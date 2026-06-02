@@ -1,0 +1,32 @@
+
+services:
+  # 1. The Next.js Frontend App
+  frontend:
+    container_name: nextjs_app
+    build:
+      context: .
+      dockerfile: Dockerfile.next
+    ports:
+      - "3000:3000"
+    restart: always
+
+  # 2. The WebSocket Server
+  websocket-server:
+    container_name: ws_app
+    build:
+      context: .
+      dockerfile: Dockerfile.ws
+    ports:
+      - "8080:8080"
+    restart: always
+  nginx-proxy:
+    container_name: nginx_proxy
+    image: nginx:alpine
+    ports:
+      - "80:80" # Opens public port 80 on your laptop
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - frontend
+      - websocket-server
+    restart: always
