@@ -1,7 +1,7 @@
 import { WebSocketServer } from "ws";
 
 const wss = new WebSocketServer({
-  port: 3001,
+  port: 8080,
 });
 
 const rooms = new Map<
@@ -84,5 +84,5 @@ if (data.type === "yjs-update") {
 });
 
 console.log(
-  "WebSocket running on port 3001"
+  "WebSocket running on port 8080"
 );

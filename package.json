@@ -16,6 +16,7 @@
     "react-dom": "19.2.4",
     "ws": "^8.21.0",
     "y-monaco": "^0.1.6",
+    "y-protocols": "^1.0.7",
     "yjs": "^13.6.31"
   },
   "devDependencies": {

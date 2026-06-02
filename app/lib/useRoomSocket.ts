@@ -9,7 +9,7 @@ export function useRoomSocket(
     useState(0);
 
   useEffect(() => {
-    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:3001";
+    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost/socket";
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
