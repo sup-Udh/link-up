@@ -25,22 +25,6 @@ wss.on("connection", (ws) => {
         rooms.set(roomId, new Set());
       }
 
-
-if (data.type === "yjs-update") {
-  rooms
-    .get(data.roomId)
-    ?.forEach((client) => {
-      if (client !== ws) {
-        client.send(
-          JSON.stringify({
-            type: "yjs-update",
-            update: data.update,
-          })
-        );
-      }
-    });
-}
-
       rooms.get(roomId)?.add(ws);
 
       const users =
@@ -57,6 +41,21 @@ if (data.type === "yjs-update") {
         .get(roomId)
         ?.forEach((client) => {
           client.send(payload);
+        });
+    }
+
+    if (data.type === "yjs-update") {
+      rooms
+        .get(data.roomId)
+        ?.forEach((client) => {
+          if (client !== ws) {
+            client.send(
+              JSON.stringify({
+                type: "yjs-update",
+                update: data.update,
+              })
+            );
+          }
         });
     }
   });
