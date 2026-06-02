@@ -1,8 +1,13 @@
+"use client";
+
+import MonacoEditor from "@monaco-editor/react";
+
 export default function Editor() {
   return (
-    <textarea
-      className="h-full w-full p-4 outline-none"
-      defaultValue="// Shared editor coming soon"
+    <MonacoEditor
+      height="100vh"
+      defaultLanguage="typescript"
+      defaultValue="// Start coding..."
     />
   );
 }
