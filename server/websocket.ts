@@ -1,4 +1,5 @@
 import { WebSocketServer } from "ws";
+import * as Y from "yjs";
 
 const PORT = parseInt(process.env.PORT || "3001", 10);
 const wss = new WebSocketServer({
@@ -9,6 +10,8 @@ const rooms = new Map<
   string,
   Set<any>
 >();
+
+const roomDocs = new Map<string, Y.Doc>();
 
 wss.on("connection", (ws) => {
   console.log("Client connected");
@@ -28,26 +31,44 @@ wss.on("connection", (ws) => {
 
       rooms.get(roomId)?.add(ws);
 
-      const users =
-        Array.from(
-          rooms.get(roomId) || []
-        ).length;
-
-
-        
+      // Send presence
+      const users = Array.from(rooms.get(roomId) || []).length;
       const payload = JSON.stringify({
         type: "presence",
         count: users,
       });
 
-      rooms
-        .get(roomId)
-        ?.forEach((client) => {
-          client.send(payload);
-        });
+      rooms.get(roomId)?.forEach((client) => {
+        client.send(payload);
+      });
+
+      // Init and send room state
+      if (!roomDocs.has(roomId)) {
+        roomDocs.set(roomId, new Y.Doc());
+      }
+      
+      const doc = roomDocs.get(roomId)!;
+      const stateVector = Y.encodeStateAsUpdate(doc);
+      
+      ws.send(JSON.stringify({
+        type: "yjs-update",
+        roomId: roomId,
+        update: Array.from(stateVector),
+      }));
     }
 
     if (data.type === "yjs-update") {
+      // Apply to server document
+      const doc = roomDocs.get(data.roomId);
+      if (doc) {
+        try {
+          Y.applyUpdate(doc, new Uint8Array(data.update));
+        } catch (e) {
+          console.error("Failed to apply update:", e);
+        }
+      }
+
+      // Broadcast to other clients
       rooms
         .get(data.roomId)
         ?.forEach((client) => {
