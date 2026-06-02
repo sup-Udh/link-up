@@ -1,7 +1,12 @@
 import { WebSocketServer } from "ws";
 
+const PORT = parseInt(process.env.PORT || "3001", 10);
 const wss = new WebSocketServer({
+<<<<<<< HEAD
   port: 8080,
+=======
+  port: PORT,
+>>>>>>> 4d48925b3f59d4275d87f67bbf1a01c75ce1ad0e
 });
 
 const rooms = new Map<
@@ -25,22 +30,6 @@ wss.on("connection", (ws) => {
         rooms.set(roomId, new Set());
       }
 
-
-if (data.type === "yjs-update") {
-  rooms
-    .get(data.roomId)
-    ?.forEach((client) => {
-      if (client !== ws) {
-        client.send(
-          JSON.stringify({
-            type: "yjs-update",
-            update: data.update,
-          })
-        );
-      }
-    });
-}
-
       rooms.get(roomId)?.add(ws);
 
       const users =
@@ -57,6 +46,21 @@ if (data.type === "yjs-update") {
         .get(roomId)
         ?.forEach((client) => {
           client.send(payload);
+        });
+    }
+
+    if (data.type === "yjs-update") {
+      rooms
+        .get(data.roomId)
+        ?.forEach((client) => {
+          if (client !== ws) {
+            client.send(
+              JSON.stringify({
+                type: "yjs-update",
+                update: data.update,
+              })
+            );
+          }
         });
     }
   });
@@ -84,5 +88,9 @@ if (data.type === "yjs-update") {
 });
 
 console.log(
+<<<<<<< HEAD
   "WebSocket running on port 8080"
+=======
+  `WebSocket running on port ${PORT}`
+>>>>>>> 4d48925b3f59d4275d87f67bbf1a01c75ce1ad0e
 );
