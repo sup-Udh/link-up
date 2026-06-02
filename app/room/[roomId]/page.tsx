@@ -1,4 +1,5 @@
-import Editor  from "@/app/components/Editors";
+import dynamic from "next/dynamic";
+const Editor = dynamic(() => import("@/app/components/Editors"), { ssr: false });
 import ProblemPanel from "@/app/components/ProblemPanel";
 import Members from "@/app/components/Members";
 
