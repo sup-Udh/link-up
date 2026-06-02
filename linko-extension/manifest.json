@@ -7,8 +7,13 @@
     "activeTab"
   ],
 
+  "action": {
+    "default_popup": "popup.html"
+  },
+
   "host_permissions": [
-    "https://leetcode.com/*"
+    "https://leetcode.com/*",
+    "https://handiness-glucose-munchkin.ngrok-free.dev/*"
   ],
 
   "content_scripts": [
