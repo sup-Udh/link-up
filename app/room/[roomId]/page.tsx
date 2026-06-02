@@ -1,5 +1,7 @@
-import Editor from "@/app/components/Editors";
 
+import Editor  from "@/app/components/Editors";
+import ProblemPanel from "@/app/components/ProblemPanel";
+import Members from "@/app/components/Members";
 export default async function RoomPage({
   params,
 }: {
@@ -8,17 +10,18 @@ export default async function RoomPage({
   const { roomId } = await params;
 
   return (
-    <div className="grid h-screen grid-cols-12">
+    <div className="grid h-screen bg-gray-500 grid-cols-12">
       <div className="col-span-3 border-r">
-        Problem Panel
+        <ProblemPanel/>
       </div>
 
       <div className="col-span-7">
-        <Editor />
+        Editor
+        <Editor/>
       </div>
 
       <div className="col-span-2 border-l">
-        Members
+       <Members roomId={roomId} />
       </div>
     </div>
   );

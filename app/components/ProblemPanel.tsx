@@ -1,6 +1,6 @@
 export default function ProblemPanel() {
   return (
-    <div className="p-4">
+    <div className="p-4 bg-gray-500">
       <h2 className="font-bold">
         Two Sum
       </h2>
