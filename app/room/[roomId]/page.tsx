@@ -1,4 +1,4 @@
-
+import Editor from "@/app/components/Editors";
 
 export default async function RoomPage({
   params,
@@ -14,7 +14,7 @@ export default async function RoomPage({
       </div>
 
       <div className="col-span-7">
-        Editor
+        <Editor />
       </div>
 
       <div className="col-span-2 border-l">
