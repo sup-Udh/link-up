@@ -11,62 +11,66 @@ export async function POST(request: Request) {
       );
     }
 
-    const res = await fetch("https://emkc.org/api/v2/piston/execute", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        language: language || "javascript",
-        version: "*", // Piston API typically expects a specific version, but '*' is requested
-        files: [{ content: code }],
-      }),
-    });
+    // Judge0 uses language_id 93 for Node.js 18.15.0
+    // If you need more languages later, you can map 'language' string to the correct Judge0 ID
+    const languageId = language === "javascript" ? 93 : 93;
+
+    const res = await fetch(
+      "https://ce.judge0.com/submissions?base64_encoded=false&wait=true",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          source_code: code,
+          language_id: languageId,
+        }),
+      }
+    );
 
     let data;
     try {
       data = await res.json();
     } catch (e) {
-      // Ignored, might not be JSON
+      // Ignored
     }
 
     if (!res.ok) {
       if (data && data.message) {
         return NextResponse.json({
           success: false,
-          output: `API Restriction (${res.status}): ${data.message}`,
+          output: `API Error (${res.status}): ${data.message}`,
         });
       }
-      throw new Error(`Piston API returned status: ${res.status}`);
+      throw new Error(`Judge0 API returned status: ${res.status}`);
     }
 
-    // Fallback if message is present but status was 200 (edge case)
-    if (data && data.message) {
-      return NextResponse.json({
-        success: false,
-        output: `API Restriction: ${data.message}`,
-      });
-    }
-
-    const compileOutput = data.compile?.output || "";
-    const runOutput = data.run?.output || "";
-    const stderr = data.run?.stderr || "";
-    const codeStatus = data.run?.code;
-
-    const isError = codeStatus !== 0 || compileOutput !== "" || stderr !== "";
+    const compileOutput = data.compile_output || "";
+    const stdout = data.stdout || "";
+    const stderr = data.stderr || "";
+    const message = data.message || "";
     
-    // Format output nicely
+    // Status ID 3 means "Accepted" (Success)
+    // See Judge0 docs for other status codes (4 = Wrong Answer, 6 = Compile Error, etc.)
+    const isSuccess = data.status?.id === 3;
+
     let finalOutput = compileOutput;
-    if (finalOutput && runOutput) finalOutput += "\n";
-    finalOutput += runOutput;
-    
+    if (finalOutput && stdout) finalOutput += "\n";
+    finalOutput += stdout;
+
     if (stderr && !finalOutput.includes(stderr)) {
-        finalOutput += "\n" + stderr;
+      if (finalOutput) finalOutput += "\n";
+      finalOutput += stderr;
+    }
+    
+    if (message) {
+      if (finalOutput) finalOutput += "\n";
+      finalOutput += `Message: ${message}`;
     }
 
     return NextResponse.json({
-      success: !isError,
+      success: isSuccess,
       output: finalOutput.trim() || "Execution finished with no output.",
     });
-
   } catch (error: any) {
     console.error("Execution error:", error);
     return NextResponse.json(
