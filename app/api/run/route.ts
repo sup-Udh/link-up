@@ -21,14 +21,25 @@ export async function POST(request: Request) {
       }),
     });
 
+    let data;
+    try {
+      data = await res.json();
+    } catch (e) {
+      // Ignored, might not be JSON
+    }
+
     if (!res.ok) {
+      if (data && data.message) {
+        return NextResponse.json({
+          success: false,
+          output: `API Restriction (${res.status}): ${data.message}`,
+        });
+      }
       throw new Error(`Piston API returned status: ${res.status}`);
     }
 
-    const data = await res.json();
-
-    // The API might return a whitelist message directly if restricted
-    if (data.message) {
+    // Fallback if message is present but status was 200 (edge case)
+    if (data && data.message) {
       return NextResponse.json({
         success: false,
         output: `API Restriction: ${data.message}`,
