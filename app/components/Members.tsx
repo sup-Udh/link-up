@@ -1,22 +1,14 @@
 "use client";
 
-import { useRoomSocket } from "@/app/lib/useRoomSocket"; 
+import { useRoom } from "@/app/lib/RoomContext";
 
-export default function Members({
-  roomId,
-}: {
-  roomId: string;
-}) {
-  const count =
-    useRoomSocket(roomId);
+export default function Members() {
+  const { onlineCount } = useRoom();
 
   return (
     <div className="p-4">
-      <h2>
-        Online Users
-      </h2>
-
-      <p>{count}</p>
+      <h2>Online Users</h2>
+      <p>{onlineCount}</p>
     </div>
   );
 }

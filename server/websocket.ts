@@ -59,6 +59,21 @@ wss.on("connection", (ws) => {
           }
         });
     }
+
+    if (data.type === "awareness-update") {
+      rooms
+        .get(data.roomId)
+        ?.forEach((client) => {
+          if (client !== ws) {
+            client.send(
+              JSON.stringify({
+                type: "awareness-update",
+                update: data.update,
+              })
+            );
+          }
+        });
+    }
   });
 
   ws.on("close", () => {
