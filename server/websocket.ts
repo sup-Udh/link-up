@@ -33,6 +33,8 @@ wss.on("connection", (ws) => {
           rooms.get(roomId) || []
         ).length;
 
+
+        
       const payload = JSON.stringify({
         type: "presence",
         count: users,
