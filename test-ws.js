@@ -7,6 +7,7 @@ const ws2 = new WebSocket('ws://localhost:3001');
 const doc1 = new Y.Doc();
 const doc2 = new Y.Doc();
 const text1 = doc1.getText('monaco');
+
 const text2 = doc2.getText('monaco');
 
 ws1.on('open', () => {
