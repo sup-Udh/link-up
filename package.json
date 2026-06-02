@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-     "socket": "tsx server/websocket.ts"
+    "socket": "tsx server/websocket.ts"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
@@ -19,7 +19,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
-    "@types/react": "^19",
+    "@types/react": "^19.2.16",
     "@types/react-dom": "^19",
     "@types/ws": "^8.18.1",
     "eslint": "^9",

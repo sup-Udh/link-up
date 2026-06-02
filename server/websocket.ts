@@ -1,7 +1,7 @@
 import { WebSocketServer } from "ws";
 
 const wss = new WebSocketServer({
-  port: 443,
+  port: 8080,
 });
 
 const rooms = new Map<
@@ -44,10 +44,15 @@ wss.on("connection", (ws) => {
 
   ws.on("close", () => {
     console.log("Disconnected");
-    
+    rooms.forEach((clients, roomId) => {
+      clients.delete(ws);
+      if (clients.size === 0) {
+        rooms.delete(roomId);
+      }
+    });
   });
 });
 
 console.log(
-  "WebSocket running on(changes made) :443"
+  "WebSocket running on port 8080"
 );

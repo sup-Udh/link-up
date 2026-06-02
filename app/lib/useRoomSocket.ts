@@ -11,7 +11,7 @@ export function useRoomSocket(
   useEffect(() => {
     const ws =
       new WebSocket(
-        "wss://1fzqjw74-3000.inc1.devtunnels.ms/room/test"
+        "ws://localhost:8080"
       );
 
     ws.onopen = () => {
