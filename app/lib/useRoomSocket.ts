@@ -9,7 +9,10 @@ export function useRoomSocket(
     useState(0);
 
   useEffect(() => {
-    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost/socket";
+    const fallbackWsUrl = typeof window !== "undefined" 
+      ? `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}/socket`
+      : "ws://localhost:3001";
+    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || fallbackWsUrl;
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
