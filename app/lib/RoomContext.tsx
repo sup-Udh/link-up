@@ -80,15 +80,30 @@ export function RoomProvider({
     const username = "User-" + Math.floor(Math.random() * 1000);
     const color = getRandomColor();
 
-    // Set local cursor identity
-    awareness.setLocalStateField("user", {
-      name: username,
-      color: color,
-      colorLight: color + "33",
-    });
+    // Helper: send our full awareness state to others
+    const broadcastAwareness = () => {
+      if (ws.readyState === WebSocket.OPEN) {
+        const update = encodeAwarenessUpdate(awareness, [ydoc.clientID]);
+        ws.send(
+          JSON.stringify({
+            type: "awareness-update",
+            roomId,
+            update: Array.from(update),
+          })
+        );
+      }
+    };
 
     ws.onopen = () => {
       ws.send(JSON.stringify({ type: "join-room", roomId, username }));
+
+      // Set cursor identity AFTER socket is open so the
+      // awareness update handler can actually send it
+      awareness.setLocalStateField("user", {
+        name: username,
+        color: color,
+        colorLight: color + "33",
+      });
     };
 
     ws.onmessage = (event) => {
@@ -96,6 +111,9 @@ export function RoomProvider({
 
       if (data.type === "presence") {
         setOnlineCount(data.count);
+        // When someone joins or leaves, re-broadcast our cursor
+        // so late joiners can see where we are
+        broadcastAwareness();
       }
 
       if (data.type === "yjs-update") {
