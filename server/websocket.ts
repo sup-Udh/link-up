@@ -1,7 +1,8 @@
 import { WebSocketServer } from "ws";
 
+const PORT = parseInt(process.env.PORT || "3001", 10);
 const wss = new WebSocketServer({
-  port: 3001,
+  port: PORT,
 });
 
 const rooms = new Map<
@@ -83,5 +84,5 @@ wss.on("connection", (ws) => {
 });
 
 console.log(
-  "WebSocket running on port 3001"
+  `WebSocket running on port ${PORT}`
 );
