@@ -65,8 +65,7 @@ export default function Editor({ roomId }: { roomId: string }) {
         new MonacoBinding(
           yText,
           model,
-          new Set([editor]),
-          null
+          new Set([editor])
         );
       }}
     />
