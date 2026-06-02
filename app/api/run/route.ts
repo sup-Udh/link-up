@@ -16,6 +16,7 @@ export async function POST(request: Request) {
     const languageId = language === "javascript" ? 93 : 93;
 
     const res = await fetch(
+      // major terminal player.
       "https://ce.judge0.com/submissions?base64_encoded=false&wait=true",
       {
         method: "POST",
