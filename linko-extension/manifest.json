@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "Linko",
+  "version": "1.0",
+
+  "permissions": [
+    "activeTab"
+  ],
+
+  "host_permissions": [
+    "https://leetcode.com/*"
+  ],
+
+  "content_scripts": [
+    {
+      "matches": [
+        "https://leetcode.com/problems/*"
+      ],
+      "js": [
+        "content.js"
+      ]
+    }
+  ]
+}
