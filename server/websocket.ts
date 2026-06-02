@@ -12,6 +12,7 @@ const rooms = new Map<
 >();
 
 const roomDocs = new Map<string, Y.Doc>();
+const roomOutputs = new Map<string, any>();
 
 wss.on("connection", (ws) => {
   console.log("Client connected");
@@ -55,6 +56,39 @@ wss.on("connection", (ws) => {
         roomId: roomId,
         update: Array.from(stateVector),
       }));
+
+      // Send latest output if exists
+      if (roomOutputs.has(roomId)) {
+        const latest = roomOutputs.get(roomId);
+        ws.send(JSON.stringify({
+          type: "execution-result",
+          roomId: roomId,
+          success: latest.success,
+          output: latest.output
+        }));
+      }
+    }
+
+    if (data.type === "execution-result") {
+      // Persist latest output for the room
+      roomOutputs.set(data.roomId, {
+        success: data.success,
+        output: data.output
+      });
+
+      // Broadcast to other clients
+      rooms.get(data.roomId)?.forEach((client) => {
+        if (client !== ws) {
+          client.send(
+            JSON.stringify({
+              type: "execution-result",
+              roomId: data.roomId,
+              success: data.success,
+              output: data.output,
+            })
+          );
+        }
+      });
     }
 
     if (data.type === "yjs-update") {

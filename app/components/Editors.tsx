@@ -7,7 +7,7 @@ import { useRoom } from "@/app/lib/RoomContext";
 import type { editor as monacoEditor } from "monaco-editor";
 
 export default function Editor() {
-  const { yText, awareness } = useRoom();
+  const { yText, awareness, runCode, isExecuting } = useRoom();
   const [editor, setEditor] =
     useState<monacoEditor.IStandaloneCodeEditor | null>(null);
 
@@ -157,11 +157,25 @@ export default function Editor() {
   );
 
   return (
-    <MonacoEditor
-      height="100vh"
-      defaultLanguage="typescript"
-      theme="vs-dark"
-      onMount={handleMount}
-    />
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between px-4 py-2 bg-[#2d2d2d] border-b border-gray-700">
+        <span className="text-gray-300 font-semibold text-sm">Editor (JavaScript)</span>
+        <button
+          onClick={runCode}
+          disabled={isExecuting}
+          className="px-4 py-1.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-medium rounded text-sm transition-colors"
+        >
+          {isExecuting ? "Running..." : "Run Code"}
+        </button>
+      </div>
+      <div className="flex-1">
+        <MonacoEditor
+          height="100%"
+          defaultLanguage="javascript"
+          theme="vs-dark"
+          onMount={handleMount}
+        />
+      </div>
+    </div>
   );
 }

@@ -20,6 +20,9 @@ interface RoomContextType {
   yText: Y.Text;
   awareness: Awareness;
   onlineCount: number;
+  latestOutput: { success: boolean; output: string } | null;
+  isExecuting: boolean;
+  runCode: () => Promise<void>;
 }
 
 const RoomContext = createContext<RoomContextType | null>(null);
@@ -59,6 +62,9 @@ export function RoomProvider({
   children: ReactNode;
 }) {
   const [onlineCount, setOnlineCount] = useState(0);
+  const [latestOutput, setLatestOutput] = useState<{ success: boolean; output: string } | null>(null);
+  const [isExecuting, setIsExecuting] = useState(false);
+  const wsRef = useRef<WebSocket | null>(null);
 
   // Stable refs so ydoc and awareness survive re-renders
   const ydocRef = useRef<Y.Doc | null>(null);
@@ -77,6 +83,7 @@ export function RoomProvider({
 
   useEffect(() => {
     const ws = new WebSocket(getWsUrl());
+    wsRef.current = ws;
     const username = "User-" + Math.floor(Math.random() * 1000);
     const color = getRandomColor();
 
@@ -127,6 +134,11 @@ export function RoomProvider({
           "ws"
         );
       }
+
+      if (data.type === "execution-result") {
+        setLatestOutput({ success: data.success, output: data.output });
+        setIsExecuting(false);
+      }
     };
 
     // Broadcast local doc changes
@@ -176,8 +188,39 @@ export function RoomProvider({
     };
   }, [roomId, ydoc, awareness]);
 
+  const runCode = async () => {
+    setIsExecuting(true);
+    setLatestOutput({ success: true, output: "Executing..." });
+    
+    try {
+      const code = yText.toString();
+      const res = await fetch("/api/run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ language: "javascript", code })
+      });
+      
+      const data = await res.json();
+      setLatestOutput({ success: data.success, output: data.output });
+      
+      // Broadcast to other users
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({
+          type: "execution-result",
+          roomId,
+          success: data.success,
+          output: data.output
+        }));
+      }
+    } catch (err: any) {
+      setLatestOutput({ success: false, output: `Network error: ${err.message}` });
+    } finally {
+      setIsExecuting(false);
+    }
+  };
+
   return (
-    <RoomContext.Provider value={{ ydoc, yText, awareness, onlineCount }}>
+    <RoomContext.Provider value={{ ydoc, yText, awareness, onlineCount, latestOutput, isExecuting, runCode }}>
       {children}
     </RoomContext.Provider>
   );
