@@ -1,15 +1,18 @@
 import { NextResponse } from "next/server";
+import { saveRoom } from "@/app/lib/db";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { slug, url } = body;
 
-    // TODO: In the future, you can save the `slug` and `url` to a database here 
-    // so the RoomLayout knows which LeetCode problem to load into the ProblemPanel!
-
     // Generate a random 8-character room ID
     const roomId = crypto.randomUUID().slice(0, 8);
+
+    // Save mapping to our local JSON db
+    if (slug) {
+      await saveRoom(roomId, slug);
+    }
 
     return NextResponse.json({ roomId });
   } catch (error) {
