@@ -1,5 +1,4 @@
-import dynamic from "next/dynamic";
-const Editor = dynamic(() => import("@/app/components/Editors"), { ssr: false });
+import EditorWrapper from "@/app/components/EditorWrapper";
 import ProblemPanel from "@/app/components/ProblemPanel";
 import Members from "@/app/components/Members";
 
@@ -17,8 +16,7 @@ export default async function RoomPage({
       </div>
 
       <div className="col-span-7">
-        Editor
-      <Editor roomId={roomId} />
+        <EditorWrapper roomId={roomId} />
       </div>
 
       <div className="col-span-2 border-l">

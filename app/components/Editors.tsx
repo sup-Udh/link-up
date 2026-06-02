@@ -6,18 +6,21 @@ import { MonacoBinding } from "y-monaco";
 import * as Y from "yjs";
 import { ydoc, yText } from "@/app/lib/collaboration";
 
+function getWsUrl(): string {
+  if (process.env.NEXT_PUBLIC_WS_URL) {
+    return process.env.NEXT_PUBLIC_WS_URL;
+  }
+  // Auto-detect: use /socket path on the current host
+  const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+  return `${proto}//${window.location.host}/socket`;
+}
+
 export default function Editor({ roomId }: { roomId: string }) {
   
   useEffect(() => {
-    const fallbackWsUrl = typeof window !== "undefined" 
-      ? `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}/socket`
-      : "ws://localhost:3001";
-    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || fallbackWsUrl;
-    const ws = new WebSocket(wsUrl);
+    const ws = new WebSocket(getWsUrl());
 
     ws.onopen = () => {
-      // Connect specifically for typing without incrementing the user count
-      // if you decide to separate connections. But for now, we'll just join.
       ws.send(
         JSON.stringify({
           type: "join-room",
@@ -30,13 +33,11 @@ export default function Editor({ roomId }: { roomId: string }) {
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
       if (data.type === "yjs-update") {
-        // Apply remote update to local Y.Doc
         const update = new Uint8Array(data.update);
         Y.applyUpdate(ydoc, update, "ws");
       }
     };
 
-    // When local ydoc changes, send it to the websocket
     const handleUpdate = (update: Uint8Array, origin: any) => {
       if (origin !== "ws" && ws.readyState === WebSocket.OPEN) {
         ws.send(
@@ -74,5 +75,3 @@ export default function Editor({ roomId }: { roomId: string }) {
     />
   );
 }
-
-

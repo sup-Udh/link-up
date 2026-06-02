@@ -2,6 +2,14 @@
 
 import { useEffect, useState } from "react";
 
+function getWsUrl(): string {
+  if (process.env.NEXT_PUBLIC_WS_URL) {
+    return process.env.NEXT_PUBLIC_WS_URL;
+  }
+  const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+  return `${proto}//${window.location.host}/socket`;
+}
+
 export function useRoomSocket(
   roomId: string
 ) {
@@ -9,11 +17,7 @@ export function useRoomSocket(
     useState(0);
 
   useEffect(() => {
-    const fallbackWsUrl = typeof window !== "undefined" 
-      ? `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}/socket`
-      : "ws://localhost:3001";
-    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || fallbackWsUrl;
-    const ws = new WebSocket(wsUrl);
+    const ws = new WebSocket(getWsUrl());
 
     ws.onopen = () => {
       ws.send(

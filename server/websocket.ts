@@ -2,11 +2,7 @@ import { WebSocketServer } from "ws";
 
 const PORT = parseInt(process.env.PORT || "3001", 10);
 const wss = new WebSocketServer({
-<<<<<<< HEAD
-  port: 8080,
-=======
   port: PORT,
->>>>>>> 4d48925b3f59d4275d87f67bbf1a01c75ce1ad0e
 });
 
 const rooms = new Map<
@@ -88,9 +84,5 @@ wss.on("connection", (ws) => {
 });
 
 console.log(
-<<<<<<< HEAD
-  "WebSocket running on port 8080"
-=======
   `WebSocket running on port ${PORT}`
->>>>>>> 4d48925b3f59d4275d87f67bbf1a01c75ce1ad0e
 );
