@@ -1,7 +1,7 @@
 import { WebSocketServer } from "ws";
 
 const wss = new WebSocketServer({
-  port: 8080,
+  port: 3001,
 });
 
 const rooms = new Map<
@@ -12,11 +12,14 @@ const rooms = new Map<
 wss.on("connection", (ws) => {
   console.log("Client connected");
 
+  let currentRoom: string | null = null;
+
   ws.on("message", (raw) => {
     const data = JSON.parse(raw.toString());
 
     if (data.type === "join-room") {
       const { roomId, username } = data;
+      currentRoom = roomId;
 
       if (!rooms.has(roomId)) {
         rooms.set(roomId, new Set());
@@ -44,15 +47,26 @@ wss.on("connection", (ws) => {
 
   ws.on("close", () => {
     console.log("Disconnected");
-    rooms.forEach((clients, roomId) => {
-      clients.delete(ws);
-      if (clients.size === 0) {
-        rooms.delete(roomId);
+    if (currentRoom && rooms.has(currentRoom)) {
+      const room = rooms.get(currentRoom);
+      room?.delete(ws);
+      
+      const users = Array.from(room || []).length;
+      if (users === 0) {
+        rooms.delete(currentRoom);
+      } else {
+        const payload = JSON.stringify({
+          type: "presence",
+          count: users,
+        });
+        room?.forEach((client) => {
+          client.send(payload);
+        });
       }
-    });
+    }
   });
 });
 
 console.log(
-  "WebSocket running on port 8080"
+  "WebSocket running on port 3001"
 );
