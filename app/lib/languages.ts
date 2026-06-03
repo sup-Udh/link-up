@@ -1,10 +1,12 @@
 export interface LanguageConfig {
-  id: string; // The internal slug we use
-  name: string; // Display name for the UI
-  monacoLanguage: string; // The string Monaco uses for syntax highlighting
-  judge0Id: number; // The Judge0 API language ID
+  id: string; 
+  name: string; 
+  monacoLanguage: string; 
+  judge0Id: number; 
 }
 
+
+// hardcoded jude list.
 export const SUPPORTED_LANGUAGES: LanguageConfig[] = [
   { id: "javascript", name: "JavaScript", monacoLanguage: "javascript", judge0Id: 102 },
   { id: "typescript", name: "TypeScript", monacoLanguage: "typescript", judge0Id: 101 },

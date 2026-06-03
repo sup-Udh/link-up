@@ -35,6 +35,7 @@ export function useRoom() {
   return ctx;
 }
 
+// needs to be changed. add more colors or a color lib
 const CURSOR_COLORS = [
   "#30bced",
   "#6eeb83",

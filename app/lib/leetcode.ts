@@ -20,6 +20,7 @@ export async function getProblemData(slug: string): Promise<LeetCodeProblem | nu
   `;
 
   try {
+    // main url hit.
     const response = await fetch("https://leetcode.com/graphql", {
       method: "POST",
       headers: {
