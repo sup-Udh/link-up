@@ -4,7 +4,6 @@ import dynamic from "next/dynamic";
 import { RoomProvider } from "@/app/lib/RoomContext";
 import Members from "./Members";
 import OutputPanel from "./OutputPanel";
-import CustomInputPanel from "./CustomInputPanel";
 
 const Editor = dynamic(() => import("./Editors"), { ssr: false });
 
@@ -25,10 +24,7 @@ export default function RoomLayout({
           <div className="flex-1 overflow-hidden">
             <Editor />
           </div>
-          <div className="h-40 shrink-0 border-t border-gray-700">
-            <CustomInputPanel />
-          </div>
-          <div className="h-48 shrink-0 border-t border-gray-700">
+          <div className="h-64 shrink-0 border-t border-gray-700">
             <OutputPanel />
           </div>
         </div>

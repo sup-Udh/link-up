@@ -14,7 +14,6 @@ const rooms = new Map<
 const roomDocs = new Map<string, Y.Doc>();
 const roomOutputs = new Map<string, any>();
 const roomLanguages = new Map<string, string>();
-const roomInputs = new Map<string, string>();
 
 wss.on("connection", (ws) => {
   console.log("Client connected");
@@ -77,29 +76,6 @@ wss.on("connection", (ws) => {
           language: roomLanguages.get(roomId)
         }));
       }
-
-      // Send custom input if exists
-      if (roomInputs.has(roomId)) {
-        ws.send(JSON.stringify({
-          type: "input-change",
-          input: roomInputs.get(roomId)
-        }));
-      }
-    }
-
-    if (data.type === "input-change") {
-      roomInputs.set(data.roomId, data.input);
-
-      rooms.get(data.roomId)?.forEach((client) => {
-        if (client !== ws) {
-          client.send(
-            JSON.stringify({
-              type: "input-change",
-              input: data.input,
-            })
-          );
-        }
-      });
     }
 
     if (data.type === "language-change") {

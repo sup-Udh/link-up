@@ -5,6 +5,9 @@ export interface LeetCodeProblem {
   title: string;
   content: string;
   difficulty: string;
+  metaData: string;
+  sampleTestCase: string;
+  codeSnippets: { langSlug: string; code: string }[];
 }
 
 export async function getProblemData(slug: string): Promise<LeetCodeProblem | null> {
@@ -15,6 +18,12 @@ export async function getProblemData(slug: string): Promise<LeetCodeProblem | nu
         title
         content
         difficulty
+        metaData
+        sampleTestCase
+        codeSnippets {
+          langSlug
+          code
+        }
       }
     }
   `;

@@ -15,18 +15,29 @@ import {
   applyAwarenessUpdate,
 } from "y-protocols/awareness";
 
+export interface TestCaseResult {
+  passed: boolean;
+  expected: string;
+  received: string;
+  error?: string;
+}
+
+export interface ExecutionResult {
+  success: boolean;
+  output?: string; // fallback for compile errors
+  results?: TestCaseResult[];
+}
+
 interface RoomContextType {
   ydoc: Y.Doc;
   yText: Y.Text;
-  awareness: Awareness;
+  awareness: any;
   onlineCount: number;
-  latestOutput: { success: boolean; output: string } | null;
+  latestOutput: ExecutionResult | null;
   isExecuting: boolean;
   runCode: () => Promise<void>;
   language: string;
   changeLanguage: (lang: string) => void;
-  customInput: string;
-  changeCustomInput: (input: string) => void;
 }
 
 const RoomContext = createContext<RoomContextType | null>(null);
@@ -67,10 +78,9 @@ export function RoomProvider({
   children: ReactNode;
 }) {
   const [onlineCount, setOnlineCount] = useState(0);
-  const [latestOutput, setLatestOutput] = useState<{ success: boolean; output: string } | null>(null);
+  const [latestOutput, setLatestOutput] = useState<ExecutionResult | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
   const [language, setLanguage] = useState("javascript");
-  const [customInput, setCustomInput] = useState("");
   const wsRef = useRef<WebSocket | null>(null);
 
   // Stable refs so ydoc and awareness survive re-renders
@@ -143,16 +153,12 @@ export function RoomProvider({
       }
 
       if (data.type === "execution-result") {
-        setLatestOutput({ success: data.success, output: data.output });
+        setLatestOutput({ success: data.success, output: data.output, results: data.results });
         setIsExecuting(false);
       }
 
       if (data.type === "language-change") {
         setLanguage(data.language);
-      }
-
-      if (data.type === "input-change") {
-        setCustomInput(data.input);
       }
     };
 
@@ -212,7 +218,7 @@ export function RoomProvider({
       const res = await fetch("/api/run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language, code, input: customInput })
+        body: JSON.stringify({ roomId, language, code }) // Added roomId to fetch metadata
       });
       
       const data = await res.json();
@@ -245,19 +251,8 @@ export function RoomProvider({
     }
   };
 
-  const changeCustomInput = (input: string) => {
-    setCustomInput(input);
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({
-        type: "input-change",
-        roomId,
-        input: input
-      }));
-    }
-  };
-
   return (
-    <RoomContext.Provider value={{ ydoc, yText, awareness, onlineCount, latestOutput, isExecuting, runCode, language, changeLanguage, customInput, changeCustomInput }}>
+    <RoomContext.Provider value={{ ydoc, yText, awareness, onlineCount, latestOutput, isExecuting, runCode, language, changeLanguage }}>
       {children}
     </RoomContext.Provider>
   );
