@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getLanguageConfig } from "@/app/lib/languages";
 
 export async function POST(request: Request) {
   try {
@@ -11,12 +12,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // Judge0 uses language_id 93 for Node.js 18.15.0
-    // If you need more languages later, you can map 'language' string to the correct Judge0 ID
-    const languageId = language === "javascript" ? 93 : 93;
+    // Get the correct Judge0 language ID for the chosen language
+    const langConfig = getLanguageConfig(language || "javascript");
+    const languageId = langConfig.judge0Id;
 
     const res = await fetch(
-      // major terminal player.
       "https://ce.judge0.com/submissions?base64_encoded=false&wait=true",
       {
         method: "POST",

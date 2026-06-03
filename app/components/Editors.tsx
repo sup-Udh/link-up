@@ -4,10 +4,12 @@ import { useEffect, useState, useCallback } from "react";
 import MonacoEditor from "@monaco-editor/react";
 import { MonacoBinding } from "y-monaco";
 import { useRoom } from "@/app/lib/RoomContext";
+import { getLanguageConfig } from "@/app/lib/languages";
+import LanguageSelector from "./LanguageSelector";
 import type { editor as monacoEditor } from "monaco-editor";
 
 export default function Editor() {
-  const { yText, awareness, runCode, isExecuting } = useRoom();
+  const { yText, awareness, runCode, isExecuting, language } = useRoom();
   const [editor, setEditor] =
     useState<monacoEditor.IStandaloneCodeEditor | null>(null);
 
@@ -156,10 +158,15 @@ export default function Editor() {
     [yText]
   );
 
+  const langConfig = getLanguageConfig(language);
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between px-4 py-2 bg-[#2d2d2d] border-b border-gray-700">
-        <span className="text-gray-300 font-semibold text-sm">Editor (JavaScript)</span>
+        <div className="flex items-center space-x-4">
+          <span className="text-gray-300 font-semibold text-sm">Editor</span>
+          <LanguageSelector />
+        </div>
         <button
           onClick={runCode}
           disabled={isExecuting}
@@ -171,7 +178,7 @@ export default function Editor() {
       <div className="flex-1">
         <MonacoEditor
           height="100%"
-          defaultLanguage="javascript"
+          language={langConfig.monacoLanguage}
           theme="vs-dark"
           onMount={handleMount}
         />

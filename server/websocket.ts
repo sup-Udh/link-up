@@ -13,6 +13,7 @@ const rooms = new Map<
 
 const roomDocs = new Map<string, Y.Doc>();
 const roomOutputs = new Map<string, any>();
+const roomLanguages = new Map<string, string>();
 
 wss.on("connection", (ws) => {
   console.log("Client connected");
@@ -67,6 +68,29 @@ wss.on("connection", (ws) => {
           output: latest.output
         }));
       }
+
+      // Send current language if it was changed from default
+      if (roomLanguages.has(roomId)) {
+        ws.send(JSON.stringify({
+          type: "language-change",
+          language: roomLanguages.get(roomId)
+        }));
+      }
+    }
+
+    if (data.type === "language-change") {
+      roomLanguages.set(data.roomId, data.language);
+
+      rooms.get(data.roomId)?.forEach((client) => {
+        if (client !== ws) {
+          client.send(
+            JSON.stringify({
+              type: "language-change",
+              language: data.language,
+            })
+          );
+        }
+      });
     }
 
     if (data.type === "execution-result") {

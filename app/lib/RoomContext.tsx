@@ -23,6 +23,8 @@ interface RoomContextType {
   latestOutput: { success: boolean; output: string } | null;
   isExecuting: boolean;
   runCode: () => Promise<void>;
+  language: string;
+  changeLanguage: (lang: string) => void;
 }
 
 const RoomContext = createContext<RoomContextType | null>(null);
@@ -64,6 +66,7 @@ export function RoomProvider({
   const [onlineCount, setOnlineCount] = useState(0);
   const [latestOutput, setLatestOutput] = useState<{ success: boolean; output: string } | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
+  const [language, setLanguage] = useState("javascript");
   const wsRef = useRef<WebSocket | null>(null);
 
   // Stable refs so ydoc and awareness survive re-renders
@@ -139,6 +142,10 @@ export function RoomProvider({
         setLatestOutput({ success: data.success, output: data.output });
         setIsExecuting(false);
       }
+
+      if (data.type === "language-change") {
+        setLanguage(data.language);
+      }
     };
 
     // Broadcast local doc changes
@@ -197,7 +204,7 @@ export function RoomProvider({
       const res = await fetch("/api/run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language: "javascript", code })
+        body: JSON.stringify({ language, code })
       });
       
       const data = await res.json();
@@ -219,8 +226,19 @@ export function RoomProvider({
     }
   };
 
+  const changeLanguage = (lang: string) => {
+    setLanguage(lang);
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({
+        type: "language-change",
+        roomId,
+        language: lang
+      }));
+    }
+  };
+
   return (
-    <RoomContext.Provider value={{ ydoc, yText, awareness, onlineCount, latestOutput, isExecuting, runCode }}>
+    <RoomContext.Provider value={{ ydoc, yText, awareness, onlineCount, latestOutput, isExecuting, runCode, language, changeLanguage }}>
       {children}
     </RoomContext.Provider>
   );
