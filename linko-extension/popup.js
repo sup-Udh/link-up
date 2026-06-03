@@ -1,5 +1,25 @@
-document.getElementById("start").addEventListener("click", async () => {
-  const statusEl = document.getElementById("status");
+const nameInput = document.getElementById("displayName");
+const startBtn = document.getElementById("start");
+const statusEl = document.getElementById("status");
+
+// Load saved name on popup open
+chrome.storage.local.get(["displayName"], (result) => {
+  if (result.displayName) {
+    nameInput.value = result.displayName;
+  }
+});
+
+startBtn.addEventListener("click", async () => {
+  const name = nameInput.value.trim();
+  
+  if (name.length < 2 || name.length > 24) {
+    statusEl.textContent = "Display name must be between 2 and 24 characters.";
+    statusEl.style.color = "red";
+    return;
+  }
+  
+  // Persist name across restarts
+  chrome.storage.local.set({ displayName: name });
   
   try {
     statusEl.textContent = "Reading problem...";
@@ -36,7 +56,8 @@ document.getElementById("start").addEventListener("click", async () => {
           },
           body: JSON.stringify({
             slug: problem.slug,
-            url: problem.url
+            url: problem.url,
+            displayName: name
           })
         });
 
@@ -53,7 +74,8 @@ document.getElementById("start").addEventListener("click", async () => {
         statusEl.textContent = "Opening collaborative room...";
         statusEl.style.color = "green";
 
-        chrome.tabs.create({ url: `https://handiness-glucose-munchkin.ngrok-free.dev/room/${data.roomId}` });
+        // Append the name parameter so the web app receives it immediately
+        chrome.tabs.create({ url: `https://handiness-glucose-munchkin.ngrok-free.dev/room/${data.roomId}?name=${encodeURIComponent(name)}` });
         
       } catch (err) {
         statusEl.textContent = `Error: ${err.message}`;

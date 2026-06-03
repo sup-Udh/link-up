@@ -14,6 +14,7 @@ const rooms = new Map<
 const roomDocs = new Map<string, Y.Doc>();
 const roomOutputs = new Map<string, any>();
 const roomLanguages = new Map<string, string>();
+const socketUsers = new Map<any, { id: string, name: string, joinedAt: number }>();
 
 wss.on("connection", (ws) => {
   console.log("Client connected");
@@ -24,8 +25,16 @@ wss.on("connection", (ws) => {
     const data = JSON.parse(raw.toString());
 
     if (data.type === "join-room") {
-      const { roomId, username } = data;
+      const { roomId, user } = data;
       currentRoom = roomId;
+
+      if (user && user.id && user.name) {
+        socketUsers.set(ws, { id: user.id, name: user.name, joinedAt: Date.now() });
+      } else {
+        // Fallback for missing identity
+        const anonId = "anon_" + Math.random().toString(36).substr(2, 6);
+        socketUsers.set(ws, { id: anonId, name: "Anonymous", joinedAt: Date.now() });
+      }
 
       if (!rooms.has(roomId)) {
         rooms.set(roomId, new Set());
@@ -33,11 +42,23 @@ wss.on("connection", (ws) => {
 
       rooms.get(roomId)?.add(ws);
 
-      // Send presence
-      const users = Array.from(rooms.get(roomId) || []).length;
+      const currentUser = socketUsers.get(ws);
+
+      // Send join notification to others
+      rooms.get(roomId)?.forEach((client) => {
+        if (client !== ws && currentUser) {
+          client.send(JSON.stringify({
+            type: "notification",
+            message: `${currentUser.name} joined the room`
+          }));
+        }
+      });
+
+      // Send presence (users array)
+      const usersList = Array.from(rooms.get(roomId) || []).map(client => socketUsers.get(client)).filter(Boolean);
       const payload = JSON.stringify({
         type: "presence",
-        count: users,
+        users: usersList,
       });
 
       rooms.get(roomId)?.forEach((client) => {
@@ -161,18 +182,34 @@ wss.on("connection", (ws) => {
     console.log("Disconnected");
     if (currentRoom && rooms.has(currentRoom)) {
       const room = rooms.get(currentRoom);
-      room?.delete(ws);
+      const departingUser = socketUsers.get(ws);
       
-      const users = Array.from(room || []).length;
-      if (users === 0) {
+      room?.delete(ws);
+      socketUsers.delete(ws);
+      
+      const usersList = Array.from(room || []).map(client => socketUsers.get(client)).filter(Boolean);
+      
+      if (usersList.length === 0) {
         rooms.delete(currentRoom);
+        roomDocs.delete(currentRoom);
+        roomOutputs.delete(currentRoom);
+        roomLanguages.delete(currentRoom);
       } else {
         const payload = JSON.stringify({
           type: "presence",
-          count: users,
+          users: usersList,
         });
+        
+        const leaveNotification = departingUser ? JSON.stringify({
+          type: "notification",
+          message: `${departingUser.name} left the room`
+        }) : null;
+
         room?.forEach((client) => {
           client.send(payload);
+          if (leaveNotification) {
+            client.send(leaveNotification);
+          }
         });
       }
     }

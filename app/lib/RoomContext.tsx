@@ -25,15 +25,30 @@ export interface TestCaseResult {
 
 export interface ExecutionResult {
   success: boolean;
-  output?: string; // fallback for compile errors
+  output?: string;
   results?: TestCaseResult[];
+}
+
+export interface User {
+  id: string;
+  name: string;
+  joinedAt: number;
+}
+
+export interface Notification {
+  id: string;
+  message: string;
 }
 
 interface RoomContextType {
   ydoc: Y.Doc;
   yText: Y.Text;
   awareness: Awareness;
-  onlineCount: number;
+  users: User[];
+  currentUser: User | null;
+  identityStatus: "loading" | "missing" | "ready";
+  setIdentity: (name: string) => void;
+  notifications: Notification[];
   latestOutput: ExecutionResult | null;
   isExecuting: boolean;
   runCode: () => Promise<void>;
@@ -50,20 +65,18 @@ export function useRoom() {
   return ctx;
 }
 
-// needs to be changed. add more colors or a color lib
-const CURSOR_COLORS = [
-  "#30bced",
-  "#6eeb83",
-  "#ffbc42",
-  "#ecd444",
-  "#ee6352",
-  "#9ac2c9",
-  "#8acb88",
-  "#1be7ff",
-];
-
-function getRandomColor() {
-  return CURSOR_COLORS[Math.floor(Math.random() * CURSOR_COLORS.length)];
+// Generate a hex color strictly from a string
+function getColorForId(str: string) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  let color = '#';
+  for (let i = 0; i < 3; i++) {
+    let value = (hash >> (i * 8)) & 0xFF;
+    color += ('00' + value.toString(16)).substr(-2);
+  }
+  return color;
 }
 
 function getWsUrl(): string {
@@ -79,7 +92,10 @@ export function RoomProvider({
   roomId: string;
   children: ReactNode;
 }) {
-  const [onlineCount, setOnlineCount] = useState(0);
+  const [users, setUsers] = useState<User[]>([]);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [identityStatus, setIdentityStatus] = useState<"loading" | "missing" | "ready">("loading");
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [latestOutput, setLatestOutput] = useState<ExecutionResult | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
   const [language, setLanguage] = useState("javascript");
@@ -101,6 +117,50 @@ export function RoomProvider({
   const awareness = awarenessRef.current;
   const yText = ydoc.getText("monaco");
 
+  const setIdentity = (name: string) => {
+    localStorage.setItem("linko_name", name.trim());
+    let storedId = localStorage.getItem("linko_id");
+    if (!storedId) {
+      storedId = "user_" + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem("linko_id", storedId);
+    }
+    setCurrentUser({ id: storedId, name: name.trim(), joinedAt: Date.now() });
+    setIdentityStatus("ready");
+  };
+
+  const addNotification = (message: string) => {
+    const id = Math.random().toString(36).substr(2, 9);
+    setNotifications(prev => [...prev, { id, message }]);
+    setTimeout(() => {
+      setNotifications(prev => prev.filter(n => n.id !== id));
+    }, 4000);
+  };
+
+  useEffect(() => {
+    // Identity resolution
+    const urlParams = new URLSearchParams(window.location.search);
+    let nameParam = urlParams.get("name");
+    if (nameParam) {
+      localStorage.setItem("linko_name", nameParam);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    
+    let storedName = localStorage.getItem("linko_name");
+    if (!storedName) {
+      setIdentityStatus("missing");
+      return;
+    }
+    
+    let storedId = localStorage.getItem("linko_id");
+    if (!storedId) {
+      storedId = "user_" + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem("linko_id", storedId);
+    }
+    
+    setCurrentUser({ id: storedId, name: storedName, joinedAt: Date.now() });
+    setIdentityStatus("ready");
+  }, []);
+
   useEffect(() => {
     // Fetch problem metadata asynchronously
     fetch(`/api/problem?roomId=${roomId}`)
@@ -109,13 +169,15 @@ export function RoomProvider({
         if (!data.error) setProblemMetadata(data);
       })
       .catch(err => console.error("Failed to load metadata:", err));
+  }, [roomId]);
+
+  useEffect(() => {
+    if (identityStatus !== "ready" || !currentUser) return;
 
     const ws = new WebSocket(getWsUrl());
     wsRef.current = ws;
-    const username = "User-" + Math.floor(Math.random() * 1000);
-    const color = getRandomColor();
+    const color = getColorForId(currentUser.id);
 
-    // Helper: send our full awareness state to others
     const broadcastAwareness = () => {
       if (ws.readyState === WebSocket.OPEN) {
         const update = encodeAwarenessUpdate(awareness, [ydoc.clientID]);
@@ -130,12 +192,11 @@ export function RoomProvider({
     };
 
     ws.onopen = () => {
-      ws.send(JSON.stringify({ type: "join-room", roomId, username }));
+      ws.send(JSON.stringify({ type: "join-room", roomId, user: currentUser }));
 
-      // Set cursor identity AFTER socket is open so the
-      // awareness update handler can actually send it
       awareness.setLocalStateField("user", {
-        name: username,
+        id: currentUser.id,
+        name: currentUser.name,
         color: color,
         colorLight: color + "33",
       });
@@ -145,10 +206,12 @@ export function RoomProvider({
       const data = JSON.parse(event.data);
 
       if (data.type === "presence") {
-        setOnlineCount(data.count);
-        // When someone joins or leaves, re-broadcast our cursor
-        // so late joiners can see where we are
+        setUsers(data.users || []);
         broadcastAwareness();
+      }
+
+      if (data.type === "notification") {
+        addNotification(data.message);
       }
 
       if (data.type === "yjs-update") {
@@ -173,7 +236,6 @@ export function RoomProvider({
       }
     };
 
-    // Broadcast local doc changes
     const handleDocUpdate = (update: Uint8Array, origin: any) => {
       if (origin !== "ws" && ws.readyState === WebSocket.OPEN) {
         ws.send(
@@ -186,25 +248,14 @@ export function RoomProvider({
       }
     };
 
-    // Broadcast local cursor/awareness changes
-    const handleAwarenessUpdate = ({
-      added,
-      updated,
-      removed,
-    }: {
-      added: number[];
-      updated: number[];
-      removed: number[];
-    }) => {
+    const handleAwarenessUpdate = ({ added, updated, removed }: any) => {
       const changedClients = added.concat(updated).concat(removed);
       if (ws.readyState === WebSocket.OPEN) {
         ws.send(
           JSON.stringify({
             type: "awareness-update",
             roomId,
-            update: Array.from(
-              encodeAwarenessUpdate(awareness, changedClients)
-            ),
+            update: Array.from(encodeAwarenessUpdate(awareness, changedClients)),
           })
         );
       }
@@ -218,7 +269,7 @@ export function RoomProvider({
       awareness.off("update", handleAwarenessUpdate);
       ws.close();
     };
-  }, [roomId, ydoc, awareness]);
+  }, [roomId, ydoc, awareness, identityStatus, currentUser]);
 
   const runCode = async () => {
     setIsExecuting(true);
@@ -229,13 +280,12 @@ export function RoomProvider({
       const res = await fetch("/api/run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ roomId, language, code }) // Added roomId to fetch metadata
+        body: JSON.stringify({ roomId, language, code })
       });
       
       const data = await res.json();
       setLatestOutput({ success: data.success, output: data.output, results: data.results });
       
-      // Broadcast to other users
       if (wsRef.current?.readyState === WebSocket.OPEN) {
         wsRef.current.send(JSON.stringify({
           type: "execution-result",
@@ -264,7 +314,7 @@ export function RoomProvider({
   };
 
   return (
-    <RoomContext.Provider value={{ ydoc, yText, awareness, onlineCount, latestOutput, isExecuting, runCode, language, changeLanguage, problemMetadata }}>
+    <RoomContext.Provider value={{ ydoc, yText, awareness, users, currentUser, identityStatus, setIdentity, notifications, latestOutput, isExecuting, runCode, language, changeLanguage, problemMetadata }}>
       {children}
     </RoomContext.Provider>
   );

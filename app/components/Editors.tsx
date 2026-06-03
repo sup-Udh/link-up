@@ -35,6 +35,15 @@ export default function Editor() {
       });
     });
 
+    let typingTimeout: any;
+    const modelDisposable = editor.onDidChangeModelContent(() => {
+      awareness.setLocalStateField("typing", true);
+      clearTimeout(typingTimeout);
+      typingTimeout = setTimeout(() => {
+        awareness.setLocalStateField("typing", false);
+      }, 1000);
+    });
+
     // ---- Render remote cursors from awareness ----
     const renderCursors = () => {
       const decs: monacoEditor.IModelDeltaDecoration[] = [];
@@ -135,6 +144,8 @@ export default function Editor() {
     renderCursors(); // render any cursors already present
 
     return () => {
+      clearTimeout(typingTimeout);
+      modelDisposable.dispose();
       cursorDisposable.dispose();
       awareness.off("change", renderCursors);
       decorations.clear();
