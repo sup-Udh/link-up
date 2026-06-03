@@ -91,18 +91,26 @@ export async function POST(request: Request) {
       finalOutput += `Message: ${message}`;
     }
 
-    let parsedResults = [];
+    let parsedResults: any[] = [];
     try {
       if (stdout.trim().startsWith("[")) {
         parsedResults = JSON.parse(stdout);
-        
-        // LeetCode GraphQL does not provide the expected output for sample test cases.
-        // We will mark them as passed if they executed without runtime errors.
-        parsedResults = parsedResults.map((r: any) => ({
-          ...r,
-          passed: r.error ? false : true,
-          expected: "N/A (Hidden by LeetCode API)"
-        }));
+        parsedResults = parsedResults.map((r: any, idx: number) => {
+          let expected = meta.expectedOutputs[idx] || "N/A";
+          let passed = false;
+          
+          if (!r.error) {
+             const cleanExpected = expected.replace(/\s+/g, '');
+             const cleanReceived = (r.received || "").replace(/\s+/g, '');
+             passed = cleanExpected === cleanReceived;
+          }
+          
+          return {
+            ...r,
+            passed: passed,
+            expected: expected
+          };
+        });
       }
     } catch (e) {
       // Failed to parse JSON results (likely a compilation/runtime crash that corrupted stdout)

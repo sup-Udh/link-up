@@ -16,6 +16,7 @@ export interface ProblemMetadata {
   returnType: { type: string; size?: number };
   starterCode: Record<string, string>;
   testCases: string[];
+  expectedOutputs: string[];
 }
 
 export async function getProblemData(slug: string): Promise<LeetCodeProblem | null> {
@@ -71,12 +72,19 @@ export async function fetchLeetCodeMetadata(slug: string): Promise<ProblemMetada
     });
 
     const numParams = meta.params.length;
-    const rawTestCases = problem.sampleTestCase.split('\\n').filter((l: string) => l.trim() !== "");
+    const rawTestCases = problem.sampleTestCase.split('\n').filter((l: string) => l.trim() !== "");
     const testCases: string[] = [];
     
     for (let i = 0; i < rawTestCases.length; i += numParams) {
-      const tc = rawTestCases.slice(i, i + numParams).join('\\n');
+      const tc = rawTestCases.slice(i, i + numParams).join('\n');
       if (tc) testCases.push(tc);
+    }
+
+    const expectedOutputs: string[] = [];
+    const outputRegex = /Output(?:<\/strong>)?:\s*(.*?)(?:<|\n|$)/gi;
+    let match;
+    while ((match = outputRegex.exec(problem.content)) !== null) {
+      expectedOutputs.push(match[1].trim());
     }
 
     return {
@@ -86,7 +94,8 @@ export async function fetchLeetCodeMetadata(slug: string): Promise<ProblemMetada
       parameters: meta.params,
       returnType: meta.return,
       starterCode,
-      testCases
+      testCases,
+      expectedOutputs
     };
   } catch (err) {
     console.error("Error parsing LeetCode metadata:", err);
