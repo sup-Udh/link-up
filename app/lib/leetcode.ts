@@ -81,10 +81,12 @@ export async function fetchLeetCodeMetadata(slug: string): Promise<ProblemMetada
     }
 
     const expectedOutputs: string[] = [];
-    const outputRegex = /Output(?:<\/strong>)?:\s*(.*?)(?:<|\n|$)/gi;
+    const outputRegex = /(?:<strong>)?Output:?(?:<\/strong>)?\s*:?\s*(.*?)(?:<|\n|$)/gi;
     let match;
     while ((match = outputRegex.exec(problem.content)) !== null) {
-      expectedOutputs.push(match[1].trim());
+      if (match[1].trim()) {
+        expectedOutputs.push(match[1].trim());
+      }
     }
 
     return {
