@@ -50,8 +50,8 @@ startBtn.addEventListener("click", async () => {
 
       try {
         statusEl.textContent = "Creating room...";
-
-        const response = await fetch("https://handiness-glucose-munchkin.ngrok-free.dev/api/rooms", {
+        
+        const response = await fetch("http://localhost/api/rooms", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -77,7 +77,7 @@ startBtn.addEventListener("click", async () => {
         statusEl.style.color = "green";
 
         // Append the name parameter so the web app receives it immediately
-        chrome.tabs.create({ url: `https://handiness-glucose-munchkin.ngrok-free.dev/room/${data.roomId}?name=${encodeURIComponent(name)}&requireApproval=${requireApproval}` });
+        chrome.tabs.create({ url: `http://localhost/room/${data.roomId}?name=${encodeURIComponent(name)}&requireApproval=${requireApproval}` });
         
       } catch (err) {
         statusEl.textContent = `Error: ${err.message}`;

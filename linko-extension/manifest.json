@@ -14,7 +14,8 @@
 
   "host_permissions": [
     "https://leetcode.com/*",
-    "https://handiness-glucose-munchkin.ngrok-free.dev/*"
+    "http://localhost/*",
+    "https://2212-49-207-225-191.ngrok-free.app /*"
   ],
 
   "content_scripts": [

@@ -3,6 +3,9 @@ import { ProblemMetadata } from "../leetcode";
 export function generatePython(code: string, meta: ProblemMetadata): string {
   const helperCode = `
 import json
+import traceback
+import sys
+from io import StringIO
 
 class ListNode:
     def __init__(self, val=0, next=None):
@@ -83,29 +86,43 @@ def parse_input(val, type_str):
 `;
 
   let executionCode = `
-__testCases = [${meta.testCases.map(t => `"""${t}"""`).join(", ")}]
+__testCases = [${meta.testCases.map(t => JSON.stringify(t)).join(", ")}]
+__expected = [${meta.expectedOutputs.map(e => JSON.stringify(e)).join(", ")}]
 __results = []
-
-class SolutionWrapper:
-    pass
 
 for __i, __tc in enumerate(__testCases):
     raw_args = [l for l in __tc.split('\\n') if l.strip() != ""]
     try:
         sol = Solution()
-${meta.parameters.map((p, idx) => `        arg${idx} = parse_input(json.loads(raw_args[${idx}]), "${p.type}")`).join("\n")}
         
-        result = sol.${meta.functionName}(${meta.parameters.map((_, idx) => `arg${idx}`).join(", ")})
+        # FIXED: Pure, standard spaces used for the multi-parameter join block
+        ${meta.parameters.map((p, idx) => `arg${idx} = parse_input(json.loads(raw_args[${idx}]), "${p.type}")`).join("\n        ")}
+        
+        # Capture any random print statement from user code to prevent terminal pollution
+        old_stdout = sys.stdout
+        sys.stdout = captured_output = StringIO()
+        
+        try:
+            result = sol.${meta.functionName}(${meta.parameters.map((_, idx) => `arg${idx}`).join(", ")})
+        finally:
+            sys.stdout = old_stdout
+            
+        user_prints = captured_output.getvalue()
         formatted = format_output(result, "${meta.returnType.type}")
+        expected_parsed = json.loads(__expected[__i])
+        is_passed = (formatted == expected_parsed)
         
         __results.append({
-            "passed": False,
-            "received": json.dumps(formatted)
+            "passed": is_passed,
+            "received": json.dumps(formatted),
+            "expected": json.dumps(expected_parsed),
+            "stdout": user_prints
         })
     except Exception as e:
         __results.append({
             "passed": False,
-            "error": str(e)
+            "error": str(e),
+            "traceback": traceback.format_exc()
         })
 
 print(json.dumps(__results))

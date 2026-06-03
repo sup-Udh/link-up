@@ -19,6 +19,7 @@ export default function BottomPanel() {
 
   // Auto-switch to result tab when execution starts
   useEffect(() => {
+    
     if (isExecutingIndex !== null) {
       setActiveTab("result");
     }
@@ -105,7 +106,8 @@ export default function BottomPanel() {
                               <div key={param.name}>
                                 <div className="text-xs text-gray-500 mb-1">{param.name} =</div>
                                 <div className="bg-[#1a1a1a] px-3 py-2 rounded border border-gray-700 text-gray-300 break-all">
-                                  {rawInputs[pIdx] || ""}
+                                  {/* {rawInputs[pIdx] || "" } */}
+                                  {rawInputs}
                                 </div>
                               </div>
                             ))}
