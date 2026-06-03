@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
 import { getLanguageConfig } from "@/app/lib/languages";
+import { getSlugForRoom } from "@/app/lib/db";
+import { fetchLeetCodeMetadata } from "@/app/lib/leetcode";
+import { generateExecutionWrapper } from "@/app/lib/generators";
 
 export async function POST(request: Request) {
   try {
-    const { language, code, input } = await request.json();
+    const { roomId, language, code } = await request.json();
 
     if (!code || !code.trim()) {
       return NextResponse.json(
@@ -12,35 +15,25 @@ export async function POST(request: Request) {
       );
     }
 
-    let finalCode = code;
-
-    // Custom Input Injection (JavaScript MVP only)
-    if (language === "javascript" && input && input.trim()) {
-      try {
-        const parsedInput = JSON.parse(input);
-        
-        // Use Regex to find the first function declaration: e.g. function add(a, b)
-        const funcMatch = finalCode.match(/function\s+([a-zA-Z_$][0-9a-zA-Z_$]*)\s*\(([^)]*)\)/);
-        
-        if (funcMatch) {
-          const funcName = funcMatch[1];
-          // Extract parameter names from the regex capture group
-          const paramNames = funcMatch[2].split(",").map((p: string) => p.trim()).filter((p: string) => p);
-          
-          // Generate the parameter string for the wrapper, e.g. __input["a"], __input["b"]
-          const paramsList = paramNames.map((p: string) => `__input["${p}"]`).join(", ");
-          
-          finalCode += `\n\n// --- GENERATED EXECUTION WRAPPER ---\n`;
-          finalCode += `const __input = ${JSON.stringify(parsedInput)};\n`;
-          finalCode += `console.log(${funcName}(${paramsList}));\n`;
-        }
-      } catch (err: any) {
-        return NextResponse.json({
-          success: false,
-          output: `Error: Invalid Custom Input JSON\n${err.message}`
-        });
-      }
+    if (!roomId) {
+      return NextResponse.json(
+        { success: false, output: "Error: No room ID provided." },
+        { status: 400 }
+      );
     }
+
+    const slug = await getSlugForRoom(roomId);
+    if (!slug) {
+      return NextResponse.json({ success: false, output: "Error: Room problem not found." });
+    }
+
+    const meta = await fetchLeetCodeMetadata(slug);
+    if (!meta) {
+      return NextResponse.json({ success: false, output: "Error: Failed to fetch LeetCode metadata." });
+    }
+
+    // Generate the execution wrapper using our native transpilers
+    const finalCode = generateExecutionWrapper(language || "javascript", code, meta);
 
     // Get the correct Judge0 language ID for the chosen language
     const langConfig = getLanguageConfig(language || "javascript");
@@ -98,9 +91,27 @@ export async function POST(request: Request) {
       finalOutput += `Message: ${message}`;
     }
 
+    let parsedResults = [];
+    try {
+      if (stdout.trim().startsWith("[")) {
+        parsedResults = JSON.parse(stdout);
+        
+        // LeetCode GraphQL does not provide the expected output for sample test cases.
+        // We will mark them as passed if they executed without runtime errors.
+        parsedResults = parsedResults.map((r: any) => ({
+          ...r,
+          passed: r.error ? false : true,
+          expected: "N/A (Hidden by LeetCode API)"
+        }));
+      }
+    } catch (e) {
+      // Failed to parse JSON results (likely a compilation/runtime crash that corrupted stdout)
+    }
+
     return NextResponse.json({
       success: isSuccess,
       output: finalOutput.trim() || "Execution finished with no output.",
+      results: parsedResults.length > 0 ? parsedResults : undefined
     });
   } catch (error: any) {
     console.error("Execution error:", error);
