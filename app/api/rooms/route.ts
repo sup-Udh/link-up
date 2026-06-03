@@ -1,25 +1,94 @@
 import { NextResponse } from "next/server";
-import { saveRoom } from "@/app/lib/db";
+import { createClient } from "@/utils/supabase/server";
+
+// Helper to generate 8-character ID
+function generateRoomId() {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < 8; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
+export async function GET(request: Request) {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { data: rooms, error } = await supabase
+      .from('rooms')
+      .select('*')
+      .eq('host_id', user.id)
+      .order('last_active_at', { ascending: false });
+
+    if (error) {
+      console.error("Error fetching rooms:", error);
+      return NextResponse.json({ error: "Failed to fetch rooms" }, { status: 500 });
+    }
+
+    return NextResponse.json(rooms || []);
+  } catch (error) {
+    console.error("GET rooms error:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+}
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { slug, url } = body;
-
-    // we generating that  random 8-character room ID
-    const roomId = crypto.randomUUID().slice(0, 8);
-
-    // Save mapping to our local JSON db
-    if (slug) {
-      await saveRoom(roomId, slug);
+    const supabase = await createClient();
+    
+    // Check for standard Web Session OR Extension Bearer token
+    let user = null;
+    
+    const authHeader = request.headers.get('Authorization');
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      // Extension token
+      const token = authHeader.split(' ')[1];
+      const { data: tokenRecord } = await supabase.from('extension_tokens').select('user_id').eq('token', token).single();
+      if (tokenRecord) {
+        user = { id: tokenRecord.user_id };
+      }
+    } else {
+      // Web session
+      const { data: { user: webUser } } = await supabase.auth.getUser();
+      user = webUser;
     }
 
-    return NextResponse.json({ roomId });
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { title, language, source = "blank", requireApproval = false, slug = null } = body;
+
+    const roomId = generateRoomId();
+
+    const roomPayload = {
+      id: roomId,
+      title: title || slug || "Untitled Session",
+      language: language || "JavaScript",
+      source: source,
+      host_id: user.id,
+      require_approval: requireApproval,
+      participant_count: 0,
+      is_active: false,
+    };
+
+    const { error } = await supabase.from('rooms').insert([roomPayload]);
+
+    if (error) {
+      console.error("Error inserting room:", error);
+      return NextResponse.json({ error: "Failed to create room" }, { status: 500 });
+    }
+
+    return NextResponse.json({ roomId, ...roomPayload });
   } catch (error) {
-    console.error("Error creating room:", error);
-    return NextResponse.json(
-      { error: "Failed to create room" },
-      { status: 500 }
-    );
+    console.error("POST room error:", error);
+    return NextResponse.json({ error: "Failed to create room" }, { status: 500 });
   }
 }
