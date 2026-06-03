@@ -23,10 +23,17 @@ export interface TestCaseResult {
   error?: string;
 }
 
+export interface CustomTestCase {
+  id: string;
+  input: string;
+  expectedOutput: string;
+}
+
 export interface ExecutionResult {
   success: boolean;
   output?: string;
   results?: TestCaseResult[];
+  runIndex?: number | "all";
 }
 
 export interface User {
@@ -50,12 +57,19 @@ interface RoomContextType {
   setIdentity: (name: string) => void;
   notifications: Notification[];
   latestOutput: ExecutionResult | null;
-  isExecuting: boolean;
-  runCode: () => Promise<void>;
+  testResults: Record<number, TestCaseResult>;
+  isExecutingIndex: number | "all" | null;
+  runCode: (runIndex?: number | "all") => Promise<void>;
   language: string;
   changeLanguage: (lang: string) => void;
   problemMetadata: ProblemMetadata | null;
   
+  // Custom Cases
+  customCases: CustomTestCase[];
+  addCustomCase: (tc: CustomTestCase) => void;
+  updateCustomCase: (tc: CustomTestCase) => void;
+  deleteCustomCase: (id: string) => void;
+
   // Moderation
   hostId: string | null;
   driverId: string | null;
@@ -112,9 +126,11 @@ export function RoomProvider({
   const [identityStatus, setIdentityStatus] = useState<"loading" | "missing" | "ready">("loading");
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [latestOutput, setLatestOutput] = useState<ExecutionResult | null>(null);
-  const [isExecuting, setIsExecuting] = useState(false);
+  const [testResults, setTestResults] = useState<Record<number, TestCaseResult>>({});
+  const [isExecutingIndex, setIsExecutingIndex] = useState<number | "all" | null>(null);
   const [language, setLanguage] = useState("javascript");
   const [problemMetadata, setProblemMetadata] = useState<ProblemMetadata | null>(null);
+  const [customCases, setCustomCases] = useState<CustomTestCase[]>([]);
   
   const [hostId, setHostId] = useState<string | null>(null);
   const [driverId, setDriverId] = useState<string | null>(null);
@@ -255,8 +271,24 @@ export function RoomProvider({
       }
 
       if (data.type === "execution-result") {
-        setLatestOutput({ success: data.success, output: data.output, results: data.results });
-        setIsExecuting(false);
+        setLatestOutput({ success: data.success, output: data.output, results: data.results, runIndex: data.runIndex });
+        setIsExecutingIndex(null);
+        
+        if (data.results) {
+          setTestResults(prev => {
+            const next = { ...prev };
+            if (data.runIndex === "all" || data.runIndex === undefined) {
+              // Replace all
+              data.results.forEach((r: any, idx: number) => {
+                next[idx] = r;
+              });
+            } else {
+              // Single test case update
+              next[data.runIndex] = data.results[0]; // the API filters it down to 1 element
+            }
+            return next;
+          });
+        }
       }
 
       if (data.type === "language-change") {
@@ -269,6 +301,9 @@ export function RoomProvider({
         setEditorLocked(data.state.editorLocked);
         if (data.state.pendingRequests) {
           setPendingRequests(data.state.pendingRequests);
+        }
+        if (data.state.customCases) {
+          setCustomCases(data.state.customCases);
         }
       }
 
@@ -339,20 +374,34 @@ export function RoomProvider({
     };
   }, [roomId, ydoc, awareness, identityStatus, currentUser]);
 
-  const runCode = async () => {
-    setIsExecuting(true);
-    setLatestOutput({ success: true, output: "Executing..." });
+  const runCode = async (runIndex: number | "all" = "all") => {
+    setIsExecutingIndex(runIndex);
+    setLatestOutput({ success: true, output: "Executing...", runIndex });
     
     try {
       const code = yText.toString();
       const res = await fetch("/api/run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ roomId, language, code })
+        body: JSON.stringify({ roomId, language, code, customTestCases: customCases, runIndex })
       });
       
       const data = await res.json();
-      setLatestOutput({ success: data.success, output: data.output, results: data.results });
+      setLatestOutput({ success: data.success, output: data.output, results: data.results, runIndex: data.runIndex });
+      
+      if (data.results) {
+        setTestResults(prev => {
+          const next = { ...prev };
+          if (data.runIndex === "all" || data.runIndex === undefined) {
+            data.results.forEach((r: any, idx: number) => {
+              next[idx] = r;
+            });
+          } else {
+            next[data.runIndex] = data.results[0];
+          }
+          return next;
+        });
+      }
       
       if (wsRef.current?.readyState === WebSocket.OPEN) {
         wsRef.current.send(JSON.stringify({
@@ -360,13 +409,14 @@ export function RoomProvider({
           roomId,
           success: data.success,
           output: data.output,
-          results: data.results
+          results: data.results,
+          runIndex: data.runIndex
         }));
       }
     } catch (err: any) {
       setLatestOutput({ success: false, output: `Network error: ${err.message}` });
     } finally {
-      setIsExecuting(false);
+      setIsExecutingIndex(null);
     }
   };
 
@@ -379,6 +429,18 @@ export function RoomProvider({
         language: lang
       }));
     }
+  };
+
+  const addCustomCase = (tc: CustomTestCase) => {
+    wsRef.current?.send(JSON.stringify({ type: "add-custom-case", roomId, case: tc }));
+  };
+
+  const updateCustomCase = (tc: CustomTestCase) => {
+    wsRef.current?.send(JSON.stringify({ type: "update-custom-case", roomId, case: tc }));
+  };
+
+  const deleteCustomCase = (id: string) => {
+    wsRef.current?.send(JSON.stringify({ type: "delete-custom-case", roomId, id }));
   };
 
   const approveUser = (userId: string) => {
@@ -422,7 +484,8 @@ export function RoomProvider({
   return (
     <RoomContext.Provider value={{ 
       ydoc, yText, awareness, users, currentUser, identityStatus, setIdentity, notifications, 
-      latestOutput, isExecuting, runCode, language, changeLanguage, problemMetadata,
+      latestOutput, testResults, isExecutingIndex, runCode, language, changeLanguage, problemMetadata,
+      customCases, addCustomCase, updateCustomCase, deleteCustomCase,
       hostId, driverId, editorLocked, joinStatus, pendingRequests, approveUser, rejectUser,
       kickUser, transferHost, assignDriver, setEditorLock, resetSession, endSession
     }}>

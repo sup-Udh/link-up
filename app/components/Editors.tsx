@@ -9,7 +9,7 @@ import LanguageSelector from "./LanguageSelector";
 import type { editor as monacoEditor } from "monaco-editor";
 
 export default function Editor() {
-  const { yText, awareness, runCode, isExecuting, language, currentUser, driverId, editorLocked, hostId } = useRoom();
+  const { yText, awareness, runCode, isExecutingIndex, language, currentUser, driverId, editorLocked, hostId } = useRoom();
   const [editor, setEditor] =
     useState<monacoEditor.IStandaloneCodeEditor | null>(null);
 
@@ -193,11 +193,11 @@ export default function Editor() {
           <LanguageSelector />
         </div>
         <button
-          onClick={runCode}
-          disabled={isExecuting}
+          onClick={() => runCode("all")}
+          disabled={isExecutingIndex !== null}
           className="px-4 py-1.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-medium rounded text-sm transition-colors"
         >
-          {isExecuting ? "Running..." : "Run Code"}
+          {isExecutingIndex !== null ? "Running..." : "Run Code"}
         </button>
       </div>
       {(isReadOnly || editorLocked) && (
