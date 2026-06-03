@@ -2,6 +2,8 @@
 import { useState, useEffect } from "react";
 import { ArrowRight, Users, Code2, Terminal, Shield, Play } from "lucide-react";
 import Link from "next/link";
+import { ThemeToggle } from "@/app/components/ThemeToggle";
+import { GithubIcon } from "@/app/components/GithubIcon";
 
 export default function Home() {
   const [step, setStep] = useState(0);
@@ -13,7 +15,7 @@ export default function Home() {
     return () => clearInterval(timer);
   }, []);
   return (
-    <main className="min-h-screen bg-white text-gray-800 font-sans overflow-x-hidden selection:bg-[#ffa116] selection:text-white">
+    <main className="min-h-screen bg-white dark:bg-[#0a0a0a] text-gray-800 dark:text-gray-200 font-sans overflow-x-hidden selection:bg-[#ffa116] selection:text-white transition-colors duration-300">
       {/* Dark Top Section with Slanted Bottom */}
       <div className="relative bg-[#282828] text-white pb-32 lg:pb-48" style={{ clipPath: "polygon(0 0, 100% 0, 100% 85%, 0% 100%)" }}>
         
@@ -33,6 +35,14 @@ export default function Home() {
             <Link href="/get-started" className="text-gray-300 hover:text-white transition-colors">Explore</Link>
             <span className="w-px h-4 bg-gray-600"></span>
             <a href="/login" className="text-gray-300 hover:text-white transition-colors">Sign in</a>
+            <ThemeToggle />
+            <a href="https://github.com/linkup-leetcode" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white transition-colors">
+                <GithubIcon />
+
+            </a>
+
+
+
           </div>
         </nav>
 
@@ -200,7 +210,7 @@ export default function Home() {
       </div>
 
       {/* Light Bottom Section */}
-      <div className="relative -mt-20 z-0 bg-white">
+      <div className="relative -mt-20 z-0 bg-white dark:bg-[#0a0a0a] transition-colors duration-300">
         
         {/* Meet the Developers Section */}
         <section className="mx-auto max-w-7xl px-6 pt-24 lg:pt-32 pb-12">
@@ -208,21 +218,21 @@ export default function Home() {
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-blue-50 text-blue-500 mb-6">
               <Users size={32} />
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Meet the Developers</h2>
-            <p className="text-gray-500 text-lg max-w-2xl mx-auto font-light">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4 transition-colors">Meet the Developers</h2>
+            <p className="text-gray-500 dark:text-gray-400 text-lg max-w-2xl mx-auto font-light transition-colors">
               The minds behind Linko. We built this platform because we believe collaborative coding should be accessible, fast, and completely seamless.
             </p>
           </div>
           
           <div className="grid md:grid-cols-2 gap-12 max-w-5xl mx-auto">
             {/* Developer 1: Udhay */}
-            <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 p-10 flex flex-col items-center text-center hover:shadow-2xl transition-shadow relative overflow-hidden group">
-              <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-blue-50 to-indigo-50 z-0"></div>
-              <div className="w-32 h-32 rounded-full bg-gray-100 mb-6 overflow-hidden border-4 border-white shadow-lg flex items-center justify-center relative z-10">
+            <div className="bg-white dark:bg-[#111] rounded-3xl shadow-xl shadow-gray-200/50 dark:shadow-black/50 border border-gray-100 dark:border-white/10 p-10 flex flex-col items-center text-center hover:shadow-2xl transition-all duration-300 relative overflow-hidden group">
+              <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 z-0 transition-colors"></div>
+              <div className="w-32 h-32 rounded-full bg-gray-100 dark:bg-black mb-6 overflow-hidden border-4 border-white dark:border-[#222] shadow-lg flex items-center justify-center relative z-10 transition-colors">
                 {/* PFP Placeholder */}
-                <span className="text-gray-400 font-semibold text-sm">PFP Here</span>
+                <span className="text-gray-400 dark:text-gray-600 font-semibold text-sm">PFP Here</span>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-1 relative z-10">Udhay</h3>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 relative z-10 transition-colors">Udhay</h3>
               <p className="text-blue-500 font-semibold text-sm tracking-wide uppercase mb-8 relative z-10">Co-Founder & Engineer</p>
               <div className="relative z-10 flex-1 flex items-center">
                 <span className="absolute -top-6 -left-2 text-6xl text-gray-100 font-serif">"</span>
@@ -233,13 +243,13 @@ export default function Home() {
             </div>
 
             {/* Developer 2: Ansh */}
-            <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 p-10 flex flex-col items-center text-center hover:shadow-2xl transition-shadow relative overflow-hidden group">
-              <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-orange-50 to-amber-50 z-0"></div>
-              <div className="w-32 h-32 rounded-full bg-gray-100 mb-6 overflow-hidden border-4 border-white shadow-lg flex items-center justify-center relative z-10">
+            <div className="bg-white dark:bg-[#111] rounded-3xl shadow-xl shadow-gray-200/50 dark:shadow-black/50 border border-gray-100 dark:border-white/10 p-10 flex flex-col items-center text-center hover:shadow-2xl transition-all duration-300 relative overflow-hidden group">
+              <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 z-0 transition-colors"></div>
+              <div className="w-32 h-32 rounded-full bg-gray-100 dark:bg-black mb-6 overflow-hidden border-4 border-white dark:border-[#222] shadow-lg flex items-center justify-center relative z-10 transition-colors">
                 {/* PFP Placeholder */}
-                <span className="text-gray-400 font-semibold text-sm">PFP Here</span>
+                <span className="text-gray-400 dark:text-gray-600 font-semibold text-sm">PFP Here</span>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-1 relative z-10">Ansh</h3>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 relative z-10 transition-colors">Ansh</h3>
               <p className="text-[#ffa116] font-semibold text-sm tracking-wide uppercase mb-8 relative z-10">Co-Founder & Engineer</p>
               <div className="relative z-10 flex-1 flex items-center">
                 <span className="absolute -top-6 -left-2 text-6xl text-gray-100 font-serif">"</span>
@@ -252,7 +262,7 @@ export default function Home() {
         </section>
         
         {/* Start Exploring Section */}
-        <section className="mx-auto max-w-7xl px-6 py-12 lg:py-24 border-t border-gray-100 mt-12">
+        <section className="mx-auto max-w-7xl px-6 py-12 lg:py-24 border-t border-gray-100 dark:border-white/10 mt-12 transition-colors">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             
             {/* Left: Text */}
@@ -263,7 +273,7 @@ export default function Home() {
               <h2 className="text-3xl md:text-4xl font-bold text-[#1cbaba] mb-6">
                 Start Exploring
               </h2>
-              <p className="text-gray-500 leading-relaxed mb-8 max-w-md ml-auto mr-auto lg:mr-0 text-lg font-light">
+              <p className="text-gray-500 dark:text-gray-400 leading-relaxed mb-8 max-w-md ml-auto mr-auto lg:mr-0 text-lg font-light transition-colors">
                 Explore a well-organized tool that helps you get the most out of your practice by providing a shared structure to guide your progress towards the next step in your programming career.
               </p>
               <Link href="/get-started" className="inline-flex items-center gap-1 text-[#1cbaba] font-semibold hover:text-[#19a6a6] transition-colors">
@@ -307,17 +317,17 @@ export default function Home() {
 
 
         {/* Footer */}
-        <footer className="border-t border-gray-200 bg-white py-12">
+        <footer className="border-t border-gray-200 dark:border-white/10 bg-white dark:bg-[#0a0a0a] py-12 transition-colors">
           <div className="mx-auto max-w-7xl px-6 flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-2">
               <Code2 size={24} className="text-[#ffa116]" />
-              <span className="font-bold text-gray-900 text-xl">Linko</span>
+              <span className="font-bold text-gray-900 dark:text-white text-xl transition-colors">Linko</span>
             </div>
             
-            <div className="flex gap-6 text-sm text-gray-500">
-              <a href="#" className="hover:text-gray-900">Help Center</a>
-              <a href="#" className="hover:text-gray-900">Terms</a>
-              <a href="#" className="hover:text-gray-900">Privacy Policy</a>
+            <div className="flex gap-6 text-sm text-gray-500 dark:text-gray-400 transition-colors">
+              <a href="#" className="hover:text-gray-900 dark:hover:text-white transition-colors">Help Center</a>
+              <a href="#" className="hover:text-gray-900 dark:hover:text-white transition-colors">Terms</a>
+              <a href="#" className="hover:text-gray-900 dark:hover:text-white transition-colors">Privacy Policy</a>
             </div>
 
             <div className="text-sm text-gray-400">
