@@ -30,10 +30,7 @@ export default function Home() {
           </div>
 
           <div className="hidden md:flex items-center gap-8 text-sm font-medium">
-            <a href="#features" className="text-[#ffa116] hover:text-[#ffb84d] transition-colors">Premium</a>
-            <a href="#explore" className="text-gray-300 hover:text-white transition-colors">Explore</a>
-            <a href="#product" className="text-gray-300 hover:text-white transition-colors">Product</a>
-            <a href="#developer" className="text-gray-300 hover:text-white transition-colors">Developer</a>
+            <Link href="/get-started" className="text-gray-300 hover:text-white transition-colors">Explore</Link>
             <span className="w-px h-4 bg-gray-600"></span>
             <a href="/login" className="text-gray-300 hover:text-white transition-colors">Sign in</a>
           </div>
@@ -205,8 +202,57 @@ export default function Home() {
       {/* Light Bottom Section */}
       <div className="relative -mt-20 z-0 bg-white">
         
+        {/* Meet the Developers Section */}
+        <section className="mx-auto max-w-7xl px-6 pt-24 lg:pt-32 pb-12">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-blue-50 text-blue-500 mb-6">
+              <Users size={32} />
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Meet the Developers</h2>
+            <p className="text-gray-500 text-lg max-w-2xl mx-auto font-light">
+              The minds behind Linko. We built this platform because we believe collaborative coding should be accessible, fast, and completely seamless.
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-12 max-w-5xl mx-auto">
+            {/* Developer 1: Udhay */}
+            <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 p-10 flex flex-col items-center text-center hover:shadow-2xl transition-shadow relative overflow-hidden group">
+              <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-blue-50 to-indigo-50 z-0"></div>
+              <div className="w-32 h-32 rounded-full bg-gray-100 mb-6 overflow-hidden border-4 border-white shadow-lg flex items-center justify-center relative z-10">
+                {/* PFP Placeholder */}
+                <span className="text-gray-400 font-semibold text-sm">PFP Here</span>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-1 relative z-10">Udhay</h3>
+              <p className="text-blue-500 font-semibold text-sm tracking-wide uppercase mb-8 relative z-10">Co-Founder & Engineer</p>
+              <div className="relative z-10 flex-1 flex items-center">
+                <span className="absolute -top-6 -left-2 text-6xl text-gray-100 font-serif">"</span>
+                <p className="text-gray-600 italic relative z-10 leading-relaxed">
+                  [Your thoughts and quotes go here. Write about your vision for the platform, the technical challenges you enjoyed solving, or your message to the community.]
+                </p>
+              </div>
+            </div>
+
+            {/* Developer 2: Ansh */}
+            <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 p-10 flex flex-col items-center text-center hover:shadow-2xl transition-shadow relative overflow-hidden group">
+              <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-orange-50 to-amber-50 z-0"></div>
+              <div className="w-32 h-32 rounded-full bg-gray-100 mb-6 overflow-hidden border-4 border-white shadow-lg flex items-center justify-center relative z-10">
+                {/* PFP Placeholder */}
+                <span className="text-gray-400 font-semibold text-sm">PFP Here</span>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-1 relative z-10">Ansh</h3>
+              <p className="text-[#ffa116] font-semibold text-sm tracking-wide uppercase mb-8 relative z-10">Co-Founder & Engineer</p>
+              <div className="relative z-10 flex-1 flex items-center">
+                <span className="absolute -top-6 -left-2 text-6xl text-gray-100 font-serif">"</span>
+                <p className="text-gray-600 italic relative z-10 leading-relaxed">
+                  [Your thoughts and quotes go here. Share what inspired you to build Linko, the impact you hope it has, or your favorite feature of the product.]
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+        
         {/* Start Exploring Section */}
-        <section className="mx-auto max-w-7xl px-6 py-24 lg:py-32">
+        <section className="mx-auto max-w-7xl px-6 py-12 lg:py-24 border-t border-gray-100 mt-12">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             
             {/* Left: Text */}
@@ -220,7 +266,7 @@ export default function Home() {
               <p className="text-gray-500 leading-relaxed mb-8 max-w-md ml-auto mr-auto lg:mr-0 text-lg font-light">
                 Explore a well-organized tool that helps you get the most out of your practice by providing a shared structure to guide your progress towards the next step in your programming career.
               </p>
-              <Link href="#features" className="inline-flex items-center gap-1 text-[#1cbaba] font-semibold hover:text-[#19a6a6] transition-colors">
+              <Link href="/get-started" className="inline-flex items-center gap-1 text-[#1cbaba] font-semibold hover:text-[#19a6a6] transition-colors">
                 Get Started <ArrowRight size={16} />
               </Link>
             </div>
