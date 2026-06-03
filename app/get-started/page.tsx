@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
 import { GithubIcon } from "@/app/components/GithubIcon";
+import { Footer } from "@/app/components/Footer";
 
 export default function GetStarted() {
   const [activeStep, setActiveStep] = useState(1);
@@ -26,9 +27,7 @@ export default function GetStarted() {
           <div className="hidden md:flex items-center gap-8 text-sm font-medium">
             <Link href="/landing" className="text-gray-300 hover:text-white transition-colors">Home</Link>
             <Link href="/landing#explore" className="text-white font-bold">Explore</Link>
-            <Link href="/room" className="bg-[#1cbaba] text-white px-4 py-2 rounded-md hover:bg-[#19a6a6] transition-colors shadow-lg shadow-[#1cbaba]/20">
-              Try it now
-            </Link>
+         
             <a href="https://github.com/udhay-singh/linkup-leetcode" target="_blank" rel="noreferrer" className="text-gray-300 hover:text-white transition-colors">
               <GithubIcon className="w-5 h-5" />
             </a>
@@ -170,17 +169,7 @@ export default function GetStarted() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-gray-200 dark:border-white/10 bg-white dark:bg-[#0a0a0a] py-12 transition-colors duration-300">
-        <div className="mx-auto max-w-7xl px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-2">
-            <Code2 size={24} className="text-[#ffa116]" />
-            <span className="font-bold text-gray-900 dark:text-white text-xl transition-colors">Linko</span>
-          </div>
-          <div className="text-sm text-gray-400">
-            Made by Udhay & Ansh · © 2026
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </main>
   );
 }
