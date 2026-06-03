@@ -5,6 +5,7 @@ export interface LeetCodeProblem {
   difficulty: string;
   metaData: string;
   sampleTestCase: string;
+  exampleTestcases?: string;
   codeSnippets: { langSlug: string; code: string }[];
 }
 
@@ -29,6 +30,7 @@ export async function getProblemData(slug: string): Promise<LeetCodeProblem | nu
         difficulty
         metaData
         sampleTestCase
+        exampleTestcases
         codeSnippets {
           langSlug
           code
@@ -72,7 +74,7 @@ export async function fetchLeetCodeMetadata(slug: string): Promise<ProblemMetada
     });
 
     const numParams = meta.params.length;
-    const rawTestCases = problem.sampleTestCase.split('\n').filter((l: string) => l.trim() !== "");
+    const rawTestCases = (problem.exampleTestcases || problem.sampleTestCase || "").split('\n').filter((l: string) => l.trim() !== "");
     const testCases: string[] = [];
     
     for (let i = 0; i < rawTestCases.length; i += numParams) {
@@ -87,6 +89,14 @@ export async function fetchLeetCodeMetadata(slug: string): Promise<ProblemMetada
       if (match[1].trim()) {
         expectedOutputs.push(match[1].trim());
       }
+    }
+
+    // Ensure expectedOutputs array perfectly matches the length of testCases to avoid array index out of bounds later on
+    while (expectedOutputs.length < testCases.length) {
+      expectedOutputs.push("N/A");
+    }
+    if (expectedOutputs.length > testCases.length) {
+      expectedOutputs.length = testCases.length; // trim extra
     }
 
     return {
