@@ -6,7 +6,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { slug, url } = body;
 
-    // Generate a random 8-character room ID
+    // we generating that  random 8-character room ID
     const roomId = crypto.randomUUID().slice(0, 8);
 
     // Save mapping to our local JSON db

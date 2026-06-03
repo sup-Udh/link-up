@@ -3,13 +3,43 @@ import { getLanguageConfig } from "@/app/lib/languages";
 
 export async function POST(request: Request) {
   try {
-    const { language, code } = await request.json();
+    const { language, code, input } = await request.json();
 
     if (!code || !code.trim()) {
       return NextResponse.json(
         { success: false, output: "Error: No code provided." },
         { status: 400 }
       );
+    }
+
+    let finalCode = code;
+
+    // Custom Input Injection (JavaScript MVP only)
+    if (language === "javascript" && input && input.trim()) {
+      try {
+        const parsedInput = JSON.parse(input);
+        
+        // Use Regex to find the first function declaration: e.g. function add(a, b)
+        const funcMatch = finalCode.match(/function\s+([a-zA-Z_$][0-9a-zA-Z_$]*)\s*\(([^)]*)\)/);
+        
+        if (funcMatch) {
+          const funcName = funcMatch[1];
+          // Extract parameter names from the regex capture group
+          const paramNames = funcMatch[2].split(",").map((p: string) => p.trim()).filter((p: string) => p);
+          
+          // Generate the parameter string for the wrapper, e.g. __input["a"], __input["b"]
+          const paramsList = paramNames.map((p: string) => `__input["${p}"]`).join(", ");
+          
+          finalCode += `\n\n// --- GENERATED EXECUTION WRAPPER ---\n`;
+          finalCode += `const __input = ${JSON.stringify(parsedInput)};\n`;
+          finalCode += `console.log(${funcName}(${paramsList}));\n`;
+        }
+      } catch (err: any) {
+        return NextResponse.json({
+          success: false,
+          output: `Error: Invalid Custom Input JSON\n${err.message}`
+        });
+      }
     }
 
     // Get the correct Judge0 language ID for the chosen language
@@ -22,7 +52,7 @@ export async function POST(request: Request) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          source_code: code,
+          source_code: finalCode,
           language_id: languageId,
         }),
       }

@@ -4,7 +4,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "GET_PROBLEM") {
     const parts = window.location.pathname.split("/").filter(Boolean);
     
-    // Validate we are on a LeetCode problem page (e.g., /problems/two-sum/)
+    // Validate we are on a LeetCode problem page
     if (parts.length >= 2 && parts[0] === "problems") {
       const slug = parts[1];
       sendResponse({
