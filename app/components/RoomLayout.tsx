@@ -99,7 +99,7 @@ function RoomContent({ problemPanel }: { problemPanel: React.ReactNode }) {
         ))}
       </div>
 
-      <Group direction="horizontal">
+      <Group orientation="horizontal">
         
         {/* Left Panel: Problem Panel */}
         <Panel defaultSize={25} minSize={15} collapsible={true} className="bg-[#282828] overflow-hidden flex flex-col">
@@ -110,7 +110,7 @@ function RoomContent({ problemPanel }: { problemPanel: React.ReactNode }) {
 
         {/* Middle Panel: Editor & Test Cases */}
         <Panel defaultSize={55} minSize={30}>
-          <Group direction="vertical">
+          <Group orientation="vertical">
             <Panel defaultSize={70} minSize={20} collapsible={true} className="flex flex-col bg-[#1e1e1e]">
               <Editor />
             </Panel>
