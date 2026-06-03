@@ -87,7 +87,6 @@ def parse_input(val, type_str):
 
   let executionCode = `
 __testCases = [${meta.testCases.map(t => JSON.stringify(t)).join(", ")}]
-__expected = [${meta.expectedOutputs.map(e => JSON.stringify(e)).join(", ")}]
 __results = []
 
 for __i, __tc in enumerate(__testCases):
@@ -109,13 +108,10 @@ for __i, __tc in enumerate(__testCases):
             
         user_prints = captured_output.getvalue()
         formatted = format_output(result, "${meta.returnType.type}")
-        expected_parsed = json.loads(__expected[__i])
-        is_passed = (formatted == expected_parsed)
         
         __results.append({
-            "passed": is_passed,
+            "passed": False,
             "received": json.dumps(formatted),
-            "expected": json.dumps(expected_parsed),
             "stdout": user_prints
         })
     except Exception as e:

@@ -6,6 +6,17 @@ import Members from "./Members";
 import BottomPanel from "./BottomPanel";
 import RoomControls from "./RoomControls";
 import { useState } from "react";
+import { Panel, Group, Separator } from "react-resizable-panels";
+
+function ResizeHandle({ direction = "horizontal" }: { direction?: "horizontal" | "vertical" }) {
+  return (
+    <Separator className={`relative flex items-center justify-center bg-gray-800 transition-colors hover:bg-green-500/50 active:bg-green-500
+      ${direction === "horizontal" ? "w-1 cursor-col-resize z-10" : "h-1 cursor-row-resize z-10"}
+    `}>
+      <div className={`bg-gray-600 rounded-full transition-all ${direction === "horizontal" ? "w-[2px] h-8" : "h-[2px] w-8"}`} />
+    </Separator>
+  );
+}
 
 const Editor = dynamic(() => import("./Editors"), { ssr: false });
 
@@ -78,7 +89,7 @@ function RoomContent({ problemPanel }: { problemPanel: React.ReactNode }) {
   }
 
   return (
-    <div className="relative grid h-screen bg-gray-500 grid-cols-12 overflow-hidden">
+    <div className="relative h-screen bg-[#1e1e1e] overflow-hidden">
       
       <div className="fixed top-4 right-4 z-[100] space-y-2">
         {notifications.map(n => (
@@ -88,25 +99,43 @@ function RoomContent({ problemPanel }: { problemPanel: React.ReactNode }) {
         ))}
       </div>
 
-      <div className="col-span-3 border-r bg-[#282828] overflow-hidden">
-        {problemPanel}
-      </div>
-      <div className="col-span-7 flex flex-col h-full bg-[#1e1e1e]">
-        <div className="flex-1 overflow-hidden">
-          <Editor />
-        </div>
-        <div className="h-64 shrink-0 border-t border-gray-700">
-          <BottomPanel />
-        </div>
-      </div>
-      <div className="col-span-2 border-l bg-[#2d2d2d] flex flex-col h-full overflow-hidden">
-        <div className="flex-1 overflow-hidden">
-          <Members />
-        </div>
-        <div className="shrink-0">
-          <RoomControls />
-        </div>
-      </div>
+      <Group direction="horizontal">
+        
+        {/* Left Panel: Problem Panel */}
+        <Panel defaultSize={25} minSize={15} collapsible={true} className="bg-[#282828] overflow-hidden flex flex-col">
+          {problemPanel}
+        </Panel>
+
+        <ResizeHandle direction="horizontal" />
+
+        {/* Middle Panel: Editor & Test Cases */}
+        <Panel defaultSize={55} minSize={30}>
+          <Group direction="vertical">
+            <Panel defaultSize={70} minSize={20} collapsible={true} className="flex flex-col bg-[#1e1e1e]">
+              <Editor />
+            </Panel>
+            
+            <ResizeHandle direction="vertical" />
+            
+            <Panel defaultSize={30} minSize={10} collapsible={true} collapsedSize={5} className="bg-[#1e1e1e] flex flex-col">
+              <BottomPanel />
+            </Panel>
+          </Group>
+        </Panel>
+
+        <ResizeHandle direction="horizontal" />
+
+        {/* Right Panel: Members & Controls */}
+        <Panel defaultSize={20} minSize={10} collapsible={true} className="bg-[#2d2d2d] flex flex-col overflow-hidden">
+          <div className="flex-1 overflow-hidden">
+            <Members />
+          </div>
+          <div className="shrink-0">
+            <RoomControls />
+          </div>
+        </Panel>
+
+      </Group>
     </div>
   );
 }
