@@ -89,9 +89,16 @@ export default function Dashboard() {
       <main className="max-w-7xl mx-auto px-6 py-8 space-y-12">
         
         {/* Welcome Section */}
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Welcome back{userProfile?.full_name ? `, ${userProfile.full_name.split(' ')[0]}` : ''}!</h1>
-          <p className="text-gray-500 dark:text-gray-400">Ready to crush some LeetCode problems today?</p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Welcome back{userProfile?.full_name ? `, ${userProfile.full_name.split(' ')[0]}` : ''}!</h1>
+            <p className="text-gray-500 dark:text-gray-400">Ready to crush some LeetCode problems today?</p>
+          </div>
+          
+          <Link href="/extension/connect" className="inline-flex items-center gap-2 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm hover:shadow-md hover:border-[#1cbaba] dark:hover:border-[#1cbaba] transition-all group shrink-0">
+            <Download size={16} className="text-[#1cbaba] group-hover:-translate-y-0.5 transition-transform" />
+            Connect Extension
+          </Link>
         </div>
 
         {/* Extension Setup Carousel */}

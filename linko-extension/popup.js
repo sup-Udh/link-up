@@ -1,93 +1,246 @@
-const nameInput = document.getElementById("displayName");
-const requireApprovalCheckbox = document.getElementById("requireApproval");
-const startBtn = document.getElementById("start");
+const BASE_URL = "http://localhost:3001";
+
+// DOM Elements
+const viewLoading = document.getElementById("view-loading");
+const viewUnauth = document.getElementById("view-unauth");
+const viewPairing = document.getElementById("view-pairing");
+const viewAuth = document.getElementById("view-auth");
 const statusEl = document.getElementById("status");
 
-// Load saved name on popup open
-chrome.storage.local.get(["displayName"], (result) => {
-  if (result.displayName) {
-    nameInput.value = result.displayName;
+// Unauth View
+const btnConnect = document.getElementById("btn-connect");
+const btnShowPairing = document.getElementById("btn-show-pairing");
+
+// Pairing View
+const inputPairing = document.getElementById("pairingCode");
+const btnVerify = document.getElementById("btn-verify");
+const btnCancelPairing = document.getElementById("btn-cancel-pairing");
+
+// Auth View
+const avatarEl = document.getElementById("user-avatar");
+const nameEl = document.getElementById("user-name");
+const emailEl = document.getElementById("user-email");
+const requireApprovalCheckbox = document.getElementById("requireApproval");
+const startBtn = document.getElementById("start");
+const btnDisconnect = document.getElementById("btn-disconnect");
+
+// Helper to switch views
+function showView(view) {
+  document.querySelectorAll(".view").forEach(el => el.classList.remove("active"));
+  view.classList.add("active");
+}
+
+function showStatus(msg, color = "#555") {
+  statusEl.textContent = msg;
+  statusEl.style.color = color;
+}
+
+// Check auth state on load
+async function checkAuth() {
+  showView(viewLoading);
+  showStatus("");
+  
+  chrome.storage.local.get(["extensionToken", "requireApproval"], async (result) => {
+    if (result.requireApproval !== undefined) {
+      requireApprovalCheckbox.checked = result.requireApproval;
+    }
+
+    if (!result.extensionToken) {
+      showView(viewUnauth);
+      return;
+    }
+
+    // Verify token with backend
+    try {
+      const response = await fetch(`${BASE_URL}/api/extension/me`, {
+        headers: { "Authorization": `Bearer ${result.extensionToken}` }
+      });
+
+      if (!response.ok) throw new Error("Invalid token");
+
+      const user = await response.json();
+      
+      // Update Auth UI
+      nameEl.textContent = user.name || "User";
+      emailEl.textContent = user.email || "";
+      if (user.avatar) {
+        avatarEl.style.backgroundImage = `url(${user.avatar})`;
+      }
+
+      showView(viewAuth);
+    } catch (err) {
+      console.error(err);
+      chrome.storage.local.remove(["extensionToken"]);
+      showView(viewUnauth);
+    }
+  });
+}
+
+// INIT
+checkAuth();
+
+// --- EVENT LISTENERS ---
+
+// Connect Account
+btnConnect.addEventListener("click", () => {
+  chrome.tabs.create({ url: `${BASE_URL}/extension/connect` });
+});
+
+// Show Pairing
+btnShowPairing.addEventListener("click", () => {
+  showView(viewPairing);
+});
+
+// Cancel Pairing
+btnCancelPairing.addEventListener("click", () => {
+  showView(viewUnauth);
+  inputPairing.value = "";
+  showStatus("");
+});
+
+// Format pairing code automatically
+inputPairing.addEventListener("input", (e) => {
+  let val = e.target.value.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+  if (val.length > 4) {
+    val = val.substring(0, 4) + "-" + val.substring(4, 8);
+  }
+  e.target.value = val;
+});
+
+// Verify Code
+btnVerify.addEventListener("click", async () => {
+  const code = inputPairing.value;
+  if (code.length !== 9) {
+    showStatus("Please enter a valid code", "red");
+    return;
+  }
+
+  showStatus("Verifying...", "#1cbaba");
+  btnVerify.disabled = true;
+
+  try {
+    const response = await fetch(`${BASE_URL}/api/extension/verify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) throw new Error(data.error || "Failed to verify");
+
+    // Save token
+    chrome.storage.local.set({ extensionToken: data.token });
+    
+    // Update Auth UI
+    nameEl.textContent = data.user.name || "User";
+    emailEl.textContent = data.user.email || "";
+    if (data.user.avatar) {
+      avatarEl.style.backgroundImage = `url(${data.user.avatar})`;
+    }
+
+    showStatus("Connected successfully!", "green");
+    setTimeout(() => {
+      showView(viewAuth);
+      showStatus("");
+    }, 1000);
+
+  } catch (err) {
+    showStatus(err.message, "red");
+  } finally {
+    btnVerify.disabled = false;
   }
 });
 
+// Save checkbox state
+requireApprovalCheckbox.addEventListener("change", (e) => {
+  chrome.storage.local.set({ requireApproval: e.target.checked });
+});
+
+// Disconnect
+btnDisconnect.addEventListener("click", async () => {
+  showStatus("Disconnecting...", "#1cbaba");
+  chrome.storage.local.get(["extensionToken"], async (result) => {
+    if (result.extensionToken) {
+      try {
+        await fetch(`${BASE_URL}/api/extension/revoke`, {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${result.extensionToken}` }
+        });
+      } catch (err) {
+        console.error("Failed to revoke token remotely");
+      }
+    }
+    chrome.storage.local.remove(["extensionToken"]);
+    showView(viewUnauth);
+    showStatus("");
+  });
+});
+
+// Start Session
 startBtn.addEventListener("click", async () => {
-  const name = nameInput.value.trim();
   const requireApproval = requireApprovalCheckbox.checked;
   
-  if (name.length < 2 || name.length > 24) {
-    statusEl.textContent = "Display name must be between 2 and 24 characters.";
-    statusEl.style.color = "red";
-    return;
-  }
-  
-  // Persist name across restarts
-  chrome.storage.local.set({ displayName: name });
-  
-  try {
-    statusEl.textContent = "Reading problem...";
-    statusEl.style.color = "#555";
-
-    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-    const tab = tabs[0];
-
-    if (!tab || !tab.url.includes("leetcode.com/problems/")) {
-      throw new Error("Please navigate to a LeetCode problem page.");
+  chrome.storage.local.get(["extensionToken"], async (result) => {
+    if (!result.extensionToken) {
+      showStatus("Please connect your account first.", "red");
+      return;
     }
 
-    chrome.tabs.sendMessage(tab.id, { type: "GET_PROBLEM" }, async (problem) => {
-      if (chrome.runtime.lastError) {
-        statusEl.textContent = "Error: Please refresh the LeetCode page and try again.";
-        statusEl.style.color = "red";
-        console.error(chrome.runtime.lastError);
-        return;
+    try {
+      showStatus("Reading problem...", "#555");
+
+      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+      const tab = tabs[0];
+
+      if (!tab || !tab.url.includes("leetcode.com/problems/")) {
+        throw new Error("Please navigate to a LeetCode problem page.");
       }
 
-      if (!problem || problem.error) {
-        statusEl.textContent = problem?.error || "Failed to read problem data.";
-        statusEl.style.color = "red";
-        return;
-      }
-
-      try {
-        statusEl.textContent = "Creating room...";
-        
-        const response = await fetch("http://localhost/api/rooms", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            slug: problem.slug,
-            url: problem.url,
-            displayName: name
-          })
-        });
-
-        if (!response.ok) {
-          throw new Error(`Server returned ${response.status}`);
+      chrome.tabs.sendMessage(tab.id, { type: "GET_PROBLEM" }, async (problem) => {
+        if (chrome.runtime.lastError) {
+          showStatus("Error: Please refresh the LeetCode page and try again.", "red");
+          return;
         }
 
-        const data = await response.json();
-        
-        if (!data.roomId) {
-          throw new Error("Invalid response from server (missing roomId).");
+        if (!problem || problem.error) {
+          showStatus(problem?.error || "Failed to read problem data.", "red");
+          return;
         }
 
-        statusEl.textContent = "Opening collaborative room...";
-        statusEl.style.color = "green";
+        try {
+          showStatus("Creating room...", "#1cbaba");
+          
+          const response = await fetch(`${BASE_URL}/api/rooms`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${result.extensionToken}`
+            },
+            body: JSON.stringify({
+              slug: problem.slug,
+              url: problem.url
+              // displayName is no longer needed from client, server infers from token!
+            })
+          });
 
-        // Append the name parameter so the web app receives it immediately
-        chrome.tabs.create({ url: `http://localhost/room/${data.roomId}?name=${encodeURIComponent(name)}&requireApproval=${requireApproval}` });
-        
-      } catch (err) {
-        statusEl.textContent = `Error: ${err.message}`;
-        statusEl.style.color = "red";
-        console.error("Room creation failed:", err);
-      }
-    });
-  } catch (err) {
-    statusEl.textContent = `Error: ${err.message}`;
-    statusEl.style.color = "red";
-    console.error("Popup error:", err);
-  }
+          if (!response.ok) {
+            throw new Error(`Server returned ${response.status}`);
+          }
+
+          const data = await response.json();
+          
+          showStatus("Opening collaborative room...", "green");
+
+          // Open the room in a new tab
+          chrome.tabs.create({ url: `${BASE_URL}/room/${data.roomId}?requireApproval=${requireApproval}` });
+          
+        } catch (err) {
+          showStatus(`Error: ${err.message}`, "red");
+        }
+      });
+    } catch (err) {
+      showStatus(`Error: ${err.message}`, "red");
+    }
+  });
 });

@@ -16,22 +16,50 @@
     <h2>Linko</h2>
   </div>
 
-  <div class="form-group">
-    <label for="displayName">Display Name</label>
-    <input type="text" id="displayName" placeholder="Enter your name..." />
+  <!-- VIEW: Loading -->
+  <div id="view-loading" class="view active">
+    <div class="loader"></div>
   </div>
 
-  <div class="form-group-inline">
-    <label for="requireApproval">Require Join Approval</label>
-    <label class="toggle-switch">
-      <input type="checkbox" id="requireApproval" />
-      <span class="slider"></span>
-    </label>
+  <!-- VIEW: Unauthenticated -->
+  <div id="view-unauth" class="view">
+    <p class="description">Connect your account to start collaborative sessions.</p>
+    <button id="btn-connect" class="btn-primary mb-3">Connect Account</button>
+    <button id="btn-show-pairing" class="btn-secondary">Enter Pairing Code</button>
   </div>
 
-  <button id="start" class="btn-primary">
-    Start Session
-  </button>
+  <!-- VIEW: Pairing -->
+  <div id="view-pairing" class="view">
+    <label for="pairingCode">Enter Pairing Code</label>
+    <input type="text" id="pairingCode" placeholder="ABCD-1234" maxlength="9" class="mb-3 text-center tracking-widest uppercase font-mono" />
+    <button id="btn-verify" class="btn-primary">Verify Code</button>
+    <button id="btn-cancel-pairing" class="btn-text mt-2">Cancel</button>
+  </div>
+
+  <!-- VIEW: Authenticated -->
+  <div id="view-auth" class="view">
+    <div class="user-profile mb-4">
+      <div id="user-avatar" class="avatar"></div>
+      <div class="user-info">
+        <div id="user-name" class="name">Name</div>
+        <div id="user-email" class="email">email@example.com</div>
+      </div>
+    </div>
+
+    <div class="form-group-inline">
+      <label for="requireApproval">Require Join Approval</label>
+      <label class="toggle-switch">
+        <input type="checkbox" id="requireApproval" />
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <button id="start" class="btn-primary">Start Session</button>
+    
+    <div class="footer-actions mt-4">
+      <button id="btn-disconnect" class="btn-text text-red">Disconnect Account</button>
+    </div>
+  </div>
 
   <div id="status"></div>
 

@@ -35,10 +35,11 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Protect dashboard, profile, and room routes
+  // Protect dashboard, profile, room, and extension connect routes
   const isProtectedRoute = request.nextUrl.pathname.startsWith('/dashboard') || 
                            request.nextUrl.pathname.startsWith('/profile') ||
-                           request.nextUrl.pathname.startsWith('/room')
+                           request.nextUrl.pathname.startsWith('/room') ||
+                           request.nextUrl.pathname.startsWith('/extension/connect')
 
   if (
     !user &&
