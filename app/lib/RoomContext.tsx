@@ -12,8 +12,8 @@ import * as Y from "yjs";
 import {
   Awareness,
   encodeAwarenessUpdate,
-  applyAwarenessUpdate,
 } from "y-protocols/awareness";
+import { ProblemMetadata } from "./leetcode";
 
 export interface TestCaseResult {
   passed: boolean;
@@ -31,13 +31,14 @@ export interface ExecutionResult {
 interface RoomContextType {
   ydoc: Y.Doc;
   yText: Y.Text;
-  awareness: any;
+  awareness: Awareness;
   onlineCount: number;
   latestOutput: ExecutionResult | null;
   isExecuting: boolean;
   runCode: () => Promise<void>;
   language: string;
   changeLanguage: (lang: string) => void;
+  problemMetadata: ProblemMetadata | null;
 }
 
 const RoomContext = createContext<RoomContextType | null>(null);
@@ -81,6 +82,7 @@ export function RoomProvider({
   const [latestOutput, setLatestOutput] = useState<ExecutionResult | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
   const [language, setLanguage] = useState("javascript");
+  const [problemMetadata, setProblemMetadata] = useState<ProblemMetadata | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
 
   // Stable refs so ydoc and awareness survive re-renders
@@ -252,7 +254,7 @@ export function RoomProvider({
   };
 
   return (
-    <RoomContext.Provider value={{ ydoc, yText, awareness, onlineCount, latestOutput, isExecuting, runCode, language, changeLanguage }}>
+    <RoomContext.Provider value={{ ydoc, yText, awareness, onlineCount, latestOutput, isExecuting, runCode, language, changeLanguage, problemMetadata }}>
       {children}
     </RoomContext.Provider>
   );

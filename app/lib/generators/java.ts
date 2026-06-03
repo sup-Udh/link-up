@@ -4,11 +4,11 @@ function transpileJava(valStr: string, type: string): string {
   try {
     const val = JSON.parse(valStr);
     if (type === "integer") return val.toString();
-    if (type === "string") return \`"\${val}"\`;
-    if (type === "integer[]") return \`new int[]{\${val.join(", ")}}\`;
-    if (type === "string[]") return \`new String[]{\${val.map((v: string) => \`"\${v}"\`).join(", ")}}\`;
-    if (type === "ListNode") return \`arrayToList(new int[]{\${val.join(", ")}})\`;
-    if (type === "TreeNode") return \`arrayToTree(new Integer[]{\${val.map((v: any) => v).join(", ")}})\`;
+    if (type === "string") return `"${val}"`;
+    if (type === "integer[]") return `new int[]{${val.join(", ")}}`;
+    if (type === "string[]") return `new String[]{${val.map((v: string) => `"${v}"`).join(", ")}}`;
+    if (type === "ListNode") return `arrayToList(new int[]{${val.join(", ")}})`;
+    if (type === "TreeNode") return `arrayToTree(new Integer[]{${val.map((v: any) => v).join(", ")}})`;
     return valStr;
   } catch (e) {
     return valStr;
@@ -16,7 +16,7 @@ function transpileJava(valStr: string, type: string): string {
 }
 
 export function generateJava(code: string, meta: ProblemMetadata): string {
-  const helpers = \`
+  const helpers = `
 import java.util.*;
 
 class ListNode {
@@ -93,45 +93,44 @@ public class Main {
     }
     public static String formatOutput(ListNode val) { return listToArrayString(val); }
 
-\`;
+`;
 
-  let mainBody = \`
+  let mainBody = `
     public static void main(String[] args) {
         Solution sol = new Solution();
         System.out.print("[");
-\`;
+`;
 
   for (let i = 0; i < meta.testCases.length; i++) {
-    const rawArgs = meta.testCases[i].split('\\n').filter(l => l.trim() !== "");
+    const rawArgs = meta.testCases[i].split('\n').filter(l => l.trim() !== "");
     const args = meta.parameters.map((p, idx) => transpileJava(rawArgs[idx], p.type)).join(", ");
     
-    mainBody += \`
+    mainBody += `
         try {
-            var res = sol.\${meta.functionName}(\${args});
+            var res = sol.${meta.functionName}(${args});
             System.out.print("{\\"passed\\": false, \\"received\\": \\"");
             
-            // Hacky manual overload resolution for formatOutput based on result type
             System.out.print(formatOutput(res));
             
             System.out.print("\\"}");
         } catch (Exception e) {
             System.out.print("{\\"passed\\": false, \\"error\\": \\"" + e.getMessage() + "\\"}");
         }
-        \${i < meta.testCases.length - 1 ? \`System.out.print(",");\` : \`\`}
-\`;
+        ${i < meta.testCases.length - 1 ? `System.out.print(",");` : ``}
+`;
   }
   
-  mainBody += \`
+  mainBody += `
         System.out.println("]");
     }
 }
-\`;
+`;
 
-  return \`
-\${code}
+  return `
+${code}
 
 // --- GENERATED EXECUTION WRAPPER ---
-\${helpers}
-\${mainBody}
-\`;
+${helpers}
+${mainBody}
+`;
 }

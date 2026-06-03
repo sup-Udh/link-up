@@ -20,14 +20,14 @@ export function generateExecutionWrapper(language: string, code: string, meta: P
         return generateCpp(code, meta);
       default:
         // Basic fallback for unsupported advanced languages
-        return \`
+        return `
 /* 
-  Language \${language} is in MVP stage. 
+  Language ${language} is in MVP stage. 
   Full native wrapper execution is coming soon! 
   Please test manually or use JS/Python/C++/Java for full Problem-Aware execution.
 */
-\${code}
-\`;
+${code}
+`;
     }
   } catch (err) {
     console.error("Generator Error:", err);

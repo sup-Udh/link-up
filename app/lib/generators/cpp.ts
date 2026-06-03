@@ -4,11 +4,11 @@ function transpileCpp(valStr: string, type: string): string {
   try {
     const val = JSON.parse(valStr);
     if (type === "integer") return val.toString();
-    if (type === "string") return \`"\${val}"\`;
-    if (type === "integer[]") return \`std::vector<int>{\${val.join(", ")}}\`;
-    if (type === "string[]") return \`std::vector<std::string>{\${val.map((v: string) => \`"\${v}"\`).join(", ")}}\`;
-    if (type === "ListNode") return \`arrayToList(std::vector<int>{\${val.join(", ")}})\`;
-    if (type === "TreeNode") return \`arrayToTree(std::vector<int>{\${val.map((v: any) => v===null? -999999 : v).join(", ")}})\`;
+    if (type === "string") return `"${val}"`;
+    if (type === "integer[]") return `std::vector<int>{${val.join(", ")}}`;
+    if (type === "string[]") return `std::vector<std::string>{${val.map((v: string) => `"${v}"`).join(", ")}}`;
+    if (type === "ListNode") return `arrayToList(std::vector<int>{${val.join(", ")}})`;
+    if (type === "TreeNode") return `arrayToTree(std::vector<int>{${val.map((v: any) => v===null? -999999 : v).join(", ")}})`;
     return valStr;
   } catch (e) {
     return valStr;
@@ -16,7 +16,7 @@ function transpileCpp(valStr: string, type: string): string {
 }
 
 export function generateCpp(code: string, meta: ProblemMetadata): string {
-  const includes = \`
+  const includes = `
 #include <iostream>
 #include <vector>
 #include <string>
@@ -98,45 +98,44 @@ string formatOutput(vector<int> val) {
 }
 string formatOutput(ListNode* val) { return listToArrayString(val); }
 string formatOutput(TreeNode* val) { return treeToArrayString(val); }
-\`;
+`;
 
-  let mainBody = \`
+  let mainBody = `
 int main() {
     Solution sol;
     cout << "[";
-\`;
+`;
 
   for (let i = 0; i < meta.testCases.length; i++) {
-    const rawArgs = meta.testCases[i].split('\\n').filter(l => l.trim() !== "");
+    const rawArgs = meta.testCases[i].split('\n').filter(l => l.trim() !== "");
     const args = meta.parameters.map((p, idx) => transpileCpp(rawArgs[idx], p.type)).join(", ");
     
-    mainBody += \`
+    mainBody += `
     try {
-        auto res = sol.\${meta.functionName}(\${args});
+        auto res = sol.${meta.functionName}(${args});
         cout << "{\\"passed\\": false, \\"received\\": \\"";
         
-        // C++ doesn't easily JSON escape string returns, MVP assumes safe returns
         cout << formatOutput(res);
         
         cout << "\\"}";
     } catch (...) {
         cout << "{\\"passed\\": false, \\"error\\": \\"Runtime Error\\"}";
     }
-    \${i < meta.testCases.length - 1 ? \`cout << ",";\` : \`\`}
-\`;
+    ${i < meta.testCases.length - 1 ? `cout << ",";` : ``}
+`;
   }
   
-  mainBody += \`
+  mainBody += `
     cout << "]" << endl;
     return 0;
 }
-\`;
+`;
 
-  return \`
-\${includes}
+  return `
+${includes}
 
-\${code}
+${code}
 
-\${mainBody}
-\`;
+${mainBody}
+`;
 }

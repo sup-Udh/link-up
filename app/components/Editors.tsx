@@ -39,7 +39,7 @@ export default function Editor() {
     const renderCursors = () => {
       const decs: monacoEditor.IModelDeltaDecoration[] = [];
 
-      awareness.getStates().forEach((state, clientId) => {
+      awareness.getStates().forEach((state: any, clientId: number) => {
         // Skip our own cursor
         if (clientId === awareness.clientID) return;
         if (!state.cursor || !state.user) return;

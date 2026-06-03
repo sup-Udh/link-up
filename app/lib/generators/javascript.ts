@@ -89,22 +89,22 @@ function parseInput(val, type) {
 `;
 
   const parseParam = (valStr: string, type: string) => {
-    return \`parseInput(\${valStr}, "\${type}")\`;
+    return `parseInput(${valStr}, "${type}")`;
   };
 
-  let executionCode = \`
-const __testCases = [\${meta.testCases.map(t => \`\`\`\${t}\`\`\`).join(", ")}];
+  let executionCode = `
+const __testCases = [${meta.testCases.map(t => `\`${t}\``).join(", ")}];
 const __results = [];
 
 for (let i = 0; i < __testCases.length; i++) {
     const rawArgs = __testCases[i].split('\\n').filter(l => l.trim() !== "");
     try {
         const args = [
-            \${meta.parameters.map((p, idx) => parseParam(\`JSON.parse(rawArgs[\${idx}])\`, p.type)).join(",\\n            ")}
+            ${meta.parameters.map((p, idx) => parseParam(`JSON.parse(rawArgs[${idx}])`, p.type)).join(",\n            ")}
         ];
         
-        let result = \${meta.functionName}(...args);
-        let formatted = formatOutput(result, "\${meta.returnType.type}");
+        let result = ${meta.functionName}(...args);
+        let formatted = formatOutput(result, "${meta.returnType.type}");
         
         __results.push({
             passed: false, // We'll compare on backend
@@ -118,13 +118,13 @@ for (let i = 0; i < __testCases.length; i++) {
     }
 }
 console.log(JSON.stringify(__results));
-\`;
+`;
 
-  return \`
-\${code}
+  return `
+${code}
 
 // --- GENERATED EXECUTION WRAPPER ---
-\${helperCode}
-\${executionCode}
-\`;
+${helperCode}
+${executionCode}
+`;
 }
