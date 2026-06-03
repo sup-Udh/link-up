@@ -1,4 +1,5 @@
 const nameInput = document.getElementById("displayName");
+const requireApprovalCheckbox = document.getElementById("requireApproval");
 const startBtn = document.getElementById("start");
 const statusEl = document.getElementById("status");
 
@@ -11,6 +12,7 @@ chrome.storage.local.get(["displayName"], (result) => {
 
 startBtn.addEventListener("click", async () => {
   const name = nameInput.value.trim();
+  const requireApproval = requireApprovalCheckbox.checked;
   
   if (name.length < 2 || name.length > 24) {
     statusEl.textContent = "Display name must be between 2 and 24 characters.";
@@ -75,7 +77,7 @@ startBtn.addEventListener("click", async () => {
         statusEl.style.color = "green";
 
         // Append the name parameter so the web app receives it immediately
-        chrome.tabs.create({ url: `https://handiness-glucose-munchkin.ngrok-free.dev/room/${data.roomId}?name=${encodeURIComponent(name)}` });
+        chrome.tabs.create({ url: `https://handiness-glucose-munchkin.ngrok-free.dev/room/${data.roomId}?name=${encodeURIComponent(name)}&requireApproval=${requireApproval}` });
         
       } catch (err) {
         statusEl.textContent = `Error: ${err.message}`;

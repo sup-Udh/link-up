@@ -4,7 +4,7 @@ import { useRoom } from "@/app/lib/RoomContext";
 import { useEffect, useState } from "react";
 
 export default function Members() {
-  const { users, awareness, currentUser, hostId, driverId, kickUser, transferHost, assignDriver } = useRoom();
+  const { users, awareness, currentUser, hostId, driverId, kickUser, transferHost, assignDriver, pendingRequests, approveUser, rejectUser } = useRoom();
   const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -69,6 +69,26 @@ export default function Members() {
           </div>
         ))}
       </div>
+
+      {isHost && pendingRequests.length > 0 && (
+        <div className="p-4 border-t border-gray-700 bg-[#252525] shrink-0">
+          <h2 className="font-semibold text-xs text-yellow-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
+            Pending Requests ({pendingRequests.length})
+          </h2>
+          <div className="space-y-3 overflow-y-auto max-h-48">
+            {pendingRequests.map(req => (
+              <div key={req.id} className="flex flex-col bg-[#1e1e1e] p-2 rounded border border-gray-700 shadow-sm">
+                <span className="text-sm font-medium mb-2 text-gray-200">🙋 {req.name}</span>
+                <div className="flex gap-2">
+                  <button onClick={() => approveUser(req.id)} className="flex-1 text-xs bg-green-600/20 text-green-400 py-1.5 rounded font-medium hover:bg-green-600 hover:text-white transition">Accept</button>
+                  <button onClick={() => rejectUser(req.id)} className="flex-1 text-xs bg-red-600/20 text-red-400 py-1.5 rounded font-medium hover:bg-red-600 hover:text-white transition">Reject</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

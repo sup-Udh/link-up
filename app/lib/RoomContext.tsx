@@ -60,6 +60,10 @@ interface RoomContextType {
   hostId: string | null;
   driverId: string | null;
   editorLocked: boolean;
+  joinStatus: "connecting" | "waiting-approval" | "joined" | "rejected";
+  pendingRequests: { id: string, name: string }[];
+  approveUser: (id: string) => void;
+  rejectUser: (id: string) => void;
   kickUser: (id: string) => void;
   transferHost: (id: string) => void;
   assignDriver: (id: string | null) => void;
@@ -115,6 +119,8 @@ export function RoomProvider({
   const [hostId, setHostId] = useState<string | null>(null);
   const [driverId, setDriverId] = useState<string | null>(null);
   const [editorLocked, setEditorLocked] = useState(false);
+  const [joinStatus, setJoinStatus] = useState<"connecting" | "waiting-approval" | "joined" | "rejected">("connecting");
+  const [pendingRequests, setPendingRequests] = useState<{ id: string, name: string }[]>([]);
   
   const wsRef = useRef<WebSocket | null>(null);
 
@@ -156,8 +162,11 @@ export function RoomProvider({
     // Identity resolution
     const urlParams = new URLSearchParams(window.location.search);
     let nameParam = urlParams.get("name");
-    if (nameParam) {
-      localStorage.setItem("linko_name", nameParam);
+    let reqAppParam = urlParams.get("requireApproval");
+    
+    if (nameParam || reqAppParam) {
+      if (nameParam) localStorage.setItem("linko_name", nameParam);
+      if (reqAppParam) sessionStorage.setItem("linko_req_app", reqAppParam);
       window.history.replaceState({}, document.title, window.location.pathname);
     }
     
@@ -208,7 +217,8 @@ export function RoomProvider({
     };
 
     ws.onopen = () => {
-      ws.send(JSON.stringify({ type: "join-room", roomId, user: currentUser }));
+      const requireApproval = sessionStorage.getItem("linko_req_app") === "true";
+      ws.send(JSON.stringify({ type: "join-room", roomId, user: currentUser, requireApproval }));
 
       awareness.setLocalStateField("user", {
         id: currentUser.id,
@@ -216,6 +226,7 @@ export function RoomProvider({
         color: color,
         colorLight: color + "33",
       });
+      // We start in connecting state. If we are added immediately, presence or room-state sets us to joined.
     };
 
     ws.onmessage = (event) => {
@@ -224,6 +235,7 @@ export function RoomProvider({
       if (data.type === "presence") {
         setUsers(data.users || []);
         broadcastAwareness();
+        setJoinStatus((prev) => prev === "connecting" ? "joined" : prev);
       }
 
       if (data.type === "notification") {
@@ -255,6 +267,22 @@ export function RoomProvider({
         setHostId(data.state.hostId);
         setDriverId(data.state.driverId);
         setEditorLocked(data.state.editorLocked);
+        if (data.state.pendingRequests) {
+          setPendingRequests(data.state.pendingRequests);
+        }
+      }
+
+      if (data.type === "waiting-approval") {
+        setJoinStatus("waiting-approval");
+      }
+
+      if (data.type === "join-approved") {
+        setJoinStatus("joined");
+        addNotification("Approved by host.");
+      }
+
+      if (data.type === "join-rejected") {
+        setJoinStatus("rejected");
       }
 
       if (data.type === "user-kicked") {
@@ -353,6 +381,14 @@ export function RoomProvider({
     }
   };
 
+  const approveUser = (userId: string) => {
+    wsRef.current?.send(JSON.stringify({ type: "approve-request", roomId, userId }));
+  };
+
+  const rejectUser = (userId: string) => {
+    wsRef.current?.send(JSON.stringify({ type: "reject-request", roomId, userId }));
+  };
+
   const kickUser = (userId: string) => {
     wsRef.current?.send(JSON.stringify({ type: "kick-user", roomId, userId }));
   };
@@ -387,7 +423,8 @@ export function RoomProvider({
     <RoomContext.Provider value={{ 
       ydoc, yText, awareness, users, currentUser, identityStatus, setIdentity, notifications, 
       latestOutput, isExecuting, runCode, language, changeLanguage, problemMetadata,
-      hostId, driverId, editorLocked, kickUser, transferHost, assignDriver, setEditorLock, resetSession, endSession
+      hostId, driverId, editorLocked, joinStatus, pendingRequests, approveUser, rejectUser,
+      kickUser, transferHost, assignDriver, setEditorLock, resetSession, endSession
     }}>
       {children}
     </RoomContext.Provider>

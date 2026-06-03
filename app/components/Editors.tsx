@@ -200,14 +200,14 @@ export default function Editor() {
           {isExecuting ? "Running..." : "Run Code"}
         </button>
       </div>
+      {(isReadOnly || editorLocked) && (
+        <div className="w-full bg-yellow-600/90 text-white text-xs font-bold text-center py-1.5 shadow-md uppercase tracking-wider pointer-events-none shrink-0 border-b border-yellow-700">
+          {editorLocked 
+            ? (isHost ? "🔒 Editor Locked For Guests" : "🔒 Editor Locked By Host") 
+            : "🎮 Navigator Mode (Read-Only)"}
+        </div>
+      )}
       <div className="flex-1 relative">
-        {(isReadOnly || editorLocked) && (
-          <div className="absolute top-0 left-0 w-full z-10 bg-yellow-600/90 text-white text-xs font-bold text-center py-1.5 shadow-md uppercase tracking-wider backdrop-blur-sm pointer-events-none">
-            {editorLocked 
-              ? (isHost ? "🔒 Editor Locked For Guests" : "🔒 Editor Locked By Host") 
-              : "🎮 Navigator Mode (Read-Only)"}
-          </div>
-        )}
         <MonacoEditor
           height="100%"
           language={langConfig.monacoLanguage}

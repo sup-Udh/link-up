@@ -20,8 +20,11 @@ export interface RoomState {
   hostId: string;
   driverId: string | null;
   editorLocked: boolean;
+  requireApproval: boolean;
+  pendingRequests: { id: string, name: string }[];
 }
 const roomStates = new Map<string, RoomState>();
+const pendingSockets = new Map<string, any>();
 
 wss.on("connection", (ws) => {
   console.log("Client connected");
@@ -31,8 +34,75 @@ wss.on("connection", (ws) => {
   ws.on("message", (raw) => {
     const data = JSON.parse(raw.toString());
 
+    const finishJoin = (socket: any, rId: string) => {
+      rooms.get(rId)?.add(socket);
+      const currentUser = socketUsers.get(socket);
+
+      // Send current room state to the newly joined user
+      if (roomStates.has(rId)) {
+        socket.send(JSON.stringify({
+          type: "room-state",
+          state: roomStates.get(rId)
+        }));
+      }
+
+      // Send join notification to others
+      rooms.get(rId)?.forEach((client) => {
+        if (client !== socket && currentUser) {
+          client.send(JSON.stringify({
+            type: "notification",
+            message: `${currentUser.name} joined the room`
+          }));
+        }
+      });
+
+      // Send presence (users array)
+      const usersList = Array.from(rooms.get(rId) || []).map(client => socketUsers.get(client)).filter(Boolean);
+      const payload = JSON.stringify({
+        type: "presence",
+        users: usersList,
+      });
+
+      rooms.get(rId)?.forEach((client) => {
+        client.send(payload);
+      });
+
+      // Init and send room state
+      if (!roomDocs.has(rId)) {
+        roomDocs.set(rId, new Y.Doc());
+      }
+      
+      const doc = roomDocs.get(rId)!;
+      const stateVector = Y.encodeStateAsUpdate(doc);
+      
+      socket.send(JSON.stringify({
+        type: "yjs-update",
+        roomId: rId,
+        update: Array.from(stateVector),
+      }));
+
+      // Send latest output if exists
+      if (roomOutputs.has(rId)) {
+        const latest = roomOutputs.get(rId);
+        socket.send(JSON.stringify({
+          type: "execution-result",
+          roomId: rId,
+          success: latest.success,
+          output: latest.output
+        }));
+      }
+
+      // Send current language if it was changed from default
+      if (roomLanguages.has(rId)) {
+        socket.send(JSON.stringify({
+          type: "language-change",
+          language: roomLanguages.get(rId)
+        }));
+      }
+    };
+
     if (data.type === "join-room") {
-      const { roomId, user } = data;
+      const { roomId, user, requireApproval } = data;
       currentRoom = roomId;
 
       if (user && user.id && user.name) {
@@ -43,84 +113,38 @@ wss.on("connection", (ws) => {
         socketUsers.set(ws, { id: anonId, name: "Anonymous", joinedAt: Date.now() });
       }
 
+      const currentUserData = socketUsers.get(ws)!;
+
       if (!rooms.has(roomId)) {
         rooms.set(roomId, new Set());
         // First user to join becomes the host
-        const currentUserData = socketUsers.get(ws);
-        if (currentUserData) {
-          roomStates.set(roomId, {
-            hostId: currentUserData.id,
-            driverId: null,
-            editorLocked: false
-          });
+        roomStates.set(roomId, {
+          hostId: currentUserData.id,
+          driverId: null,
+          editorLocked: false,
+          requireApproval: requireApproval === true,
+          pendingRequests: []
+        });
+      }
+
+      const state = roomStates.get(roomId);
+
+      if (state && state.requireApproval && state.hostId !== currentUserData.id) {
+        pendingSockets.set(currentUserData.id, ws);
+        
+        if (!state.pendingRequests.find(u => u.id === currentUserData.id)) {
+          state.pendingRequests.push({ id: currentUserData.id, name: currentUserData.name });
         }
+        
+        ws.send(JSON.stringify({ type: "waiting-approval" }));
+        
+        // Notify host
+        const payload = JSON.stringify({ type: "room-state", state });
+        rooms.get(roomId)?.forEach(client => client.send(payload));
+        return; // User is stuck in waiting room
       }
 
-      rooms.get(roomId)?.add(ws);
-
-      const currentUser = socketUsers.get(ws);
-
-      // Send current room state to the newly joined user
-      if (roomStates.has(roomId)) {
-        ws.send(JSON.stringify({
-          type: "room-state",
-          state: roomStates.get(roomId)
-        }));
-      }
-
-      // Send join notification to others
-      rooms.get(roomId)?.forEach((client) => {
-        if (client !== ws && currentUser) {
-          client.send(JSON.stringify({
-            type: "notification",
-            message: `${currentUser.name} joined the room`
-          }));
-        }
-      });
-
-      // Send presence (users array)
-      const usersList = Array.from(rooms.get(roomId) || []).map(client => socketUsers.get(client)).filter(Boolean);
-      const payload = JSON.stringify({
-        type: "presence",
-        users: usersList,
-      });
-
-      rooms.get(roomId)?.forEach((client) => {
-        client.send(payload);
-      });
-
-      // Init and send room state
-      if (!roomDocs.has(roomId)) {
-        roomDocs.set(roomId, new Y.Doc());
-      }
-      
-      const doc = roomDocs.get(roomId)!;
-      const stateVector = Y.encodeStateAsUpdate(doc);
-      
-      ws.send(JSON.stringify({
-        type: "yjs-update",
-        roomId: roomId,
-        update: Array.from(stateVector),
-      }));
-
-      // Send latest output if exists
-      if (roomOutputs.has(roomId)) {
-        const latest = roomOutputs.get(roomId);
-        ws.send(JSON.stringify({
-          type: "execution-result",
-          roomId: roomId,
-          success: latest.success,
-          output: latest.output
-        }));
-      }
-
-      // Send current language if it was changed from default
-      if (roomLanguages.has(roomId)) {
-        ws.send(JSON.stringify({
-          type: "language-change",
-          language: roomLanguages.get(roomId)
-        }));
-      }
+      finishJoin(ws, roomId);
     }
 
     if (data.type === "language-change") {
@@ -230,6 +254,40 @@ wss.on("connection", (ws) => {
       });
     }
 
+    if (data.type === "approve-request") {
+      if (!isHost(data.roomId, ws)) return;
+      
+      const state = roomStates.get(data.roomId);
+      if (state) {
+        state.pendingRequests = state.pendingRequests.filter(u => u.id !== data.userId);
+        broadcastRoomState(data.roomId);
+        
+        const targetSocket = pendingSockets.get(data.userId);
+        if (targetSocket) {
+          targetSocket.send(JSON.stringify({ type: "join-approved" }));
+          finishJoin(targetSocket, data.roomId);
+          pendingSockets.delete(data.userId);
+        }
+      }
+    }
+
+    if (data.type === "reject-request") {
+      if (!isHost(data.roomId, ws)) return;
+      
+      const state = roomStates.get(data.roomId);
+      if (state) {
+        state.pendingRequests = state.pendingRequests.filter(u => u.id !== data.userId);
+        broadcastRoomState(data.roomId);
+        
+        const targetSocket = pendingSockets.get(data.userId);
+        if (targetSocket) {
+          targetSocket.send(JSON.stringify({ type: "join-rejected" }));
+          targetSocket.close();
+          pendingSockets.delete(data.userId);
+        }
+      }
+    }
+
     if (data.type === "transfer-host") {
       if (!isHost(data.roomId, ws)) return;
       const state = roomStates.get(data.roomId);
@@ -291,6 +349,21 @@ wss.on("connection", (ws) => {
       const room = rooms.get(currentRoom);
       const departingUser = socketUsers.get(ws);
       
+      // Handle pending sockets cleanup
+      const currentUser = socketUsers.get(ws);
+      if (currentUser) {
+        if (pendingSockets.get(currentUser.id) === ws) {
+          pendingSockets.delete(currentUser.id);
+          // also remove from pendingRequests of any room (can just search currentRoom)
+          if (currentRoom && roomStates.has(currentRoom)) {
+            const state = roomStates.get(currentRoom)!;
+            state.pendingRequests = state.pendingRequests.filter(u => u.id !== currentUser.id);
+            const payload = JSON.stringify({ type: "room-state", state });
+            rooms.get(currentRoom)?.forEach(client => client.send(payload));
+          }
+        }
+      }
+
       room?.delete(ws);
       socketUsers.delete(ws);
       
