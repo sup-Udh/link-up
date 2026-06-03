@@ -16,6 +16,13 @@ const roomOutputs = new Map<string, any>();
 const roomLanguages = new Map<string, string>();
 const socketUsers = new Map<any, { id: string, name: string, joinedAt: number }>();
 
+export interface RoomState {
+  hostId: string;
+  driverId: string | null;
+  editorLocked: boolean;
+}
+const roomStates = new Map<string, RoomState>();
+
 wss.on("connection", (ws) => {
   console.log("Client connected");
 
@@ -38,11 +45,28 @@ wss.on("connection", (ws) => {
 
       if (!rooms.has(roomId)) {
         rooms.set(roomId, new Set());
+        // First user to join becomes the host
+        const currentUserData = socketUsers.get(ws);
+        if (currentUserData) {
+          roomStates.set(roomId, {
+            hostId: currentUserData.id,
+            driverId: null,
+            editorLocked: false
+          });
+        }
       }
 
       rooms.get(roomId)?.add(ws);
 
       const currentUser = socketUsers.get(ws);
+
+      // Send current room state to the newly joined user
+      if (roomStates.has(roomId)) {
+        ws.send(JSON.stringify({
+          type: "room-state",
+          state: roomStates.get(roomId)
+        }));
+      }
 
       // Send join notification to others
       rooms.get(roomId)?.forEach((client) => {
@@ -176,6 +200,89 @@ wss.on("connection", (ws) => {
           }
         });
     }
+
+    // --- HOST MODERATION CONTROLS ---
+    
+    // Helper to validate host permissions securely
+    const isHost = (roomId: string, socket: any) => {
+      const state = roomStates.get(roomId);
+      const user = socketUsers.get(socket);
+      return state && user && state.hostId === user.id;
+    };
+
+    const broadcastRoomState = (roomId: string) => {
+      const state = roomStates.get(roomId);
+      if (state) {
+        const payload = JSON.stringify({ type: "room-state", state });
+        rooms.get(roomId)?.forEach(client => client.send(payload));
+      }
+    };
+
+    if (data.type === "kick-user") {
+      if (!isHost(data.roomId, ws)) return;
+      
+      rooms.get(data.roomId)?.forEach((client) => {
+        const user = socketUsers.get(client);
+        if (user && user.id === data.userId) {
+          client.send(JSON.stringify({ type: "user-kicked" }));
+          client.close();
+        }
+      });
+    }
+
+    if (data.type === "transfer-host") {
+      if (!isHost(data.roomId, ws)) return;
+      const state = roomStates.get(data.roomId);
+      if (state) {
+        state.hostId = data.userId;
+        broadcastRoomState(data.roomId);
+      }
+    }
+
+    if (data.type === "assign-driver") {
+      if (!isHost(data.roomId, ws)) return;
+      const state = roomStates.get(data.roomId);
+      if (state) {
+        state.driverId = data.userId; // can be null to clear driver
+        broadcastRoomState(data.roomId);
+      }
+    }
+
+    if (data.type === "lock-editor") {
+      if (!isHost(data.roomId, ws)) return;
+      const state = roomStates.get(data.roomId);
+      if (state) {
+        state.editorLocked = data.locked;
+        broadcastRoomState(data.roomId);
+      }
+    }
+
+    if (data.type === "reset-session") {
+      if (!isHost(data.roomId, ws)) return;
+      
+      // Clear output history
+      roomOutputs.delete(data.roomId);
+      
+      rooms.get(data.roomId)?.forEach((client) => {
+        client.send(JSON.stringify({ type: "session-reset" }));
+      });
+    }
+
+    if (data.type === "end-session") {
+      if (!isHost(data.roomId, ws)) return;
+      
+      rooms.get(data.roomId)?.forEach((client) => {
+        client.send(JSON.stringify({ type: "room-ended" }));
+        client.close();
+      });
+      
+      // Cleanup all server states for this room
+      rooms.delete(data.roomId);
+      roomDocs.delete(data.roomId);
+      roomOutputs.delete(data.roomId);
+      roomLanguages.delete(data.roomId);
+      roomStates.delete(data.roomId);
+    }
   });
 
   ws.on("close", () => {
@@ -194,6 +301,7 @@ wss.on("connection", (ws) => {
         roomDocs.delete(currentRoom);
         roomOutputs.delete(currentRoom);
         roomLanguages.delete(currentRoom);
+        roomStates.delete(currentRoom);
       } else {
         const payload = JSON.stringify({
           type: "presence",

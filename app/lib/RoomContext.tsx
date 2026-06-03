@@ -55,6 +55,17 @@ interface RoomContextType {
   language: string;
   changeLanguage: (lang: string) => void;
   problemMetadata: ProblemMetadata | null;
+  
+  // Moderation
+  hostId: string | null;
+  driverId: string | null;
+  editorLocked: boolean;
+  kickUser: (id: string) => void;
+  transferHost: (id: string) => void;
+  assignDriver: (id: string | null) => void;
+  setEditorLock: (locked: boolean) => void;
+  resetSession: () => void;
+  endSession: () => void;
 }
 
 const RoomContext = createContext<RoomContextType | null>(null);
@@ -100,6 +111,11 @@ export function RoomProvider({
   const [isExecuting, setIsExecuting] = useState(false);
   const [language, setLanguage] = useState("javascript");
   const [problemMetadata, setProblemMetadata] = useState<ProblemMetadata | null>(null);
+  
+  const [hostId, setHostId] = useState<string | null>(null);
+  const [driverId, setDriverId] = useState<string | null>(null);
+  const [editorLocked, setEditorLocked] = useState(false);
+  
   const wsRef = useRef<WebSocket | null>(null);
 
   // Stable refs so ydoc and awareness survive re-renders
@@ -234,6 +250,30 @@ export function RoomProvider({
       if (data.type === "language-change") {
         setLanguage(data.language);
       }
+
+      if (data.type === "room-state") {
+        setHostId(data.state.hostId);
+        setDriverId(data.state.driverId);
+        setEditorLocked(data.state.editorLocked);
+      }
+
+      if (data.type === "user-kicked") {
+        alert("You have been removed from this room.");
+        window.location.href = "/";
+      }
+
+      if (data.type === "room-ended") {
+        alert("Session ended by host.");
+        window.location.href = "/";
+      }
+
+      if (data.type === "session-reset") {
+        setLatestOutput(null);
+        addNotification("Session reset by host.");
+        if (currentUser.id === hostId) {
+          yText.delete(0, yText.length);
+        }
+      }
     };
 
     const handleDocUpdate = (update: Uint8Array, origin: any) => {
@@ -313,8 +353,42 @@ export function RoomProvider({
     }
   };
 
+  const kickUser = (userId: string) => {
+    wsRef.current?.send(JSON.stringify({ type: "kick-user", roomId, userId }));
+  };
+
+  const transferHost = (userId: string) => {
+    if (window.confirm("Are you sure you want to transfer host permissions?")) {
+      wsRef.current?.send(JSON.stringify({ type: "transfer-host", roomId, userId }));
+    }
+  };
+
+  const assignDriver = (userId: string | null) => {
+    wsRef.current?.send(JSON.stringify({ type: "assign-driver", roomId, userId }));
+  };
+
+  const setEditorLock = (locked: boolean) => {
+    wsRef.current?.send(JSON.stringify({ type: "lock-editor", roomId, locked }));
+  };
+
+  const resetSession = () => {
+    if (window.confirm("Are you sure you want to reset the session? All code and outputs will be cleared.")) {
+      wsRef.current?.send(JSON.stringify({ type: "reset-session", roomId }));
+    }
+  };
+
+  const endSession = () => {
+    if (window.confirm("Are you sure you want to permanently end this session? Everyone will be disconnected.")) {
+      wsRef.current?.send(JSON.stringify({ type: "end-session", roomId }));
+    }
+  };
+
   return (
-    <RoomContext.Provider value={{ ydoc, yText, awareness, users, currentUser, identityStatus, setIdentity, notifications, latestOutput, isExecuting, runCode, language, changeLanguage, problemMetadata }}>
+    <RoomContext.Provider value={{ 
+      ydoc, yText, awareness, users, currentUser, identityStatus, setIdentity, notifications, 
+      latestOutput, isExecuting, runCode, language, changeLanguage, problemMetadata,
+      hostId, driverId, editorLocked, kickUser, transferHost, assignDriver, setEditorLock, resetSession, endSession
+    }}>
       {children}
     </RoomContext.Provider>
   );

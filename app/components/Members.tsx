@@ -4,7 +4,7 @@ import { useRoom } from "@/app/lib/RoomContext";
 import { useEffect, useState } from "react";
 
 export default function Members() {
-  const { users, awareness } = useRoom();
+  const { users, awareness, currentUser, hostId, driverId, kickUser, transferHost, assignDriver } = useRoom();
   const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -22,6 +22,8 @@ export default function Members() {
     return () => awareness.off("change", handleAwarenessChange);
   }, [awareness]);
 
+  const isHost = currentUser?.id === hostId;
+
   return (
     <div className="flex flex-col h-full text-white">
       <div className="p-4 border-b border-gray-700">
@@ -34,13 +36,35 @@ export default function Members() {
       
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {users.map(u => (
-          <div key={u.id} className="flex flex-col">
+          <div key={u.id} className="flex flex-col group">
             <div className="flex items-center gap-2">
-              <span className="text-sm">🟢</span>
-              <span className="text-sm font-medium">{u.name}</span>
+              <span className="text-sm">{u.id === hostId ? "👑" : "🟢"}</span>
+              <span className="text-sm font-medium flex-1 truncate">
+                {u.name} {u.id === currentUser?.id && <span className="text-gray-400 font-normal">(You)</span>}
+              </span>
+              {u.id === driverId && <span title="Driver" className="text-sm">🎮</span>}
             </div>
+            
             {typingUsers.has(u.id) && (
               <span className="text-xs text-gray-400 italic ml-6 animate-pulse">is typing...</span>
+            )}
+
+            {isHost && u.id !== hostId && (
+              <div className="ml-6 mt-1 flex flex-wrap gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onClick={() => kickUser(u.id)} className="text-[10px] bg-red-600/20 text-red-400 px-2 py-0.5 rounded hover:bg-red-600 hover:text-white transition">Kick</button>
+                <button onClick={() => transferHost(u.id)} className="text-[10px] bg-yellow-600/20 text-yellow-400 px-2 py-0.5 rounded hover:bg-yellow-600 hover:text-white transition">Make Host</button>
+                {driverId === u.id ? (
+                  <button onClick={() => assignDriver(null)} className="text-[10px] bg-blue-600/20 text-blue-400 px-2 py-0.5 rounded hover:bg-blue-600 hover:text-white transition">Revoke Control</button>
+                ) : (
+                  <button onClick={() => assignDriver(u.id)} className="text-[10px] bg-green-600/20 text-green-400 px-2 py-0.5 rounded hover:bg-green-600 hover:text-white transition">Give Control</button>
+                )}
+              </div>
+            )}
+
+            {isHost && u.id === hostId && driverId && driverId !== hostId && (
+              <div className="ml-6 mt-1 flex flex-wrap gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onClick={() => assignDriver(hostId)} className="text-[10px] bg-green-600/20 text-green-400 px-2 py-0.5 rounded hover:bg-green-600 hover:text-white transition">Take Control</button>
+              </div>
             )}
           </div>
         ))}

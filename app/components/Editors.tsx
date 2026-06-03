@@ -9,9 +9,16 @@ import LanguageSelector from "./LanguageSelector";
 import type { editor as monacoEditor } from "monaco-editor";
 
 export default function Editor() {
-  const { yText, awareness, runCode, isExecuting, language } = useRoom();
+  const { yText, awareness, runCode, isExecuting, language, currentUser, driverId, editorLocked } = useRoom();
   const [editor, setEditor] =
     useState<monacoEditor.IStandaloneCodeEditor | null>(null);
+
+  const isReadOnly = editorLocked || (driverId !== null && currentUser?.id !== driverId);
+
+  useEffect(() => {
+    if (!editor) return;
+    editor.updateOptions({ readOnly: isReadOnly });
+  }, [editor, isReadOnly]);
 
   // Cursor tracking + rendering (runs after editor mounts)
   useEffect(() => {
@@ -186,12 +193,18 @@ export default function Editor() {
           {isExecuting ? "Running..." : "Run Code"}
         </button>
       </div>
-      <div className="flex-1">
+      <div className="flex-1 relative">
+        {isReadOnly && (
+          <div className="absolute top-0 left-0 w-full z-10 bg-yellow-600/90 text-white text-xs font-bold text-center py-1.5 shadow-md uppercase tracking-wider backdrop-blur-sm">
+            {editorLocked ? "🔒 Editor Locked By Host" : "🎮 Navigator Mode (Read-Only)"}
+          </div>
+        )}
         <MonacoEditor
           height="100%"
           language={langConfig.monacoLanguage}
           theme="vs-dark"
           onMount={handleMount}
+          options={{ readOnly: isReadOnly }}
         />
       </div>
     </div>

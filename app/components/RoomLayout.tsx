@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { RoomProvider, useRoom } from "@/app/lib/RoomContext";
 import Members from "./Members";
 import BottomPanel from "./BottomPanel";
+import RoomControls from "./RoomControls";
 import { useState } from "react";
 
 const Editor = dynamic(() => import("./Editors"), { ssr: false });
@@ -60,8 +61,13 @@ function RoomContent({ problemPanel }: { problemPanel: React.ReactNode }) {
           <BottomPanel />
         </div>
       </div>
-      <div className="col-span-2 border-l bg-[#2d2d2d]">
-        <Members />
+      <div className="col-span-2 border-l bg-[#2d2d2d] flex flex-col h-full overflow-hidden">
+        <div className="flex-1 overflow-hidden">
+          <Members />
+        </div>
+        <div className="shrink-0">
+          <RoomControls />
+        </div>
       </div>
     </div>
   );
