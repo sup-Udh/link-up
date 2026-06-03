@@ -22,6 +22,7 @@ export interface RoomState {
   editorLocked: boolean;
   requireApproval: boolean;
   pendingRequests: { id: string, name: string }[];
+  customCases: { id: string, input: string, expectedOutput: string }[];
 }
 const roomStates = new Map<string, RoomState>();
 const pendingSockets = new Map<string, any>();
@@ -83,12 +84,14 @@ wss.on("connection", (ws) => {
 
       // Send latest output if exists
       if (roomOutputs.has(rId)) {
-        const latest = roomOutputs.get(rId);
+        const latest = roomOutputs.get(rId)!;
         socket.send(JSON.stringify({
           type: "execution-result",
           roomId: rId,
           success: latest.success,
-          output: latest.output
+          output: latest.output,
+          results: latest.results,
+          runIndex: latest.runIndex
         }));
       }
 
@@ -123,7 +126,8 @@ wss.on("connection", (ws) => {
           driverId: null,
           editorLocked: false,
           requireApproval: requireApproval === true,
-          pendingRequests: []
+          pendingRequests: [],
+          customCases: []
         });
       }
 
@@ -163,23 +167,22 @@ wss.on("connection", (ws) => {
     }
 
     if (data.type === "execution-result") {
-      // Persist latest output for the room
-      roomOutputs.set(data.roomId, {
-        success: data.success,
-        output: data.output
+      roomOutputs.set(data.roomId, { 
+        success: data.success, 
+        output: data.output,
+        results: data.results,
+        runIndex: data.runIndex
       });
-
-      // Broadcast to other clients
       rooms.get(data.roomId)?.forEach((client) => {
         if (client !== ws) {
-          client.send(
-            JSON.stringify({
-              type: "execution-result",
-              roomId: data.roomId,
-              success: data.success,
-              output: data.output,
-            })
-          );
+          client.send(JSON.stringify({
+            type: "execution-result",
+            roomId: data.roomId,
+            success: data.success,
+            output: data.output,
+            results: data.results,
+            runIndex: data.runIndex
+          }));
         }
       });
     }
@@ -285,6 +288,33 @@ wss.on("connection", (ws) => {
           targetSocket.close();
           pendingSockets.delete(data.userId);
         }
+      }
+    }
+
+    if (data.type === "add-custom-case") {
+      const state = roomStates.get(data.roomId);
+      if (state) {
+        state.customCases.push(data.case);
+        broadcastRoomState(data.roomId);
+      }
+    }
+
+    if (data.type === "update-custom-case") {
+      const state = roomStates.get(data.roomId);
+      if (state) {
+        const idx = state.customCases.findIndex(c => c.id === data.case.id);
+        if (idx !== -1) {
+          state.customCases[idx] = data.case;
+          broadcastRoomState(data.roomId);
+        }
+      }
+    }
+
+    if (data.type === "delete-custom-case") {
+      const state = roomStates.get(data.roomId);
+      if (state) {
+        state.customCases = state.customCases.filter(c => c.id !== data.id);
+        broadcastRoomState(data.roomId);
       }
     }
 

@@ -6,7 +6,7 @@ import { generateExecutionWrapper } from "@/app/lib/generators";
 
 export async function POST(request: Request) {
   try {
-    const { roomId, language, code } = await request.json();
+    const { roomId, language, code, customTestCases, runIndex } = await request.json();
 
     if (!code || !code.trim()) {
       return NextResponse.json(
@@ -30,6 +30,23 @@ export async function POST(request: Request) {
     const meta = await fetchLeetCodeMetadata(slug);
     if (!meta) {
       return NextResponse.json({ success: false, output: "Error: Failed to fetch LeetCode metadata." });
+    }
+
+    // Append custom test cases if any
+    if (customTestCases && Array.isArray(customTestCases)) {
+      for (const tc of customTestCases) {
+        meta.testCases.push(tc.input);
+        meta.expectedOutputs.push(tc.expectedOutput);
+      }
+    }
+
+    // Filter to a single test case if runIndex is provided
+    if (runIndex !== undefined && runIndex !== null && runIndex !== "all") {
+      const idx = Number(runIndex);
+      if (idx >= 0 && idx < meta.testCases.length) {
+        meta.testCases = [meta.testCases[idx]];
+        meta.expectedOutputs = [meta.expectedOutputs[idx]];
+      }
     }
 
     // Generate the execution wrapper using our native transpilers
@@ -119,7 +136,8 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: isSuccess,
       output: finalOutput.trim() || "Execution finished with no output.",
-      results: parsedResults.length > 0 ? parsedResults : undefined
+      results: parsedResults.length > 0 ? parsedResults : undefined,
+      runIndex: runIndex !== undefined ? runIndex : "all"
     });
   } catch (error: any) {
     console.error("Execution error:", error);
