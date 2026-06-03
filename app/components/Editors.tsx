@@ -9,11 +9,18 @@ import LanguageSelector from "./LanguageSelector";
 import type { editor as monacoEditor } from "monaco-editor";
 
 export default function Editor() {
-  const { yText, awareness, runCode, isExecuting, language, currentUser, driverId, editorLocked } = useRoom();
+  const { yText, awareness, runCode, isExecuting, language, currentUser, driverId, editorLocked, hostId } = useRoom();
   const [editor, setEditor] =
     useState<monacoEditor.IStandaloneCodeEditor | null>(null);
 
-  const isReadOnly = editorLocked || (driverId !== null && currentUser?.id !== driverId);
+  const isHost = currentUser?.id === hostId;
+  
+  let isReadOnly = false;
+  if (editorLocked) {
+    isReadOnly = !isHost;
+  } else if (driverId !== null) {
+    isReadOnly = currentUser?.id !== driverId;
+  }
 
   useEffect(() => {
     if (!editor) return;
@@ -194,9 +201,11 @@ export default function Editor() {
         </button>
       </div>
       <div className="flex-1 relative">
-        {isReadOnly && (
-          <div className="absolute top-0 left-0 w-full z-10 bg-yellow-600/90 text-white text-xs font-bold text-center py-1.5 shadow-md uppercase tracking-wider backdrop-blur-sm">
-            {editorLocked ? "🔒 Editor Locked By Host" : "🎮 Navigator Mode (Read-Only)"}
+        {(isReadOnly || editorLocked) && (
+          <div className="absolute top-0 left-0 w-full z-10 bg-yellow-600/90 text-white text-xs font-bold text-center py-1.5 shadow-md uppercase tracking-wider backdrop-blur-sm pointer-events-none">
+            {editorLocked 
+              ? (isHost ? "🔒 Editor Locked For Guests" : "🔒 Editor Locked By Host") 
+              : "🎮 Navigator Mode (Read-Only)"}
           </div>
         )}
         <MonacoEditor
