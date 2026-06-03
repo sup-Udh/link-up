@@ -12,6 +12,7 @@ import * as Y from "yjs";
 import {
   Awareness,
   encodeAwarenessUpdate,
+  applyAwarenessUpdate,
 } from "y-protocols/awareness";
 import { ProblemMetadata } from "./leetcode";
 
@@ -101,6 +102,14 @@ export function RoomProvider({
   const yText = ydoc.getText("monaco");
 
   useEffect(() => {
+    // Fetch problem metadata asynchronously
+    fetch(`/api/problem?roomId=${roomId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (!data.error) setProblemMetadata(data);
+      })
+      .catch(err => console.error("Failed to load metadata:", err));
+
     const ws = new WebSocket(getWsUrl());
     wsRef.current = ws;
     const username = "User-" + Math.floor(Math.random() * 1000);
@@ -224,7 +233,7 @@ export function RoomProvider({
       });
       
       const data = await res.json();
-      setLatestOutput({ success: data.success, output: data.output });
+      setLatestOutput({ success: data.success, output: data.output, results: data.results });
       
       // Broadcast to other users
       if (wsRef.current?.readyState === WebSocket.OPEN) {
@@ -232,7 +241,8 @@ export function RoomProvider({
           type: "execution-result",
           roomId,
           success: data.success,
-          output: data.output
+          output: data.output,
+          results: data.results
         }));
       }
     } catch (err: any) {
