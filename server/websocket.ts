@@ -10,7 +10,7 @@ let supabase: any = null;
 if (supabaseUrl && supabaseKey) {
   supabase = createClient(supabaseUrl, supabaseKey, {
     auth: { persistSession: false },
-    realtime: { transport: WebSocket }
+    realtime: { transport: WebSocket as any }
   });
 }
 

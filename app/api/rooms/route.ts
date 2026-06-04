@@ -74,6 +74,7 @@ export async function POST(request: Request) {
     const roomId = generateRoomId();
 
     const roomPayload = {
+      
       id: roomId,
       title: title || slug || "Untitled Session",
       language: language || "JavaScript",

@@ -20,7 +20,7 @@ export async function PATCH(
     const adminDb = createAdminClient();
 
     const body = await request.json();
-    const { code, language, customTestCases, latestResults } = body;
+    const { code, language, customTestCases, latestResults, starterCode } = body;
 
     const payload: any = {
       last_saved_at: new Date().toISOString(),
@@ -31,6 +31,7 @@ export async function PATCH(
     if (language !== undefined) payload.language = language;
     if (customTestCases !== undefined) payload.custom_test_cases = customTestCases;
     if (latestResults !== undefined) payload.latest_results = latestResults;
+    if (starterCode !== undefined) payload.starter_code = starterCode;
 
     const { error } = await adminDb
       .from("rooms")

@@ -121,10 +121,12 @@ checkAuth();
 
 // --- EVENT LISTENERS ---
 
-// Connect Account
-btnConnect.addEventListener("click", () => {
-  chrome.tabs.create({ url: `${BASE_URL}/extension/connect` });
-});
+// Connect Account (if the button exists in UI)
+if (btnConnect) {
+  btnConnect.addEventListener("click", () => {
+    chrome.tabs.create({ url: `${BASE_URL}/extension/connect` });
+  });
+}
 
 // Show Pairing
 btnShowPairing.addEventListener("click", () => {

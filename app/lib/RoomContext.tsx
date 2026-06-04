@@ -14,7 +14,8 @@ import {
   encodeAwarenessUpdate,
   applyAwarenessUpdate,
 } from "y-protocols/awareness";
-import { extractedProblemData } from "./leetcode";
+import type { NormalizedProblem } from "./problem-engine/types";
+import { getStarterCode, isEditorEmpty } from "./problem-engine/starterCode";
 
 export interface TestCaseResult {
   passed: boolean;
@@ -62,7 +63,7 @@ interface RoomContextType {
   runCode: (runIndex?: number | "all") => Promise<void>;
   language: string;
   changeLanguage: (lang: string) => void;
-  problemMetadata: extractedProblemData | null;
+  problemMetadata: NormalizedProblem | null;
   
   // Custom Cases
   customCases: CustomTestCase[];
@@ -135,7 +136,7 @@ export function RoomProvider({
   const [testResults, setTestResults] = useState<Record<number, TestCaseResult>>({});
   const [isExecutingIndex, setIsExecutingIndex] = useState<number | "all" | null>(null);
   const [language, setLanguage] = useState("javascript");
-  const [problemMetadata, setProblemMetadata] = useState<extractedProblemData | null>(null);
+  const [problemMetadata, setProblemMetadata] = useState<NormalizedProblem | null>(null);
   const [customCases, setCustomCases] = useState<CustomTestCase[]>([]);
   const [hasLoadedState, setHasLoadedState] = useState(false);
   
@@ -217,7 +218,17 @@ export function RoomProvider({
     fetch(`/api/problem?roomId=${roomId}`)
       .then(res => res.json())
       .then(data => {
-        if (!data.error) setProblemMetadata(data);
+        if (!data.error) {
+          setProblemMetadata(data);
+          // Inject starter code if the editor is empty
+          if (isEditorEmpty(yText.toString())) {
+            const starter = getStarterCode(data, language);
+            if (starter) {
+              yText.delete(0, yText.length);
+              yText.insert(0, starter);
+            }
+          }
+        }
       })
       .catch(err => console.error("Failed to load metadata:", err));
 

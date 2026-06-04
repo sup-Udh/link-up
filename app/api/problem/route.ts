@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { fetchLeetCodeProblem } from "@/app/lib/leetcode";
+import { normalizeProblem } from "@/app/lib/problem-engine/normalizeProblem";
 import { getSlugForRoom } from "@/app/lib/db";
 
 export async function GET(request: Request) {
@@ -12,13 +13,18 @@ export async function GET(request: Request) {
 
   const slug = await getSlugForRoom(roomId);
   if (!slug) {
-    return NextResponse.json({ error: "Room not found" }, { status: 404 });
+    return NextResponse.json({ error: "Room not found or no problem linked" }, { status: 404 });
   }
 
-  const meta = await fetchLeetCodeProblem(slug);
-  if (!meta) {
-    return NextResponse.json({ error: "Failed to fetch metadata" }, { status: 500 });
+  try {
+    const raw = await fetchLeetCodeProblem(slug);
+    const normalized = normalizeProblem(raw);
+    return NextResponse.json(normalized);
+  } catch (err: any) {
+    console.error("Failed to fetch/normalize problem:", err);
+    return NextResponse.json(
+      { error: err.message || "Failed to fetch problem metadata" },
+      { status: 500 }
+    );
   }
-
-  return NextResponse.json(meta);
 }

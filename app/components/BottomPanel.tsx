@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal } from "react";
+import { useState, useEffect } from "react";
 import { useRoom } from "@/app/lib/RoomContext";
 
 export default function BottomPanel() {
@@ -19,7 +19,6 @@ export default function BottomPanel() {
 
   // Auto-switch to result tab when execution starts
   useEffect(() => {
-    
     if (isExecutingIndex !== null) {
       setActiveTab("result");
     }
@@ -33,9 +32,8 @@ export default function BottomPanel() {
     });
   };
 
-
-
-  const totalCases = (problemMetadata?.testcases?.length || 0) + (customCases?.length || 0);
+  const exampleCount = problemMetadata?.examples?.length || 0;
+  const totalCases = exampleCount + (customCases?.length || 0);
   const ranCases = Object.keys(testResults).length;
   const passedCases = Object.values(testResults).filter(r => r.passed).length;
 
@@ -84,38 +82,41 @@ export default function BottomPanel() {
               {/* LeetCode Examples */}
               <div>
                 <h3 className="text-gray-400 font-bold mb-4 uppercase tracking-wider text-xs">LeetCode Examples</h3>
-                {(!problemMetadata.testcases || problemMetadata.testcases.length === 0) ? (
+                {exampleCount === 0 ? (
                   <div className="text-gray-500 italic">No examples available.</div>
                 ) : (
                   <div className="space-y-4">
-                    {problemMetadata.testcases.map((tc: string, idx: number) => {
-                      const rawInputs = tc.split('\n').filter((l: string) => l.trim() !== "");
-                      return (
-                        <div key={`lc-${idx}`} className="bg-[#252525] border border-gray-700 rounded-lg p-4 shadow-sm">
-                          <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
-                            <span className="font-bold text-gray-200">Example </span>
-                            <button 
-                              onClick={() => runCode(idx)} 
-                              disabled={isExecutingIndex !== null}
-                              className="px-3 py-1 bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white disabled:opacity-50 rounded text-xs font-medium transition flex items-center"
-                            >
-                              {isExecutingIndex === idx ? <span className="animate-spin mr-1">⌛</span> : "▶ "} Run Example
-                            </button>
+                    {problemMetadata.examples.map((ex, idx) => (
+                      <div key={`lc-${ex.id}`} className="bg-[#252525] border border-gray-700 rounded-lg p-4 shadow-sm">
+                        <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
+                          <span className="font-bold text-gray-200">{ex.title}</span>
+                          <button 
+                            onClick={() => runCode(idx)} 
+                            disabled={isExecutingIndex !== null}
+                            className="px-3 py-1 bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white disabled:opacity-50 rounded text-xs font-medium transition flex items-center"
+                          >
+                            {isExecutingIndex === idx ? <span className="animate-spin mr-1">⌛</span> : "▶ "} Run Example
+                          </button>
+                        </div>
+                        
+                        <div className="space-y-3">
+                          {/* Input */}
+                          <div>
+                            <div className="text-xs text-gray-500 mb-1 font-semibold uppercase tracking-wide">Input</div>
+                            <div className="bg-[#1a1a1a] px-3 py-2 rounded border border-gray-700 text-gray-300 break-all whitespace-pre-wrap font-mono text-xs">
+                              {ex.input}
+                            </div>
                           </div>
-                          
-                          <div className="space-y-3">
-                            {/* {problemMetadata.parameters.map((param: { name: string }, pIdx: number) => (
-                              <div key={pIdx}>
-                                <div className="text-xs text-gray-500 mb-1">{param.name} =</div>
-                                <div className="bg-[#1a1a1a] px-3 py-2 rounded border border-gray-700 text-gray-300 break-all">
-                                  {rawInputs[pIdx] || ""}
-                                </div>
-                              </div>
-                            ))} */}
+                          {/* Expected Output */}
+                          <div>
+                            <div className="text-xs text-gray-500 mb-1 font-semibold uppercase tracking-wide">Expected Output</div>
+                            <div className="bg-[#1a1a1a] px-3 py-2 rounded border border-gray-700 text-gray-300 break-all whitespace-pre-wrap font-mono text-xs">
+                              {ex.output}
+                            </div>
                           </div>
                         </div>
-                      );
-                    })}
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
@@ -132,7 +133,7 @@ export default function BottomPanel() {
                 ) : (
                   <div className="space-y-4">
                     {customCases.map((tc, cIdx) => {
-                      const absoluteIdx = (problemMetadata?.testcases?.length || 0) + cIdx;
+                      const absoluteIdx = exampleCount + cIdx;
                       return (
                         <div key={tc.id} className="bg-[#252525] border border-yellow-700/50 rounded-lg p-4 shadow-sm">
                           <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
@@ -155,7 +156,7 @@ export default function BottomPanel() {
                               <textarea 
                                 className="w-full bg-[#1a1a1a] border border-gray-600 focus:border-blue-500 outline-none rounded p-3 text-gray-300 text-sm font-mono h-24 resize-y transition-colors"
                                 value={tc.input}
-                                placeholder="e.g.&#10;[1, 2, 3]&#10;4"
+                                placeholder={"e.g.\n[1, 2, 3]\n4"}
                                 onChange={(e) => updateCustomCase({ ...tc, input: e.target.value })}
                               />
                             </div>
@@ -202,8 +203,10 @@ export default function BottomPanel() {
                   const res = testResults[idx];
                   if (!res) return null;
                   
-                  const isCustom = idx >= (problemMetadata?.testcases?.length || 0);
-                  const title = isCustom ? `Custom Case ${idx - (problemMetadata?.testcases?.length || 0) + 1}` : `Example ${idx + 1}`;
+                  const isCustom = idx >= exampleCount;
+                  const title = isCustom 
+                    ? `Custom Case ${idx - exampleCount + 1}` 
+                    : (problemMetadata?.examples?.[idx]?.title || `Example ${idx + 1}`);
                   
                   return (
                     <div key={`res-${idx}`} className={`border rounded-lg bg-[#252525] p-4 shadow-sm ${res.passed ? "border-green-900/30" : "border-red-900/50"}`}>
