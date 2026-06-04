@@ -1,25 +1,33 @@
-import fs from "fs/promises";
-import path from "path";
-
-const DB_PATH = path.join(process.cwd(), "rooms.json");
-
-export async function getRooms() {
-  try {
-    const data = await fs.readFile(DB_PATH, "utf-8");
-    return JSON.parse(data);
-  } catch (error) {
-    // If the file doesn't exist or is corrupted, return an empty object
-    return {};
-  }
-}
-
-export async function saveRoom(roomId: string, slug: string) {
-  const rooms = await getRooms();
-  rooms[roomId] = slug;
-  await fs.writeFile(DB_PATH, JSON.stringify(rooms, null, 2), "utf-8");
-}
+import { createAdminClient } from "@/utils/supabase/admin";
 
 export async function getSlugForRoom(roomId: string): Promise<string | null> {
-  const rooms = await getRooms();
-  return rooms[roomId] || null;
+  try {
+    const supabase = createAdminClient();
+    const { data: room, error } = await supabase
+      .from('rooms')
+      .select('title, source')
+      .eq('id', roomId)
+      .single();
+
+    if (error || !room) {
+      console.error("Error fetching room for slug:", error);
+      return null;
+    }
+
+    // If source is extension, the title is the slug (e.g. 'two-sum')
+    if (room.source === 'extension') {
+      return room.title;
+    }
+
+    // Fallback: If it was saved with source 'blank' but the title is a slug (e.g. 'two-sum')
+    // LeetCode slugs do not contain spaces.
+    if (room.source === 'blank' && room.title && !room.title.includes(' ')) {
+      return room.title;
+    }
+
+    return null;
+  } catch (e) {
+    console.error("Error in getSlugForRoom:", e);
+    return null;
+  }
 }

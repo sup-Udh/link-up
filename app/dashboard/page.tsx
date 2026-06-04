@@ -2,7 +2,18 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Plus, Users, Clock, Download, X, Code2, Globe, Lock, Crown, TerminalSquare } from "lucide-react";
+import {
+  Plus,
+  Users,
+  Clock,
+  Download,
+  X,
+  Code2,
+  Globe,
+  Lock,
+  Crown,
+  TerminalSquare,
+} from "lucide-react";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
 import { createClient } from "@/utils/supabase/client";
 
@@ -17,8 +28,6 @@ interface Room {
   require_approval: boolean;
 }
 
-
-
 export default function Dashboard() {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -27,7 +36,9 @@ export default function Dashboard() {
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalView, setModalView] = useState<'options' | 'blank' | 'extension'>('options');
+  const [modalView, setModalView] = useState<"options" | "blank" | "extension">(
+    "options",
+  );
   const [creating, setCreating] = useState(false);
 
   // Blank Room Form State
@@ -39,18 +50,23 @@ export default function Dashboard() {
   useEffect(() => {
     async function loadData() {
       const supabase = createClient();
-      
+
       // Load User
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (user) {
-        const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
         setUserProfile(profile);
-	
       }
 
       // Load Rooms
       try {
-        const res = await fetch('/api/rooms');
+        const res = await fetch("/api/rooms");
         if (res.ok) {
           const data = await res.json();
           setRooms(data);
@@ -66,15 +82,15 @@ export default function Dashboard() {
     // Listen for extension pings
     let timeoutId: NodeJS.Timeout;
     const handleMessage = (event: MessageEvent) => {
-      if (event.data?.type === 'LINKO_EXTENSION_LIVE') {
+      if (event.data?.type === "LINKO_EXTENSION_LIVE") {
         setIsExtensionLive(true);
         clearTimeout(timeoutId);
         timeoutId = setTimeout(() => setIsExtensionLive(false), 3000);
       }
     };
-    window.addEventListener('message', handleMessage);
+    window.addEventListener("message", handleMessage);
     return () => {
-      window.removeEventListener('message', handleMessage);
+      window.removeEventListener("message", handleMessage);
       clearTimeout(timeoutId);
     };
   }, []);
@@ -83,17 +99,17 @@ export default function Dashboard() {
     e.preventDefault();
     setCreating(true);
     try {
-      const res = await fetch('/api/rooms', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/rooms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: roomTitle || "Untitled Session",
           language: roomLanguage,
           source: "blank",
-          requireApproval
-        })
+          requireApproval,
+        }),
       });
-      
+
       if (res.ok) {
         const data = await res.json();
         window.location.href = `/room/${data.roomId}`;
@@ -105,7 +121,7 @@ export default function Dashboard() {
   };
 
   const openModal = () => {
-    setModalView('options');
+    setModalView("options");
     setIsModalOpen(true);
   };
 
@@ -115,7 +131,9 @@ export default function Dashboard() {
   };
 
   const timeAgo = (dateString: string) => {
-    const seconds = Math.floor((new Date().getTime() - new Date(dateString).getTime()) / 1000);
+    const seconds = Math.floor(
+      (new Date().getTime() - new Date(dateString).getTime()) / 1000,
+    );
     let interval = seconds / 31536000;
     if (interval > 1) return Math.floor(interval) + " years ago";
     interval = seconds / 2592000;
@@ -131,7 +149,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#050505] text-gray-900 dark:text-gray-100 font-sans transition-colors duration-300">
-      
       {/* Navbar */}
       <nav className="border-b border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-[#0a0a0a]/50 backdrop-blur-xl sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -145,10 +162,17 @@ export default function Dashboard() {
           <div className="flex items-center gap-4">
             <ThemeToggle />
             <div className="w-px h-6 bg-gray-200 dark:bg-gray-800"></div>
-            <Link href="/profile" className="flex items-center gap-3 cursor-pointer group">
+            <Link
+              href="/profile"
+              className="flex items-center gap-3 cursor-pointer group"
+            >
               <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center group-hover:border-[#1cbaba] transition-colors overflow-hidden">
                 {userProfile?.avatar_url ? (
-                  <img src={userProfile.avatar_url} alt="User Avatar" className="w-full h-full object-cover" />
+                  <img
+                    src={userProfile.avatar_url}
+                    alt="User Avatar"
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
                   <div className="w-full h-full bg-gray-300 dark:bg-gray-700"></div>
                 )}
@@ -159,14 +183,21 @@ export default function Dashboard() {
       </nav>
 
       <main className="max-w-7xl mx-auto px-6 py-10 space-y-12">
-        
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Welcome back{userProfile?.full_name ? `, ${userProfile.full_name.split(' ')[0]}` : ''}!</h1>
-            <p className="text-gray-500 dark:text-gray-400">Manage your collaborative coding sessions.</p>
+            <h1 className="text-3xl font-bold mb-2">
+              Welcome back
+              {userProfile?.full_name
+                ? `, ${userProfile.full_name.split(" ")[0]}`
+                : ""}
+              !
+            </h1>
+            <p className="text-gray-500 dark:text-gray-400">
+              Manage your collaborative coding sessions.
+            </p>
           </div>
-          
+
           <div className="flex items-center gap-3">
             {isExtensionLive ? (
               <div className="inline-flex items-center gap-2 bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20 px-4 py-2.5 rounded-xl text-sm font-semibold text-green-700 dark:text-green-400 shrink-0">
@@ -177,12 +208,21 @@ export default function Dashboard() {
                 Extension Live
               </div>
             ) : (
-              <Link href="/extension/connect" className="inline-flex items-center gap-2 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 px-4 py-2.5 rounded-xl text-sm font-semibold shadow-sm hover:shadow-md hover:border-[#1cbaba] dark:hover:border-[#1cbaba] transition-all text-gray-700 dark:text-gray-300 group shrink-0">
-                <Download size={16} className="text-[#1cbaba] group-hover:-translate-y-0.5 transition-transform" />
+              <Link
+                href="/extension/connect"
+                className="inline-flex items-center gap-2 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 px-4 py-2.5 rounded-xl text-sm font-semibold shadow-sm hover:shadow-md hover:border-[#1cbaba] dark:hover:border-[#1cbaba] transition-all text-gray-700 dark:text-gray-300 group shrink-0"
+              >
+                <Download
+                  size={16}
+                  className="text-[#1cbaba] group-hover:-translate-y-0.5 transition-transform"
+                />
                 Get Extension
               </Link>
             )}
-            <button onClick={openModal} className="inline-flex items-center gap-2 bg-[#1cbaba] hover:bg-[#19a6a6] text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-[#1cbaba]/20 transition-all active:scale-95 shrink-0">
+            <button
+              onClick={openModal}
+              className="inline-flex items-center gap-2 bg-[#1cbaba] hover:bg-[#19a6a6] text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-[#1cbaba]/20 transition-all active:scale-95 shrink-0"
+            >
               <Plus size={18} />
               Create Room
             </button>
@@ -198,17 +238,33 @@ export default function Dashboard() {
           /* Empty State */
           <div className="bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-3xl p-12 flex flex-col items-center justify-center text-center shadow-sm">
             <div className="w-20 h-20 bg-gray-50 dark:bg-gray-800/50 rounded-full flex items-center justify-center mb-6">
-              <TerminalSquare size={32} className="text-gray-400 dark:text-gray-500" />
+              <TerminalSquare
+                size={32}
+                className="text-gray-400 dark:text-gray-500"
+              />
             </div>
             <h3 className="text-xl font-bold mb-2">No Sessions Yet</h3>
             <p className="text-gray-500 dark:text-gray-400 max-w-sm mb-8">
-              Start your first collaborative coding session by creating a blank room or importing a problem from the extension.
+              Start your first collaborative coding session by creating a blank
+              room or importing a problem from the extension.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <button onClick={() => { setModalView('blank'); setIsModalOpen(true); }} className="px-6 py-3 bg-[#1cbaba] hover:bg-[#19a6a6] text-white rounded-xl font-semibold shadow-md shadow-[#1cbaba]/20 transition-all active:scale-95">
+              <button
+                onClick={() => {
+                  setModalView("blank");
+                  setIsModalOpen(true);
+                }}
+                className="px-6 py-3 bg-[#1cbaba] hover:bg-[#19a6a6] text-white rounded-xl font-semibold shadow-md shadow-[#1cbaba]/20 transition-all active:scale-95"
+              >
                 Create Blank Room
               </button>
-              <button onClick={() => { setModalView('extension'); setIsModalOpen(true); }} className="px-6 py-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white rounded-xl font-semibold transition-all active:scale-95">
+              <button
+                onClick={() => {
+                  setModalView("extension");
+                  setIsModalOpen(true);
+                }}
+                className="px-6 py-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white rounded-xl font-semibold transition-all active:scale-95"
+              >
                 Create From Extension
               </button>
             </div>
@@ -216,14 +272,22 @@ export default function Dashboard() {
         ) : (
           /* Room Cards */
           <div>
-            <h2 className="text-lg font-bold mb-6 flex items-center gap-2">Recent Rooms <span className="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-xs text-gray-500">{rooms.length}</span></h2>
+            <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
+              Recent Rooms{" "}
+              <span className="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-xs text-gray-500">
+                {rooms.length}
+              </span>
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {rooms.map(room => (
-                <Link href={`/room/${room.id}`} key={room.id} className="group bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 hover:border-[#1cbaba] dark:hover:border-[#1cbaba] rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col h-full">
-                  
+              {rooms.map((room) => (
+                <Link
+                  href={`/room/${room.id}`}
+                  key={room.id}
+                  className="group bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 hover:border-[#1cbaba] dark:hover:border-[#1cbaba] rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col h-full"
+                >
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center gap-2">
-                      {room.source === 'extension' ? (
+                      {room.source === "extension" ? (
                         <span className="px-2.5 py-1 rounded-md bg-[#ffa116]/10 text-[#ffa116] text-xs font-semibold flex items-center gap-1.5">
                           <Code2 size={12} /> LeetCode Session
                         </span>
@@ -235,11 +299,13 @@ export default function Dashboard() {
                     </div>
                     {room.is_active ? (
                       <span className="flex items-center gap-1.5 text-xs font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-500/10 px-2 py-1 rounded-md">
-                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> Active
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>{" "}
+                        Active
                       </span>
                     ) : (
                       <span className="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">
-                        <span className="w-1.5 h-1.5 rounded-full bg-gray-400 dark:bg-gray-500"></span> Offline
+                        <span className="w-1.5 h-1.5 rounded-full bg-gray-400 dark:bg-gray-500"></span>{" "}
+                        Offline
                       </span>
                     )}
                   </div>
@@ -248,8 +314,10 @@ export default function Dashboard() {
                     <Crown size={18} className="text-[#ffa116] shrink-0" />
                     {room.title}
                   </h3>
-                  <p className="text-gray-500 dark:text-gray-400 text-sm mb-6 line-clamp-1">{room.language}</p>
-                  
+                  <p className="text-gray-500 dark:text-gray-400 text-sm mb-6 line-clamp-1">
+                    {room.language}
+                  </p>
+
                   <div className="mt-auto pt-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between text-xs font-medium text-gray-500 dark:text-gray-400">
                     <div className="flex items-center gap-1.5">
                       <Users size={14} /> {room.participant_count} Participants
@@ -258,73 +326,99 @@ export default function Dashboard() {
                       <Clock size={14} /> {timeAgo(room.last_active_at)}
                     </div>
                   </div>
-
                 </Link>
               ))}
             </div>
           </div>
         )}
-
       </main>
 
       {/* CREATE ROOM MODAL */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={closeModal}></div>
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={closeModal}
+          ></div>
           <div className="bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-3xl w-full max-w-md shadow-2xl relative z-10 overflow-hidden animate-in zoom-in-95 duration-200">
-            
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-800">
               <h2 className="text-xl font-bold">
-                {modalView === 'options' ? 'Create Room' : modalView === 'blank' ? 'Blank Room' : 'Import from Extension'}
+                {modalView === "options"
+                  ? "Create Room"
+                  : modalView === "blank"
+                    ? "Blank Room"
+                    : "Import from Extension"}
               </h2>
-              <button onClick={closeModal} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 transition-colors">
+              <button
+                onClick={closeModal}
+                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 transition-colors"
+              >
                 <X size={20} />
               </button>
             </div>
 
             {/* View: Options */}
-            {modalView === 'options' && (
+            {modalView === "options" && (
               <div className="p-6 space-y-3">
-                <button onClick={() => setModalView('blank')} className="w-full flex items-center gap-4 p-4 rounded-2xl border border-gray-200 dark:border-gray-800 hover:border-[#1cbaba] dark:hover:border-[#1cbaba] bg-gray-50 dark:bg-[#0a0a0a] hover:bg-[#1cbaba]/5 dark:hover:bg-[#1cbaba]/10 transition-all text-left group">
+                <button
+                  onClick={() => setModalView("blank")}
+                  className="w-full flex items-center gap-4 p-4 rounded-2xl border border-gray-200 dark:border-gray-800 hover:border-[#1cbaba] dark:hover:border-[#1cbaba] bg-gray-50 dark:bg-[#0a0a0a] hover:bg-[#1cbaba]/5 dark:hover:bg-[#1cbaba]/10 transition-all text-left group"
+                >
                   <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-500/20 text-blue-500 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                     <TerminalSquare size={24} />
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-900 dark:text-white mb-1">Create Blank Room</h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Start an empty collaborative session for pair programming or interviews.</p>
+                    <h3 className="font-bold text-gray-900 dark:text-white mb-1">
+                      Create Blank Room
+                    </h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Start an empty collaborative session for pair programming
+                      or interviews.
+                    </p>
                   </div>
                 </button>
 
-                <button onClick={() => setModalView('extension')} className="w-full flex items-center gap-4 p-4 rounded-2xl border border-gray-200 dark:border-gray-800 hover:border-[#ffa116] dark:hover:border-[#ffa116] bg-gray-50 dark:bg-[#0a0a0a] hover:bg-[#ffa116]/5 dark:hover:bg-[#ffa116]/10 transition-all text-left group">
+                <button
+                  onClick={() => setModalView("extension")}
+                  className="w-full flex items-center gap-4 p-4 rounded-2xl border border-gray-200 dark:border-gray-800 hover:border-[#ffa116] dark:hover:border-[#ffa116] bg-gray-50 dark:bg-[#0a0a0a] hover:bg-[#ffa116]/5 dark:hover:bg-[#ffa116]/10 transition-all text-left group"
+                >
                   <div className="w-12 h-12 rounded-xl bg-[#ffa116]/10 text-[#ffa116] flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                     <Code2 size={24} />
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-900 dark:text-white mb-1">Import From Extension</h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Launch a session directly from any LeetCode problem page.</p>
+                    <h3 className="font-bold text-gray-900 dark:text-white mb-1">
+                      Import From Extension
+                    </h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Launch a session directly from any LeetCode problem page.
+                    </p>
                   </div>
                 </button>
               </div>
             )}
 
             {/* View: Blank Room Form */}
-            {modalView === 'blank' && (
+            {modalView === "blank" && (
               <form onSubmit={handleCreateBlankRoom} className="p-6 space-y-5">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Room Name</label>
-                  <input 
-                    type="text" 
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    Room Name
+                  </label>
+                  <input
+                    type="text"
                     value={roomTitle}
                     onChange={(e) => setRoomTitle(e.target.value)}
-                    placeholder="e.g. System Design Mock" 
+                    placeholder="e.g. System Design Mock"
                     className="w-full bg-gray-50 dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#1cbaba] focus:ring-1 focus:ring-[#1cbaba] transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Language</label>
-                  <select 
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    Language
+                  </label>
+                  <select
                     value={roomLanguage}
                     onChange={(e) => setRoomLanguage(e.target.value)}
                     className="w-full bg-gray-50 dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#1cbaba] transition-all appearance-none"
@@ -337,54 +431,85 @@ export default function Dashboard() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <button type="button" onClick={() => setIsPrivate(false)} className={`py-3 rounded-xl border text-sm font-semibold flex justify-center items-center gap-2 transition-colors ${!isPrivate ? 'border-[#1cbaba] bg-[#1cbaba]/10 text-[#1cbaba]' : 'border-gray-200 dark:border-gray-800 text-gray-500 hover:bg-gray-50 dark:hover:bg-[#0a0a0a]'}`}>
+                  <button
+                    type="button"
+                    onClick={() => setIsPrivate(false)}
+                    className={`py-3 rounded-xl border text-sm font-semibold flex justify-center items-center gap-2 transition-colors ${!isPrivate ? "border-[#1cbaba] bg-[#1cbaba]/10 text-[#1cbaba]" : "border-gray-200 dark:border-gray-800 text-gray-500 hover:bg-gray-50 dark:hover:bg-[#0a0a0a]"}`}
+                  >
                     <Globe size={16} /> Public
                   </button>
-                  <button type="button" onClick={() => setIsPrivate(true)} className={`py-3 rounded-xl border text-sm font-semibold flex justify-center items-center gap-2 transition-colors ${isPrivate ? 'border-[#1cbaba] bg-[#1cbaba]/10 text-[#1cbaba]' : 'border-gray-200 dark:border-gray-800 text-gray-500 hover:bg-gray-50 dark:hover:bg-[#0a0a0a]'}`}>
+                  <button
+                    type="button"
+                    onClick={() => setIsPrivate(true)}
+                    className={`py-3 rounded-xl border text-sm font-semibold flex justify-center items-center gap-2 transition-colors ${isPrivate ? "border-[#1cbaba] bg-[#1cbaba]/10 text-[#1cbaba]" : "border-gray-200 dark:border-gray-800 text-gray-500 hover:bg-gray-50 dark:hover:bg-[#0a0a0a]"}`}
+                  >
                     <Lock size={16} /> Private
                   </button>
                 </div>
 
                 <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800">
                   <div>
-                    <div className="text-sm font-semibold">Require Join Approval</div>
-                    <div className="text-xs text-gray-500">You must approve guests.</div>
+                    <div className="text-sm font-semibold">
+                      Require Join Approval
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      You must approve guests.
+                    </div>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" className="sr-only peer" checked={requireApproval} onChange={(e) => setRequireApproval(e.target.checked)} />
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={requireApproval}
+                      onChange={(e) => setRequireApproval(e.target.checked)}
+                    />
                     <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#1cbaba]"></div>
                   </label>
                 </div>
 
-                <button type="submit" disabled={creating} className="w-full bg-[#1cbaba] hover:bg-[#19a6a6] text-white py-3.5 rounded-xl font-bold transition-all active:scale-95 disabled:opacity-70 flex justify-center items-center">
-                  {creating ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : 'Create Blank Room'}
+                <button
+                  type="submit"
+                  disabled={creating}
+                  className="w-full bg-[#1cbaba] hover:bg-[#19a6a6] text-white py-3.5 rounded-xl font-bold transition-all active:scale-95 disabled:opacity-70 flex justify-center items-center"
+                >
+                  {creating ? (
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  ) : (
+                    "Create Blank Room"
+                  )}
                 </button>
               </form>
             )}
 
             {/* View: Extension Import */}
-            {modalView === 'extension' && (
+            {modalView === "extension" && (
               <div className="p-6 text-center">
                 <div className="w-16 h-16 rounded-full bg-[#ffa116]/10 flex items-center justify-center mx-auto mb-4">
                   <Code2 size={32} className="text-[#ffa116]" />
                 </div>
-                <h3 className="font-bold text-lg mb-2">Waiting for extension...</h3>
+                <h3 className="font-bold text-lg mb-2">
+                  Waiting for extension...
+                </h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-                  Open a LeetCode problem and create a room using the Linko Extension. The room will automatically appear in your dashboard.
+                  Open a LeetCode problem and create a room using the Linko
+                  Extension. The room will automatically appear in your
+                  dashboard.
                 </p>
-                
+
                 <ExtensionAnimation />
 
-                <Link href="/extension/connect" onClick={closeModal} className="text-sm text-[#1cbaba] hover:underline font-semibold">
+                <Link
+                  href="/extension/connect"
+                  onClick={closeModal}
+                  className="text-sm text-[#1cbaba] hover:underline font-semibold"
+                >
                   Don't have the extension connected?
                 </Link>
               </div>
             )}
-
           </div>
         </div>
       )}
-
     </div>
   );
 }
@@ -403,7 +528,6 @@ const ExtensionAnimation = () => {
     <div className="w-full mb-8">
       {/* Animated Mockup Window */}
       <div className="relative w-full h-48 bg-white dark:bg-[#0a0a0a] rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-inner mb-4">
-        
         {/* Browser Mock Header */}
         <div className="h-8 bg-gray-100 dark:bg-[#111] border-b border-gray-200 dark:border-gray-800 flex items-center px-3 gap-2">
           <div className="flex gap-1.5">
@@ -411,77 +535,128 @@ const ExtensionAnimation = () => {
             <div className="w-2.5 h-2.5 rounded-full bg-yellow-400"></div>
             <div className="w-2.5 h-2.5 rounded-full bg-green-400"></div>
           </div>
-          <div className="mx-auto w-32 h-4 bg-white dark:bg-[#222] rounded flex items-center justify-center text-[9px] text-gray-400 font-medium">leetcode.com</div>
-          <div className={`w-6 h-6 rounded flex items-center justify-center transition-colors ${step === 1 ? 'bg-gray-200 dark:bg-gray-800' : ''}`}>
-            <Code2 size={14} className={step >= 2 ? "text-[#ffa116]" : "text-gray-400"} />
+          <div className="mx-auto w-32 h-4 bg-white dark:bg-[#222] rounded flex items-center justify-center text-[9px] text-gray-400 font-medium">
+            leetcode.com
+          </div>
+          <div
+            className={`w-6 h-6 rounded flex items-center justify-center transition-colors ${step === 1 ? "bg-gray-200 dark:bg-gray-800" : ""}`}
+          >
+            <Code2
+              size={14}
+              className={step >= 2 ? "text-[#ffa116]" : "text-gray-400"}
+            />
           </div>
         </div>
 
         {/* Browser Content */}
         <div className="p-4 relative h-full">
           {/* Step 1: LeetCode Mock UI */}
-          <div className={`transition-opacity duration-500 ${step === 3 ? 'opacity-0' : 'opacity-100'}`}>
+          <div
+            className={`transition-opacity duration-500 ${step === 3 ? "opacity-0" : "opacity-100"}`}
+          >
             <div className="w-3/4 h-4 bg-gray-100 dark:bg-gray-800 rounded mb-3"></div>
             <div className="w-1/2 h-3 bg-gray-100 dark:bg-gray-800 rounded mb-5"></div>
             <div className="w-full h-20 bg-gray-100 dark:bg-gray-800 rounded"></div>
           </div>
 
           {/* Step 3: Linko Mock UI */}
-          <div className={`absolute top-4 left-4 right-4 transition-opacity duration-500 ${step === 3 ? 'opacity-100' : 'opacity-0'}`}>
-             <div className="flex flex-col items-center justify-center h-28 text-[#1cbaba]">
-               <div className="w-12 h-12 rounded-full bg-[#1cbaba]/10 flex items-center justify-center mb-2 animate-bounce">
-                 <TerminalSquare size={24} />
-               </div>
-               <div className="text-xs font-bold text-gray-800 dark:text-gray-200">Session Active</div>
-             </div>
+          <div
+            className={`absolute top-4 left-4 right-4 transition-opacity duration-500 ${step === 3 ? "opacity-100" : "opacity-0"}`}
+          >
+            <div className="flex flex-col items-center justify-center h-28 text-[#1cbaba]">
+              <div className="w-12 h-12 rounded-full bg-[#1cbaba]/10 flex items-center justify-center mb-2 animate-bounce">
+                <TerminalSquare size={24} />
+              </div>
+              <div className="text-xs font-bold text-gray-800 dark:text-gray-200">
+                Session Active
+              </div>
+            </div>
           </div>
 
           {/* Extension Popup Mock */}
-          <div className={`absolute top-1 right-2 w-32 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-lg shadow-xl transition-all duration-300 transform origin-top-right ${step === 2 ? 'scale-100 opacity-100' : 'scale-90 opacity-0 pointer-events-none'}`}>
+          <div
+            className={`absolute top-1 right-2 w-32 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-lg shadow-xl transition-all duration-300 transform origin-top-right ${step === 2 ? "scale-100 opacity-100" : "scale-90 opacity-0 pointer-events-none"}`}
+          >
             <div className="p-2 border-b border-gray-100 dark:border-gray-800 flex items-center gap-1.5">
               <Code2 size={12} className="text-[#ffa116]" />
-              <span className="text-[10px] font-bold text-gray-800 dark:text-gray-200">Linko</span>
+              <span className="text-[10px] font-bold text-gray-800 dark:text-gray-200">
+                Linko
+              </span>
             </div>
             <div className="p-2 space-y-2">
               <div className="w-full h-2 bg-gray-100 dark:bg-gray-800 rounded"></div>
               <div className="w-3/4 h-2 bg-gray-100 dark:bg-gray-800 rounded"></div>
-              <div className={`w-full py-1.5 mt-2 bg-[#1cbaba] rounded-md text-[9px] text-center text-white font-bold shadow-sm transition-all ${step === 2 ? 'opacity-100 scale-100' : 'opacity-80 scale-95'}`}>
+              <div
+                className={`w-full py-1.5 mt-2 bg-[#1cbaba] rounded-md text-[9px] text-center text-white font-bold shadow-sm transition-all ${step === 2 ? "opacity-100 scale-100" : "opacity-80 scale-95"}`}
+              >
                 Start Session
               </div>
             </div>
           </div>
 
           {/* Animated Cursor */}
-          <div 
+          <div
             className="absolute z-50 transition-all duration-1000 ease-in-out pointer-events-none drop-shadow-lg"
             style={{
-              top: step === 1 ? '5px' : step === 2 ? '80px' : '90px',
-              left: step === 1 ? '92%' : step === 2 ? '78%' : '50%',
-              transform: `translate(-50%, -50%) scale(${step === 1 ? 0.9 : step === 2 ? 0.9 : 1})`
+              top: step === 1 ? "5px" : step === 2 ? "80px" : "90px",
+              left: step === 1 ? "92%" : step === 2 ? "78%" : "50%",
+              transform: `translate(-50%, -50%) scale(${step === 1 ? 0.9 : step === 2 ? 0.9 : 1})`,
             }}
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M4 4L11 20L13.5 13.5L20 11L4 4Z" fill="white" stroke="#333" strokeWidth="1.5" strokeLinejoin="round"/>
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M4 4L11 20L13.5 13.5L20 11L4 4Z"
+                fill="white"
+                stroke="#333"
+                strokeWidth="1.5"
+                strokeLinejoin="round"
+              />
             </svg>
             {/* Click Ripple */}
-            <div className={`absolute top-1 left-1 w-5 h-5 bg-[#1cbaba]/40 rounded-full transition-transform duration-500 ${step === 1 || step === 2 ? 'scale-150 opacity-0 animate-ping' : 'scale-0 opacity-0'}`}></div>
+            <div
+              className={`absolute top-1 left-1 w-5 h-5 bg-[#1cbaba]/40 rounded-full transition-transform duration-500 ${step === 1 || step === 2 ? "scale-150 opacity-0 animate-ping" : "scale-0 opacity-0"}`}
+            ></div>
           </div>
         </div>
       </div>
 
       {/* Text Steps */}
       <div className="flex justify-between items-center text-left gap-2">
-        <div className={`flex-1 p-2.5 rounded-xl transition-all duration-300 ${step === 1 ? 'bg-[#1cbaba]/10 text-[#1cbaba] shadow-sm border border-[#1cbaba]/20 scale-105' : 'text-gray-400 dark:text-gray-600 bg-gray-50 dark:bg-[#0a0a0a] border border-transparent scale-100'}`}>
-          <div className="text-[9px] font-bold uppercase tracking-wider mb-0.5 opacity-70">Step 1</div>
-          <div className="text-[11px] font-semibold leading-tight">Click Extension</div>
+        <div
+          className={`flex-1 p-2.5 rounded-xl transition-all duration-300 ${step === 1 ? "bg-[#1cbaba]/10 text-[#1cbaba] shadow-sm border border-[#1cbaba]/20 scale-105" : "text-gray-400 dark:text-gray-600 bg-gray-50 dark:bg-[#0a0a0a] border border-transparent scale-100"}`}
+        >
+          <div className="text-[9px] font-bold uppercase tracking-wider mb-0.5 opacity-70">
+            Step 1
+          </div>
+          <div className="text-[11px] font-semibold leading-tight">
+            Click Extension
+          </div>
         </div>
-        <div className={`flex-1 p-2.5 rounded-xl transition-all duration-300 ${step === 2 ? 'bg-[#1cbaba]/10 text-[#1cbaba] shadow-sm border border-[#1cbaba]/20 scale-105' : 'text-gray-400 dark:text-gray-600 bg-gray-50 dark:bg-[#0a0a0a] border border-transparent scale-100'}`}>
-          <div className="text-[9px] font-bold uppercase tracking-wider mb-0.5 opacity-70">Step 2</div>
-          <div className="text-[11px] font-semibold leading-tight">Start Room</div>
+        <div
+          className={`flex-1 p-2.5 rounded-xl transition-all duration-300 ${step === 2 ? "bg-[#1cbaba]/10 text-[#1cbaba] shadow-sm border border-[#1cbaba]/20 scale-105" : "text-gray-400 dark:text-gray-600 bg-gray-50 dark:bg-[#0a0a0a] border border-transparent scale-100"}`}
+        >
+          <div className="text-[9px] font-bold uppercase tracking-wider mb-0.5 opacity-70">
+            Step 2
+          </div>
+          <div className="text-[11px] font-semibold leading-tight">
+            Start Room
+          </div>
         </div>
-        <div className={`flex-1 p-2.5 rounded-xl transition-all duration-300 ${step === 3 ? 'bg-green-500/10 text-green-600 dark:text-green-400 shadow-sm border border-green-500/20 scale-105' : 'text-gray-400 dark:text-gray-600 bg-gray-50 dark:bg-[#0a0a0a] border border-transparent scale-100'}`}>
-          <div className="text-[9px] font-bold uppercase tracking-wider mb-0.5 opacity-70">Step 3</div>
-          <div className="text-[11px] font-semibold leading-tight">It's Working!</div>
+        <div
+          className={`flex-1 p-2.5 rounded-xl transition-all duration-300 ${step === 3 ? "bg-green-500/10 text-green-600 dark:text-green-400 shadow-sm border border-green-500/20 scale-105" : "text-gray-400 dark:text-gray-600 bg-gray-50 dark:bg-[#0a0a0a] border border-transparent scale-100"}`}
+        >
+          <div className="text-[9px] font-bold uppercase tracking-wider mb-0.5 opacity-70">
+            Step 3
+          </div>
+          <div className="text-[11px] font-semibold leading-tight">
+            It's Working!
+          </div>
         </div>
       </div>
     </div>
