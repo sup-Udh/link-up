@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal } from "react";
 import { useRoom } from "@/app/lib/RoomContext";
 
 export default function BottomPanel() {
@@ -33,7 +33,9 @@ export default function BottomPanel() {
     });
   };
 
-  const totalCases = (problemMetadata?.testCases.length || 0) + customCases.length;
+
+
+  const totalCases = (problemMetadata?.testcases.length || 0) + customCases.length;
   const ranCases = Object.keys(testResults).length;
   const passedCases = Object.values(testResults).filter(r => r.passed).length;
 
@@ -82,16 +84,16 @@ export default function BottomPanel() {
               {/* LeetCode Examples */}
               <div>
                 <h3 className="text-gray-400 font-bold mb-4 uppercase tracking-wider text-xs">LeetCode Examples</h3>
-                {problemMetadata.testCases.length === 0 ? (
+                {problemMetadata.testcases.length === 0 ? (
                   <div className="text-gray-500 italic">No examples available.</div>
                 ) : (
                   <div className="space-y-4">
-                    {problemMetadata.testCases.map((tc, idx) => {
-                      const rawInputs = tc.split('\n').filter(l => l.trim() !== "");
+                    {problemMetadata.testcases.map((tc: string, idx: number) => {
+                      const rawInputs = tc.split('\n').filter((l: string) => l.trim() !== "");
                       return (
                         <div key={`lc-${idx}`} className="bg-[#252525] border border-gray-700 rounded-lg p-4 shadow-sm">
                           <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
-                            <span className="font-bold text-gray-200">Example {idx + 1}</span>
+                            <span className="font-bold text-gray-200">Example </span>
                             <button 
                               onClick={() => runCode(idx)} 
                               disabled={isExecutingIndex !== null}
@@ -102,14 +104,14 @@ export default function BottomPanel() {
                           </div>
                           
                           <div className="space-y-3">
-                            {problemMetadata.parameters.map((param, pIdx) => (
-                              <div key={param.name}>
+                            {/* {problemMetadata.parameters.map((param: { name: string }, pIdx: number) => (
+                              <div key={pIdx}>
                                 <div className="text-xs text-gray-500 mb-1">{param.name} =</div>
                                 <div className="bg-[#1a1a1a] px-3 py-2 rounded border border-gray-700 text-gray-300 break-all">
                                   {rawInputs[pIdx] || ""}
                                 </div>
                               </div>
-                            ))}
+                            ))} */}
                           </div>
                         </div>
                       );
@@ -130,7 +132,7 @@ export default function BottomPanel() {
                 ) : (
                   <div className="space-y-4">
                     {customCases.map((tc, cIdx) => {
-                      const absoluteIdx = problemMetadata.testCases.length + cIdx;
+                      const absoluteIdx = problemMetadata.testcases.length + cIdx;
                       return (
                         <div key={tc.id} className="bg-[#252525] border border-yellow-700/50 rounded-lg p-4 shadow-sm">
                           <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
@@ -200,8 +202,8 @@ export default function BottomPanel() {
                   const res = testResults[idx];
                   if (!res) return null;
                   
-                  const isCustom = idx >= (problemMetadata?.testCases.length || 0);
-                  const title = isCustom ? `Custom Case ${idx - (problemMetadata?.testCases.length || 0) + 1}` : `Example ${idx + 1}`;
+                  const isCustom = idx >= (problemMetadata?.testcases.length || 0);
+                  const title = isCustom ? `Custom Case ${idx - (problemMetadata?.testcases.length || 0) + 1}` : `Example ${idx + 1}`;
                   
                   return (
                     <div key={`res-${idx}`} className={`border rounded-lg bg-[#252525] p-4 shadow-sm ${res.passed ? "border-green-900/30" : "border-red-900/50"}`}>
