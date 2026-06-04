@@ -20,7 +20,8 @@
   "host_permissions": [
     "https://leetcode.com/*",
     "http://localhost/*",
-    "https://2212-49-207-225-191.ngrok-free.app /*"
+    "http://127.0.0.1/*",
+    "https://*.ngrok-free.app/*"
   ],
 
   "content_scripts": [
@@ -28,7 +29,10 @@
       "matches": [
         "https://leetcode.com/problems/*",
         "http://localhost/*",
-        "http://localhost:*/*"
+        "http://localhost:*/*",
+        "http://127.0.0.1/*",
+        "http://127.0.0.1:*/*",
+        "https://*.ngrok-free.app/*"
       ],
       "js": [
         "content.js"

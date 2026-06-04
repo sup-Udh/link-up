@@ -1,4 +1,36 @@
-const BASE_URL = "http://localhost:3001";
+let BASE_URL = "http://localhost:3001";
+
+// Automatically update BASE_URL if the user opens the popup while on the dashboard/connect page
+function detectBaseUrl() {
+  return new Promise((resolve) => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const activeTab = tabs[0];
+      if (activeTab && activeTab.url) {
+        try {
+          const url = new URL(activeTab.url);
+          const hostname = url.hostname;
+          if (
+            hostname === "localhost" ||
+            hostname === "127.0.0.1" ||
+            hostname.includes("linko") ||
+            hostname.includes("ngrok-free.app")
+          ) {
+            const detectedUrl = url.origin;
+            chrome.storage.local.set({ savedBaseUrl: detectedUrl }, () => {
+              resolve(detectedUrl);
+            });
+            return;
+          }
+        } catch (e) {
+          console.error("Error parsing tab URL for BASE_URL detection", e);
+        }
+      }
+      chrome.storage.local.get(["savedBaseUrl"], (result) => {
+        resolve(result.savedBaseUrl || "http://localhost:3001");
+      });
+    });
+  });
+}
 
 // DOM Elements
 const viewLoading = document.getElementById("view-loading");
@@ -39,6 +71,9 @@ function showStatus(msg, color = "#555") {
 async function checkAuth() {
   showView(viewLoading);
   showStatus("");
+  
+  BASE_URL = await detectBaseUrl();
+  console.log("Using BASE_URL:", BASE_URL);
   
   chrome.storage.local.get(["extensionToken", "requireApproval"], async (result) => {
     if (result.requireApproval !== undefined) {
