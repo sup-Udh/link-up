@@ -1,5 +1,31 @@
-import { WebSocketServer } from "ws";
+import WebSocket, { WebSocketServer } from "ws";
 import * as Y from "yjs";
+import { createClient } from "@supabase/supabase-js";
+
+// Initialize Supabase admin client for syncing presence
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+let supabase: any = null;
+
+if (supabaseUrl && supabaseKey) {
+  supabase = createClient(supabaseUrl, supabaseKey, {
+    auth: { persistSession: false },
+    realtime: { transport: WebSocket }
+  });
+}
+
+async function updateRoomDb(roomId: string, count: number) {
+  if (!supabase) return;
+  try {
+    await supabase.from("rooms").update({
+      participant_count: count,
+      is_active: count > 0,
+      last_active_at: new Date().toISOString()
+    }).eq("id", roomId);
+  } catch (err) {
+    console.error("Failed to sync room count to DB:", err);
+  }
+}
 
 const PORT = parseInt(process.env.PORT || "3001", 10);
 const wss = new WebSocketServer({
@@ -67,6 +93,8 @@ wss.on("connection", (ws) => {
       rooms.get(rId)?.forEach((client) => {
         client.send(payload);
       });
+
+      updateRoomDb(rId, usersList.length);
 
       // Init and send room state
       if (!roomDocs.has(rId)) {
@@ -398,6 +426,8 @@ wss.on("connection", (ws) => {
       socketUsers.delete(ws);
       
       const usersList = Array.from(room || []).map(client => socketUsers.get(client)).filter(Boolean);
+      
+      updateRoomDb(currentRoom, usersList.length);
       
       if (usersList.length === 0) {
         rooms.delete(currentRoom);

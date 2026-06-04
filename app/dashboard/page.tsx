@@ -13,6 +13,7 @@ import {
   Lock,
   Crown,
   TerminalSquare,
+  Trash2,
 } from "lucide-react";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
 import { createClient } from "@/utils/supabase/client";
@@ -40,6 +41,10 @@ export default function Dashboard() {
     "options",
   );
   const [creating, setCreating] = useState(false);
+  
+  // Delete Modal State
+  const [roomToDelete, setRoomToDelete] = useState<Room | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Blank Room Form State
   const [roomTitle, setRoomTitle] = useState("");
@@ -117,6 +122,26 @@ export default function Dashboard() {
     } catch (err) {
       console.error(err);
       setCreating(false);
+    }
+  };
+
+  const handleDeleteRoom = async () => {
+    if (!roomToDelete) return;
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/rooms/${roomToDelete.id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setRooms((prev) => prev.filter((r) => r.id !== roomToDelete.id));
+        setRoomToDelete(null);
+      } else {
+        console.error("Failed to delete room");
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -297,17 +322,30 @@ export default function Dashboard() {
                         </span>
                       )}
                     </div>
-                    {room.is_active ? (
-                      <span className="flex items-center gap-1.5 text-xs font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-500/10 px-2 py-1 rounded-md">
-                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>{" "}
-                        Active
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">
-                        <span className="w-1.5 h-1.5 rounded-full bg-gray-400 dark:bg-gray-500"></span>{" "}
-                        Offline
-                      </span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {room.is_active ? (
+                        <span className="flex items-center gap-1.5 text-xs font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-500/10 px-2 py-1 rounded-md">
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>{" "}
+                          Active
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">
+                          <span className="w-1.5 h-1.5 rounded-full bg-gray-400 dark:bg-gray-500"></span>{" "}
+                          Offline
+                        </span>
+                      )}
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setRoomToDelete(room);
+                        }}
+                        className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                        aria-label="Delete room"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </div>
 
                   <h3 className="text-lg font-bold mb-1 group-hover:text-[#1cbaba] transition-colors line-clamp-1 flex items-center gap-2">
@@ -507,6 +545,41 @@ export default function Dashboard() {
                 </Link>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* DELETE ROOM MODAL */}
+      {roomToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setRoomToDelete(null)}
+          ></div>
+          <div className="bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-3xl w-full max-w-sm shadow-2xl relative z-10 overflow-hidden animate-in zoom-in-95 duration-200 p-6">
+            <h3 className="text-xl font-bold mb-2">Delete Room?</h3>
+            <p className="text-gray-500 dark:text-gray-400 mb-6 text-sm">
+              Are you sure you want to delete <strong className="text-gray-900 dark:text-white">{roomToDelete.title}</strong>? This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setRoomToDelete(null)}
+                className="flex-1 px-4 py-2.5 rounded-xl font-semibold bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteRoom}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2.5 rounded-xl font-semibold bg-red-500 text-white hover:bg-red-600 transition-colors flex justify-center items-center"
+              >
+                {isDeleting ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                ) : (
+                  "Delete"
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}
