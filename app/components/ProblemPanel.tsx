@@ -14,7 +14,7 @@ export default async function ProblemPanel({ roomId }: { roomId: string }) {
   }
 
   const problem = await getProblemData(slug);
-
+  console.log(problem)
   if (!problem) {
     return (
       <div className="p-4 h-full bg-[#282828] text-white">
