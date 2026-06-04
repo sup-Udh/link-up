@@ -22,7 +22,8 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: rooms, error } = await supabase
+    const adminDb = createAdminClient();
+    const { data: rooms, error } = await adminDb
       .from('rooms')
       .select('*')
       .eq('host_id', user.id)
@@ -83,8 +84,8 @@ export async function POST(request: Request) {
       is_active: false,
     };
 
-    const dbClient = isExtension ? createAdminClient() : supabase;
-    const { error } = await dbClient.from('rooms').insert([roomPayload]);
+    const adminDb = createAdminClient();
+    const { error } = await adminDb.from('rooms').insert([roomPayload]);
 
     if (error) {
       console.error("Error inserting room:", error);

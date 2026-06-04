@@ -137,6 +137,10 @@ export function RoomProvider({
   const [language, setLanguage] = useState("javascript");
   const [problemMetadata, setProblemMetadata] = useState<extractedProblemData | null>(null);
   const [customCases, setCustomCases] = useState<CustomTestCase[]>([]);
+  const [hasLoadedState, setHasLoadedState] = useState(false);
+  
+  // Autosave refs
+  const autosaveTimer = useRef<any>(null);
   
   const [hostId, setHostId] = useState<string | null>(null);
   const [driverId, setDriverId] = useState<string | null>(null);
@@ -216,7 +220,71 @@ export function RoomProvider({
         if (!data.error) setProblemMetadata(data);
       })
       .catch(err => console.error("Failed to load metadata:", err));
-  }, [roomId]);
+
+    // Fetch persisted room state
+    fetch(`/api/rooms/${roomId}`)
+      .then(res => {
+        if (!res.ok) throw new Error("Room not found");
+        return res.json();
+      })
+      .then(data => {
+        if (data.language) setLanguage(data.language);
+        if (data.custom_test_cases) setCustomCases(data.custom_test_cases);
+        if (data.latest_results) setTestResults(data.latest_results);
+        
+        // Rehydrate Yjs if it's currently empty (e.g. server restarted)
+        if (data.code && yText.toString() === "") {
+          yText.insert(0, data.code);
+        }
+        
+        setHasLoadedState(true);
+      })
+      .catch(err => {
+        console.error("Failed to load persisted room state:", err);
+        setHasLoadedState(true); // Proceed anyway
+      });
+  }, [roomId, yText]);
+
+  // Debounced Autosave
+  useEffect(() => {
+    if (!hasLoadedState || !currentUser) return;
+
+    const saveToDb = async () => {
+      try {
+        await fetch(`/api/rooms/${roomId}/save`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            code: yText.toString(),
+            language,
+            customTestCases: customCases,
+            latestResults: testResults
+          })
+        });
+      } catch (err) {
+        console.error("Autosave failed:", err);
+      }
+    };
+
+    const triggerAutosave = () => {
+      clearTimeout(autosaveTimer.current);
+      autosaveTimer.current = setTimeout(() => {
+        saveToDb();
+      }, 3000); // 3 seconds debounce
+    };
+
+    // Watch Yjs changes
+    const observer = () => triggerAutosave();
+    yText.observe(observer);
+
+    // Watch React state changes
+    triggerAutosave();
+
+    return () => {
+      clearTimeout(autosaveTimer.current);
+      yText.unobserve(observer);
+    };
+  }, [yText, language, customCases, testResults, hasLoadedState, currentUser, roomId]);
 
   useEffect(() => {
     if (identityStatus !== "ready" || !currentUser) return;
