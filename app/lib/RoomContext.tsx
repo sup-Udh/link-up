@@ -14,7 +14,7 @@ import {
   encodeAwarenessUpdate,
   applyAwarenessUpdate,
 } from "y-protocols/awareness";
-import { ProblemMetadata } from "./leetcode";
+import { extractedProblemData } from "./leetcode";
 
 export interface TestCaseResult {
   passed: boolean;
@@ -62,7 +62,7 @@ interface RoomContextType {
   runCode: (runIndex?: number | "all") => Promise<void>;
   language: string;
   changeLanguage: (lang: string) => void;
-  problemMetadata: ProblemMetadata | null;
+  problemMetadata: extractedProblemData | null;
   
   // Custom Cases
   customCases: CustomTestCase[];
@@ -135,7 +135,7 @@ export function RoomProvider({
   const [testResults, setTestResults] = useState<Record<number, TestCaseResult>>({});
   const [isExecutingIndex, setIsExecutingIndex] = useState<number | "all" | null>(null);
   const [language, setLanguage] = useState("javascript");
-  const [problemMetadata, setProblemMetadata] = useState<ProblemMetadata | null>(null);
+  const [problemMetadata, setProblemMetadata] = useState<extractedProblemData | null>(null);
   const [customCases, setCustomCases] = useState<CustomTestCase[]>([]);
   
   const [hostId, setHostId] = useState<string | null>(null);

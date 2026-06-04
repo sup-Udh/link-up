@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSlugForRoom } from "@/app/lib/db";
-import { fetchLeetCodeMetadata } from "@/app/lib/leetcode";
+import { fetchLeetCodeProblem } from "@/app/lib/leetcode";
 
 export async function POST(request: Request) {
   try {
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, output: "Error: Room problem not found." });
     }
 
-    const meta = await fetchLeetCodeMetadata(slug);
+    const meta = await fetchLeetCodeProblem(slug);
     if (!meta) {
       return NextResponse.json({ success: false, output: "Error: Failed to fetch LeetCode metadata." });
     }

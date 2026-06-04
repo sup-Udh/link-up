@@ -16,6 +16,7 @@ export default function ConnectExtension() {
     setLoading(true);
     setError(null);
     try {
+      console.log("Code generation")
       const response = await fetch('/api/extension/code', { method: 'POST' });
       const data = await response.json();
       

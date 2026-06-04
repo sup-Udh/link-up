@@ -12,6 +12,7 @@ function generateRandomCode() {
 
 export async function POST(request: Request) {
   try {
+    //We need a key here for create CLient? - Ansh
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 

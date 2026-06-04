@@ -1,3 +1,4 @@
+
 console.log("Linko Content Script Loaded");
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "GET_PROBLEM") {
@@ -5,7 +6,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     // Validate we are on a LeetCode problem page
     if (parts.length >= 2 && parts[0] === "problems") {
-      const slug = parts[1];
+      const slug = parts[1];      
       sendResponse({
         slug: slug,
         url: window.location.href,
