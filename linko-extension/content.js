@@ -33,55 +33,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
-
-
-// import { getProblemData } from "@/app/lib/leetcode";
-
-// console.log("Linko Content Script Loaded");
-
-// chrome.runtime.onMessage.addListener(
-//   async (message, sender, sendResponse) => {
-//     if (message.type !== "GET_PROBLEM") {
-//       return;
-//     }
-
-//     try {
-//       const parts = window.location.pathname
-//         .split("/")
-//         .filter(Boolean);
-
-//       if (
-//         parts.length < 2 ||
-//         parts[0] !== "problems"
-//       ) {
-//         sendResponse({
-//           error: "Not on a LeetCode problem page",
-//         });
-
-//         return;
-//       }
-
-//       const slug = parts[1];
-
-//       console.log("Fetching:", slug);
-
-//       const problemData = await getProblemData(slug);
-
-//       sendResponse({
-//         ...problemData,
-//         url: window.location.href,
-//       });
-//     } catch (err) {
-//       console.error("Linko Error:", err);
-
-//       sendResponse({
-//         error:
-//           err instanceof Error
-//             ? err.message
-//             : "Unknown error",
-//       });
-//     }
-
-//     return true;
-//   }
-// );
+// Ping the web app to indicate extension is alive AND connected
+const hostname = window.location.hostname;
+if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.includes('linko') || hostname.includes('ngrok-free.app')) {
+  setInterval(() => {
+    chrome.storage.local.get(["extensionToken"], (result) => {
+      if (result.extensionToken) {
+        window.postMessage({ type: 'LINKO_EXTENSION_LIVE' }, '*');
+      }
+    });
+  }, 2000);
+}

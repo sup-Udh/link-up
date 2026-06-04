@@ -1,4 +1,36 @@
-const BASE_URL = "http://localhost:3001";
+let BASE_URL = "http://localhost";
+
+// Automatically update BASE_URL if the user opens the popup while on the dashboard/connect page
+function detectBaseUrl() {
+  return new Promise((resolve) => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const activeTab = tabs[0];
+      if (activeTab && activeTab.url) {
+        try {
+          const url = new URL(activeTab.url);
+          const hostname = url.hostname;
+          if (
+            hostname === "localhost" ||
+            hostname === "127.0.0.1" ||
+            hostname.includes("linko") ||
+            hostname.includes("ngrok-free.app")
+          ) {
+            const detectedUrl = url.origin;
+            chrome.storage.local.set({ savedBaseUrl: detectedUrl }, () => {
+              resolve(detectedUrl);
+            });
+            return;
+          }
+        } catch (e) {
+          console.error("Error parsing tab URL for BASE_URL detection", e);
+        }
+      }
+      chrome.storage.local.get(["savedBaseUrl"], (result) => {
+        resolve(result.savedBaseUrl || "http://localhost:3001");
+      });
+    });
+  });
+}
 
 // DOM Elements
 const viewLoading = document.getElementById("view-loading");
@@ -26,7 +58,9 @@ const btnDisconnect = document.getElementById("btn-disconnect");
 
 // Helper to switch views
 function showView(view) {
-  document.querySelectorAll(".view").forEach(el => el.classList.remove("active"));
+  document
+    .querySelectorAll(".view")
+    .forEach((el) => el.classList.remove("active"));
   view.classList.add("active");
 }
 
@@ -39,41 +73,47 @@ function showStatus(msg, color = "#555") {
 async function checkAuth() {
   showView(viewLoading);
   showStatus("");
-  
-  chrome.storage.local.get(["extensionToken", "requireApproval"], async (result) => {
-    if (result.requireApproval !== undefined) {
-      requireApprovalCheckbox.checked = result.requireApproval;
-    }
 
-    if (!result.extensionToken) {
-      showView(viewUnauth);
-      return;
-    }
+  BASE_URL = await detectBaseUrl();
+  console.log("Using BASE_URL:", BASE_URL);
 
-    // Verify token with backend
-    try {
-      const response = await fetch(`${BASE_URL}/api/extension/me`, {
-        headers: { "Authorization": `Bearer ${result.extensionToken}` }
-      });
-
-      if (!response.ok) throw new Error("Invalid token");
-
-      const user = await response.json();
-      
-      // Update Auth UI
-      nameEl.textContent = user.name || "User";
-      emailEl.textContent = user.email || "";
-      if (user.avatar) {
-        avatarEl.style.backgroundImage = `url(${user.avatar})`;
+  chrome.storage.local.get(
+    ["extensionToken", "requireApproval"],
+    async (result) => {
+      if (result.requireApproval !== undefined) {
+        requireApprovalCheckbox.checked = result.requireApproval;
       }
 
-      showView(viewAuth);
-    } catch (err) {
-      console.error(err);
-      chrome.storage.local.remove(["extensionToken"]);
-      showView(viewUnauth);
-    }
-  });
+      if (!result.extensionToken) {
+        showView(viewUnauth);
+        return;
+      }
+
+      // Verify token with backend
+      try {
+        const response = await fetch(`${BASE_URL}/api/extension/me`, {
+          headers: { Authorization: `Bearer ${result.extensionToken}` },
+        });
+
+        if (!response.ok) throw new Error("Invalid token");
+
+        const user = await response.json();
+
+        // Update Auth UI
+        nameEl.textContent = user.name || "User";
+        emailEl.textContent = user.email || "";
+        if (user.avatar) {
+          avatarEl.style.backgroundImage = `url(${user.avatar})`;
+        }
+
+        showView(viewAuth);
+      } catch (err) {
+        console.error(err);
+        chrome.storage.local.remove(["extensionToken"]);
+        showView(viewUnauth);
+      }
+    },
+  );
 }
 
 // INIT
@@ -122,7 +162,7 @@ btnVerify.addEventListener("click", async () => {
     const response = await fetch(`${BASE_URL}/api/extension/verify`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code })
+      body: JSON.stringify({ code }),
     });
 
     const data = await response.json();
@@ -131,7 +171,7 @@ btnVerify.addEventListener("click", async () => {
 
     // Save token
     chrome.storage.local.set({ extensionToken: data.token });
-    
+
     // Update Auth UI
     nameEl.textContent = data.user.name || "User";
     emailEl.textContent = data.user.email || "";
@@ -144,7 +184,6 @@ btnVerify.addEventListener("click", async () => {
       showView(viewAuth);
       showStatus("");
     }, 1000);
-
   } catch (err) {
     showStatus(err.message, "red");
   } finally {
@@ -165,7 +204,7 @@ btnDisconnect.addEventListener("click", async () => {
       try {
         await fetch(`${BASE_URL}/api/extension/revoke`, {
           method: "POST",
-          headers: { "Authorization": `Bearer ${result.extensionToken}` }
+          headers: { Authorization: `Bearer ${result.extensionToken}` },
         });
       } catch (err) {
         console.error("Failed to revoke token remotely");
@@ -180,7 +219,7 @@ btnDisconnect.addEventListener("click", async () => {
 // Start Session
 startBtn.addEventListener("click", async () => {
   const requireApproval = requireApprovalCheckbox.checked;
-  
+
   chrome.storage.local.get(["extensionToken"], async (result) => {
     if (!result.extensionToken) {
       showStatus("Please connect your account first.", "red");
@@ -190,55 +229,66 @@ startBtn.addEventListener("click", async () => {
     try {
       showStatus("Reading problem...", "#555");
 
-      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+      const tabs = await chrome.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
       const tab = tabs[0];
 
       if (!tab || !tab.url.includes("leetcode.com/problems/")) {
         throw new Error("Please navigate to a LeetCode problem page.");
       }
 
-      chrome.tabs.sendMessage(tab.id, { type: "GET_PROBLEM" }, async (problem) => {
-        if (chrome.runtime.lastError) {
-          showStatus("Error: Please refresh the LeetCode page and try again.", "red");
-          return;
-        }
-
-        if (!problem || problem.error) {
-          showStatus(problem?.error || "Failed to read problem data.", "red");
-          return;
-        }
-
-        try {
-          showStatus("Creating room...", "#1cbaba");
-          
-          const response = await fetch(`${BASE_URL}/api/rooms`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${result.extensionToken}`
-            },
-            body: JSON.stringify({
-              slug: problem.slug,
-              url: problem.url
-              // displayName is no longer needed from client, server infers from token!
-            })
-          });
-
-          if (!response.ok) {
-            throw new Error(`Server returned ${response.status}`);
+      chrome.tabs.sendMessage(
+        tab.id,
+        { type: "GET_PROBLEM" },
+        async (problem) => {
+          if (chrome.runtime.lastError) {
+            showStatus(
+              "Error: Please refresh the LeetCode page and try again.",
+              "red",
+            );
+            return;
           }
 
-          const data = await response.json();
-          
-          showStatus("Opening collaborative room...", "green");
+          if (!problem || problem.error) {
+            showStatus(problem?.error || "Failed to read problem data.", "red");
+            return;
+          }
 
-          // Open the room in a new tab
-          chrome.tabs.create({ url: `${BASE_URL}/room/${data.roomId}?requireApproval=${requireApproval}` });
-          
-        } catch (err) {
-          showStatus(`Error: ${err.message}`, "red");
-        }
-      });
+          try {
+            showStatus("Creating room...", "#1cbaba");
+
+            const response = await fetch(`${BASE_URL}/api/rooms`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${result.extensionToken}`,
+              },
+              body: JSON.stringify({
+                slug: problem.slug,
+                url: problem.url,
+                // displayName is no longer needed from client, server infers from token!
+              }),
+            });
+
+            if (!response.ok) {
+              throw new Error(`Server returned ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            showStatus("Opening collaborative room...", "green");
+
+            // Open the room in a new tab
+            chrome.tabs.create({
+              url: `${BASE_URL}/room/${data.roomId}?requireApproval=${requireApproval}`,
+            });
+          } catch (err) {
+            showStatus(`Error: ${err.message}`, "red");
+          }
+        },
+      );
     } catch (err) {
       showStatus(`Error: ${err.message}`, "red");
     }

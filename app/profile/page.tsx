@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Code2, User, Award, Hash, Clock, FolderGit2, Calendar, LayoutGrid, CheckCircle2, ChevronRight, LogOut } from "lucide-react";
+import { Code2, User, Edit3, Award, Hash, Clock, FolderGit2, Calendar, LayoutGrid, CheckCircle2, ChevronRight, LogOut } from "lucide-react";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
 import { createClient } from "@/utils/supabase/client";
 

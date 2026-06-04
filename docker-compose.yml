@@ -9,7 +9,7 @@ services:
     ports:
       - "3000:3000"
     env_file:
-      .env.local
+      - .env.local
     restart: always
 
   # 2. The WebSocket Server

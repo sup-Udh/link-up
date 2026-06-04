@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 
+import { createAdminClient } from "@/utils/supabase/admin";
+
 // Helper to generate 8-character ID
 function generateRoomId() {
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -44,6 +46,7 @@ export async function POST(request: Request) {
     
     // Check for standard Web Session OR Extension Bearer token
     let user = null;
+    let isExtension = false;
     
     const authHeader = request.headers.get('Authorization');
     if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -52,6 +55,7 @@ export async function POST(request: Request) {
       const { data: tokenRecord } = await supabase.from('extension_tokens').select('user_id').eq('token', token).single();
       if (tokenRecord) {
         user = { id: tokenRecord.user_id };
+        isExtension = true;
       }
     } else {
       // Web session
@@ -72,14 +76,15 @@ export async function POST(request: Request) {
       id: roomId,
       title: title || slug || "Untitled Session",
       language: language || "JavaScript",
-      source: source,
+      source: slug ? "extension" : source,
       host_id: user.id,
       require_approval: requireApproval,
       participant_count: 0,
       is_active: false,
     };
 
-    const { error } = await supabase.from('rooms').insert([roomPayload]);
+    const dbClient = isExtension ? createAdminClient() : supabase;
+    const { error } = await dbClient.from('rooms').insert([roomPayload]);
 
     if (error) {
       console.error("Error inserting room:", error);

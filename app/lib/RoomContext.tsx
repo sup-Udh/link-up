@@ -110,6 +110,12 @@ function getColorForId(str: string) {
 
 function getWsUrl(): string {
   if (process.env.NEXT_PUBLIC_WS_URL) return process.env.NEXT_PUBLIC_WS_URL;
+  
+  // If running locally, route directly to the websocket server port to bypass any Next.js proxying issues
+  if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+    return "ws://localhost:8080";
+  }
+
   const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
   return `${proto}//${window.location.host}/socket`;
 }
