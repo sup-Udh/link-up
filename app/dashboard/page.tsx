@@ -17,6 +17,8 @@ interface Room {
   require_approval: boolean;
 }
 
+
+
 export default function Dashboard() {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -42,6 +44,7 @@ export default function Dashboard() {
       if (user) {
         const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
         setUserProfile(profile);
+	
       }
 
       // Load Rooms
