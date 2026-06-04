@@ -26,7 +26,7 @@ function detectBaseUrl() {
         }
       }
       chrome.storage.local.get(["savedBaseUrl"], (result) => {
-        resolve(result.savedBaseUrl || "http://localhost:3001");
+        resolve(result.savedBaseUrl || "http://localhost");
       });
     });
   });
