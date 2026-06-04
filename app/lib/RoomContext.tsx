@@ -212,10 +212,19 @@ export function RoomProvider({
     // Fetch problem metadata asynchronously
     fetch(`/api/problem?roomId=${roomId}`)
       .then(res => res.json())
-      .then(data => {
-        if (!data.error) setProblemMetadata(data);
+      .then((data) => {
+        if (data?.error) {
+          console.error("Problem metadata error:", data.error);
+          return;
+        }
+
+        if (!Array.isArray(data?.testcases)) {
+          data = { ...data, testcases: [] };
+        }
+
+        setProblemMetadata(data);
       })
-      .catch(err => console.error("Failed to load metadata:", err));
+      .catch((err) => console.error("Failed to load metadata:", err));
   }, [roomId]);
 
   useEffect(() => {

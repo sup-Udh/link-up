@@ -17,7 +17,10 @@ export async function GET(request: Request) {
       if (isLocalEnv) {
         return NextResponse.redirect(`${origin}${next}`)
       } else if (forwardedHost) {
-        return NextResponse.redirect(`https://${forwardedHost}${next}`)
+        // Don't force HTTPS if the host is localhost (e.g. when testing via Docker)
+        const isLocalHost = forwardedHost.includes('localhost') || forwardedHost.includes('127.0.0.1')
+        const proto = isLocalHost ? 'http' : 'https'
+        return NextResponse.redirect(`${proto}://${forwardedHost}${next}`)
       } else {
         return NextResponse.redirect(`${origin}${next}`)
       }

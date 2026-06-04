@@ -118,7 +118,7 @@ function RoomContent({ problemPanel }: { problemPanel: React.ReactNode }) {
             <ResizeHandle direction="vertical" />
             
             <Panel defaultSize={30} minSize={10} collapsible={true} collapsedSize={5} className="bg-[#1e1e1e] flex flex-col">
-              <BottomPanel />
+              {/* <BottomPanel/> */}
             </Panel>
           </Group>
         </Panel>

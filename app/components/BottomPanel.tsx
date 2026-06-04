@@ -19,7 +19,6 @@ export default function BottomPanel() {
 
   // Auto-switch to result tab when execution starts
   useEffect(() => {
-    
     if (isExecutingIndex !== null) {
       setActiveTab("result");
     }
@@ -33,11 +32,12 @@ export default function BottomPanel() {
     });
   };
 
-
-
-  const totalCases = (problemMetadata?.testcases.length || 0) + customCases.length;
-  const ranCases = Object.keys(testResults).length;
-  const passedCases = Object.values(testResults).filter(r => r.passed).length;
+  const metadataTestcases = Array.isArray(problemMetadata?.testcases) ? problemMetadata.testcases : [];
+  const customCasesArray = Array.isArray(customCases) ? customCases : [];
+  const testResultsObject = testResults || {};
+  const totalCases = metadataTestcases.length + customCasesArray.length;
+  const ranCases = Object.keys(testResultsObject).length;
+  const passedCases = Object.values(testResultsObject).filter((r) => r?.passed).length;
 
   return (
     <div className="flex flex-col h-full bg-[#1e1e1e] text-sm font-mono text-gray-300">
@@ -84,16 +84,18 @@ export default function BottomPanel() {
               {/* LeetCode Examples */}
               <div>
                 <h3 className="text-gray-400 font-bold mb-4 uppercase tracking-wider text-xs">LeetCode Examples</h3>
-                {problemMetadata.testcases.length === 0 ? (
+                {metadataTestcases.length === 0 ? (
                   <div className="text-gray-500 italic">No examples available.</div>
                 ) : (
                   <div className="space-y-4">
-                    {problemMetadata.testcases.map((tc: string, idx: number) => {
-                      const rawInputs = tc.split('\n').filter((l: string) => l.trim() !== "");
+                    {metadataTestcases.map((tc: any, idx: number) => {
+                      const rawTestcase = typeof tc === "string" ? tc : tc?.input ?? "";
+                      const rawInputs = rawTestcase.split('\n').filter((l: string) => l.trim() !== "");
+                      const exampleLabel = typeof tc === "object" && tc?.example ? tc.example : `Example ${idx + 1}`;
                       return (
                         <div key={`lc-${idx}`} className="bg-[#252525] border border-gray-700 rounded-lg p-4 shadow-sm">
                           <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
-                            <span className="font-bold text-gray-200">Example </span>
+                            <span className="font-bold text-gray-200">{exampleLabel}</span>
                             <button 
                               onClick={() => runCode(idx)} 
                               disabled={isExecutingIndex !== null}
@@ -127,12 +129,12 @@ export default function BottomPanel() {
                   <button onClick={handleAddCustomCase} className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded text-xs transition shadow-sm">+ Add Case</button>
                 </div>
                 
-                {customCases.length === 0 ? (
+                {customCasesArray.length === 0 ? (
                   <div className="text-gray-500 italic text-sm">No custom cases added yet.</div>
                 ) : (
                   <div className="space-y-4">
-                    {customCases.map((tc, cIdx) => {
-                      const absoluteIdx = problemMetadata.testcases.length + cIdx;
+                    {customCasesArray.map((tc, cIdx) => {
+                      const absoluteIdx = metadataTestcases.length + cIdx;
                       return (
                         <div key={tc.id} className="bg-[#252525] border border-yellow-700/50 rounded-lg p-4 shadow-sm">
                           <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
@@ -202,8 +204,8 @@ export default function BottomPanel() {
                   const res = testResults[idx];
                   if (!res) return null;
                   
-                  const isCustom = idx >= (problemMetadata?.testcases.length || 0);
-                  const title = isCustom ? `Custom Case ${idx - (problemMetadata?.testcases.length || 0) + 1}` : `Example ${idx + 1}`;
+                  const isCustom = idx >= metadataTestcases.length;
+                  const title = isCustom ? `Custom Case ${idx - metadataTestcases.length + 1}` : `Example ${idx + 1}`;
                   
                   return (
                     <div key={`res-${idx}`} className={`border rounded-lg bg-[#252525] p-4 shadow-sm ${res.passed ? "border-green-900/30" : "border-red-900/50"}`}>
