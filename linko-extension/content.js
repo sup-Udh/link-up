@@ -16,3 +16,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
   }
 });
+
+// Ping the web app to indicate extension is alive AND connected
+if (window.location.hostname === 'localhost' || window.location.hostname.includes('linko')) {
+  setInterval(() => {
+    chrome.storage.local.get(["extensionToken"], (result) => {
+      if (result.extensionToken) {
+        window.postMessage({ type: 'LINKO_EXTENSION_LIVE' }, '*');
+      }
+    });
+  }, 2000);
+}

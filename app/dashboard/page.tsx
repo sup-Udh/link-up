@@ -23,6 +23,7 @@ export default function Dashboard() {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loadingRooms, setLoadingRooms] = useState(true);
+  const [isExtensionLive, setIsExtensionLive] = useState(false);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -61,6 +62,21 @@ export default function Dashboard() {
       }
     }
     loadData();
+
+    // Listen for extension pings
+    let timeoutId: NodeJS.Timeout;
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'LINKO_EXTENSION_LIVE') {
+        setIsExtensionLive(true);
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => setIsExtensionLive(false), 3000);
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => {
+      window.removeEventListener('message', handleMessage);
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   const handleCreateBlankRoom = async (e: React.FormEvent) => {
@@ -152,10 +168,20 @@ export default function Dashboard() {
           </div>
           
           <div className="flex items-center gap-3">
-            <Link href="/extension/connect" className="inline-flex items-center gap-2 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 px-4 py-2.5 rounded-xl text-sm font-semibold shadow-sm hover:shadow-md hover:border-[#1cbaba] dark:hover:border-[#1cbaba] transition-all text-gray-700 dark:text-gray-300 group shrink-0">
-              <Download size={16} className="text-[#1cbaba] group-hover:-translate-y-0.5 transition-transform" />
-              Get Extension
-            </Link>
+            {isExtensionLive ? (
+              <div className="inline-flex items-center gap-2 bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20 px-4 py-2.5 rounded-xl text-sm font-semibold text-green-700 dark:text-green-400 shrink-0">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                </span>
+                Extension Live
+              </div>
+            ) : (
+              <Link href="/extension/connect" className="inline-flex items-center gap-2 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 px-4 py-2.5 rounded-xl text-sm font-semibold shadow-sm hover:shadow-md hover:border-[#1cbaba] dark:hover:border-[#1cbaba] transition-all text-gray-700 dark:text-gray-300 group shrink-0">
+                <Download size={16} className="text-[#1cbaba] group-hover:-translate-y-0.5 transition-transform" />
+                Get Extension
+              </Link>
+            )}
             <button onClick={openModal} className="inline-flex items-center gap-2 bg-[#1cbaba] hover:bg-[#19a6a6] text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-[#1cbaba]/20 transition-all active:scale-95 shrink-0">
               <Plus size={18} />
               Create Room
@@ -347,20 +373,7 @@ export default function Dashboard() {
                   Open a LeetCode problem and create a room using the Linko Extension. The room will automatically appear in your dashboard.
                 </p>
                 
-                <div className="bg-gray-50 dark:bg-[#0a0a0a] rounded-xl p-4 text-left border border-gray-200 dark:border-gray-800 space-y-3 mb-6">
-                  <div className="flex items-center gap-3 text-sm">
-                    <div className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400 font-bold flex items-center justify-center shrink-0">1</div>
-                    <span>Open any LeetCode problem.</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm">
-                    <div className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400 font-bold flex items-center justify-center shrink-0">2</div>
-                    <span>Open the Linko extension.</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm">
-                    <div className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400 font-bold flex items-center justify-center shrink-0">3</div>
-                    <span>Click <strong>Start Session</strong>.</span>
-                  </div>
-                </div>
+                <ExtensionAnimation />
 
                 <Link href="/extension/connect" onClick={closeModal} className="text-sm text-[#1cbaba] hover:underline font-semibold">
                   Don't have the extension connected?
@@ -375,3 +388,102 @@ export default function Dashboard() {
     </div>
   );
 }
+
+const ExtensionAnimation = () => {
+  const [step, setStep] = useState(1);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setStep((prev) => (prev >= 3 ? 1 : prev + 1));
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="w-full mb-8">
+      {/* Animated Mockup Window */}
+      <div className="relative w-full h-48 bg-white dark:bg-[#0a0a0a] rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-inner mb-4">
+        
+        {/* Browser Mock Header */}
+        <div className="h-8 bg-gray-100 dark:bg-[#111] border-b border-gray-200 dark:border-gray-800 flex items-center px-3 gap-2">
+          <div className="flex gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full bg-red-400"></div>
+            <div className="w-2.5 h-2.5 rounded-full bg-yellow-400"></div>
+            <div className="w-2.5 h-2.5 rounded-full bg-green-400"></div>
+          </div>
+          <div className="mx-auto w-32 h-4 bg-white dark:bg-[#222] rounded flex items-center justify-center text-[9px] text-gray-400 font-medium">leetcode.com</div>
+          <div className={`w-6 h-6 rounded flex items-center justify-center transition-colors ${step === 1 ? 'bg-gray-200 dark:bg-gray-800' : ''}`}>
+            <Code2 size={14} className={step >= 2 ? "text-[#ffa116]" : "text-gray-400"} />
+          </div>
+        </div>
+
+        {/* Browser Content */}
+        <div className="p-4 relative h-full">
+          {/* Step 1: LeetCode Mock UI */}
+          <div className={`transition-opacity duration-500 ${step === 3 ? 'opacity-0' : 'opacity-100'}`}>
+            <div className="w-3/4 h-4 bg-gray-100 dark:bg-gray-800 rounded mb-3"></div>
+            <div className="w-1/2 h-3 bg-gray-100 dark:bg-gray-800 rounded mb-5"></div>
+            <div className="w-full h-20 bg-gray-100 dark:bg-gray-800 rounded"></div>
+          </div>
+
+          {/* Step 3: Linko Mock UI */}
+          <div className={`absolute top-4 left-4 right-4 transition-opacity duration-500 ${step === 3 ? 'opacity-100' : 'opacity-0'}`}>
+             <div className="flex flex-col items-center justify-center h-28 text-[#1cbaba]">
+               <div className="w-12 h-12 rounded-full bg-[#1cbaba]/10 flex items-center justify-center mb-2 animate-bounce">
+                 <TerminalSquare size={24} />
+               </div>
+               <div className="text-xs font-bold text-gray-800 dark:text-gray-200">Session Active</div>
+             </div>
+          </div>
+
+          {/* Extension Popup Mock */}
+          <div className={`absolute top-1 right-2 w-32 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-lg shadow-xl transition-all duration-300 transform origin-top-right ${step === 2 ? 'scale-100 opacity-100' : 'scale-90 opacity-0 pointer-events-none'}`}>
+            <div className="p-2 border-b border-gray-100 dark:border-gray-800 flex items-center gap-1.5">
+              <Code2 size={12} className="text-[#ffa116]" />
+              <span className="text-[10px] font-bold text-gray-800 dark:text-gray-200">Linko</span>
+            </div>
+            <div className="p-2 space-y-2">
+              <div className="w-full h-2 bg-gray-100 dark:bg-gray-800 rounded"></div>
+              <div className="w-3/4 h-2 bg-gray-100 dark:bg-gray-800 rounded"></div>
+              <div className={`w-full py-1.5 mt-2 bg-[#1cbaba] rounded-md text-[9px] text-center text-white font-bold shadow-sm transition-all ${step === 2 ? 'opacity-100 scale-100' : 'opacity-80 scale-95'}`}>
+                Start Session
+              </div>
+            </div>
+          </div>
+
+          {/* Animated Cursor */}
+          <div 
+            className="absolute z-50 transition-all duration-1000 ease-in-out pointer-events-none drop-shadow-lg"
+            style={{
+              top: step === 1 ? '5px' : step === 2 ? '80px' : '90px',
+              left: step === 1 ? '92%' : step === 2 ? '78%' : '50%',
+              transform: `translate(-50%, -50%) scale(${step === 1 ? 0.9 : step === 2 ? 0.9 : 1})`
+            }}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 4L11 20L13.5 13.5L20 11L4 4Z" fill="white" stroke="#333" strokeWidth="1.5" strokeLinejoin="round"/>
+            </svg>
+            {/* Click Ripple */}
+            <div className={`absolute top-1 left-1 w-5 h-5 bg-[#1cbaba]/40 rounded-full transition-transform duration-500 ${step === 1 || step === 2 ? 'scale-150 opacity-0 animate-ping' : 'scale-0 opacity-0'}`}></div>
+          </div>
+        </div>
+      </div>
+
+      {/* Text Steps */}
+      <div className="flex justify-between items-center text-left gap-2">
+        <div className={`flex-1 p-2.5 rounded-xl transition-all duration-300 ${step === 1 ? 'bg-[#1cbaba]/10 text-[#1cbaba] shadow-sm border border-[#1cbaba]/20 scale-105' : 'text-gray-400 dark:text-gray-600 bg-gray-50 dark:bg-[#0a0a0a] border border-transparent scale-100'}`}>
+          <div className="text-[9px] font-bold uppercase tracking-wider mb-0.5 opacity-70">Step 1</div>
+          <div className="text-[11px] font-semibold leading-tight">Click Extension</div>
+        </div>
+        <div className={`flex-1 p-2.5 rounded-xl transition-all duration-300 ${step === 2 ? 'bg-[#1cbaba]/10 text-[#1cbaba] shadow-sm border border-[#1cbaba]/20 scale-105' : 'text-gray-400 dark:text-gray-600 bg-gray-50 dark:bg-[#0a0a0a] border border-transparent scale-100'}`}>
+          <div className="text-[9px] font-bold uppercase tracking-wider mb-0.5 opacity-70">Step 2</div>
+          <div className="text-[11px] font-semibold leading-tight">Start Room</div>
+        </div>
+        <div className={`flex-1 p-2.5 rounded-xl transition-all duration-300 ${step === 3 ? 'bg-green-500/10 text-green-600 dark:text-green-400 shadow-sm border border-green-500/20 scale-105' : 'text-gray-400 dark:text-gray-600 bg-gray-50 dark:bg-[#0a0a0a] border border-transparent scale-100'}`}>
+          <div className="text-[9px] font-bold uppercase tracking-wider mb-0.5 opacity-70">Step 3</div>
+          <div className="text-[11px] font-semibold leading-tight">It's Working!</div>
+        </div>
+      </div>
+    </div>
+  );
+};
