@@ -8,7 +8,7 @@ import { generateWrapper } from "@/app/lib/problem-engine/wrappers";
 import { judge } from "@/app/lib/problem-engine/judge";
 import type { Example, TestCaseResult } from "@/app/lib/problem-engine/types";
 
-const PISTON_URL = "https://emkc.org/api/v2/piston/execute";
+const WANDBOX_URL = "https://wandbox.org/api/compile.json";
 
 export async function POST(request: Request) {
   try {
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
       examplesToRun = [allExamples[runIndex]];
     }
 
-    // 4. Find Piston language config (case-insensitive check against both id and name)
+    // 4. Find Wandbox language config (case-insensitive check against both id and name)
     const langInfo = SUPPORTED_LANGUAGES.find(
       (l) => l.id.toLowerCase() === language.toLowerCase() || l.name.toLowerCase() === language.toLowerCase()
     );
@@ -55,8 +55,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unsupported language" }, { status: 400 });
     }
 
-    // 5. Execute all selected examples via Piston API concurrently
-    const executionPromises = examplesToRun.map(async (example) => {
+    // 5. Execute all selected examples via Wandbox API sequentially to avoid rate/resource limits
+    const results: any[] = [];
+    
+    for (const example of examplesToRun) {
       const startTime = Date.now();
       
       // a. Get adapter code (Helper + Execution parts)
@@ -70,29 +72,14 @@ export async function POST(request: Request) {
         adapter.executionCode
       );
 
-      // Determine filename extension for Piston based on language ID
-      let extension = "txt";
-      if (langInfo.id === "javascript") extension = "js";
-      else if (langInfo.id === "python") extension = "py";
-      else if (langInfo.id === "java") extension = "java";
-      else if (langInfo.id === "cpp") extension = "cpp";
-      else if (langInfo.id === "typescript") extension = "ts";
-      
       const payload = {
-        language: langInfo.pistonLanguage,
-        version: langInfo.pistonVersion,
-        files: [
-          {
-            name: `main.${extension}`,
-            content: sourceCode
-          }
-        ],
-        compile_timeout: 10000,
-        run_timeout: 3000
+        code: sourceCode,
+        compiler: langInfo.wandboxCompiler,
+        save: false
       };
 
       try {
-        const response = await fetch(PISTON_URL, {
+        const response = await fetch(WANDBOX_URL, {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -101,50 +88,52 @@ export async function POST(request: Request) {
         });
 
         if (!response.ok) {
-          throw new Error(`Piston API Error: ${response.statusText}`);
+          throw new Error(`Wandbox API Error: ${response.statusText}`);
         }
 
         const data = await response.json();
         const executionTime = (Date.now() - startTime) / 1000;
         
-        let stderr = data.run?.stderr || "";
+        let stderr = data.program_error || "";
         
-        // If compilation failed, surface compile errors
-        if (data.compile && data.compile.code !== 0) {
-           stderr = data.compile.stderr || data.compile.output || "Compilation Error";
+        // If compilation failed
+        if (data.compiler_error) {
+           stderr = data.compiler_error;
         }
 
-        if (stderr || (data.run && data.run.code !== 0)) {
-           return {
+        if (stderr || data.status !== "0") {
+           results.push({
              passed: false,
              expected: example.output,
              received: "",
-             error: stderr || data.run?.output || "Runtime Error",
+             error: stderr || data.program_output || "Runtime Error",
              executionTime
-           };
+           });
+           continue;
         }
 
-        const stdout = data.run?.stdout || "";
+        const stdout = data.program_output || "";
         const isCorrect = judge(example.output, stdout);
         
-        return {
+        results.push({
           passed: isCorrect,
           expected: example.output,
           received: stdout.trim(),
           executionTime
-        };
+        });
       } catch (err: any) {
-        return {
+        results.push({
           passed: false,
           expected: example.output,
           received: "",
           error: err.message || "Execution Failed",
           executionTime: 0
-        };
+        });
       }
-    });
-
-    const results = await Promise.all(executionPromises);
+      
+      // Add a tiny delay between requests to prevent overwhelming the free API
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
 
     return NextResponse.json({ results });
   } catch (error: any) {
