@@ -216,7 +216,9 @@ export function RoomProvider({
 
   useEffect(() => {
     // Fetch problem metadata asynchronously
-    fetch(`/api/problem?roomId=${roomId}`)
+    const urlParams = new URLSearchParams(window.location.search);
+    const slugParam = urlParams.get("slug");
+    fetch(`/api/problem?roomId=${roomId}${slugParam ? `&slug=${slugParam}` : ''}`)
       .then(res => res.json())
       .then(data => {
         if (!data.error) {
@@ -481,7 +483,14 @@ export function RoomProvider({
       const res = await fetch("/api/run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ roomId, language, code, customTestCases: customCases, runIndex })
+        body: JSON.stringify({ 
+          roomId, 
+          language, 
+          code, 
+          customTestCases: customCases, 
+          runIndex,
+          slug: problemMetadata?.slug
+        })
       });
       
       const data = await res.json();

@@ -12,14 +12,14 @@ const WANDBOX_URL = "https://wandbox.org/api/compile.json";
 
 export async function POST(request: Request) {
   try {
-    const { roomId, language, code, runIndex, customTestCases } = await request.json();
+    const { roomId, language, code, runIndex, customTestCases, slug: reqSlug } = await request.json();
 
     if (!roomId || !language || !code) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
     // 1. Get problem data
-    const slug = await getSlugForRoom(roomId);
+    const slug = reqSlug || await getSlugForRoom(roomId);
     if (!slug) {
       return NextResponse.json({ error: "Room not linked to a problem" }, { status: 404 });
     }

@@ -12,7 +12,7 @@ export default function Home() {
 
   const createRoom = () => {
     const roomId = crypto.randomUUID().slice(0, 8);
-    router.push(`/room/${roomId}`);
+    router.push(`/room/${roomId}?slug=two-sum`);
   };
 
   const scrollToDevelopers = () => {

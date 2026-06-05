@@ -6,12 +6,13 @@ import { getSlugForRoom } from "@/app/lib/db";
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const roomId = searchParams.get("roomId");
+  const slugParam = searchParams.get("slug");
 
-  if (!roomId) {
-    return NextResponse.json({ error: "Missing roomId" }, { status: 400 });
+  if (!roomId && !slugParam) {
+    return NextResponse.json({ error: "Missing roomId or slug" }, { status: 400 });
   }
 
-  const slug = await getSlugForRoom(roomId);
+  const slug = slugParam || (roomId ? await getSlugForRoom(roomId) : null);
   if (!slug) {
     return NextResponse.json({ error: "Room not found or no problem linked" }, { status: 404 });
   }
