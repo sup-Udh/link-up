@@ -529,6 +529,21 @@ export function RoomProvider({
   };
 
   const changeLanguage = (lang: string) => {
+    // If the editor is empty or just contains the starter code of the current language, replace it with the new starter code
+    if (problemMetadata) {
+      const normalize = (str: string) => str.replace(/\s+/g, '').trim();
+      const currentCode = normalize(yText.toString());
+      const currentStarterCode = normalize(getStarterCode(problemMetadata, language) || "");
+      
+      if (currentCode === "" || currentCode === currentStarterCode) {
+        const newStarter = getStarterCode(problemMetadata, lang);
+        if (newStarter) {
+          yText.delete(0, yText.length);
+          yText.insert(0, newStarter);
+        }
+      }
+    }
+
     setLanguage(lang);
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({
