@@ -325,7 +325,7 @@ export default function Dashboard() {
                       )}
                     </div>
                     <div className="flex items-center gap-2">
-                      {room.is_active ? (
+                      {room.participant_count > 0 ? (
                         <span className="flex items-center gap-1.5 text-xs font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-500/10 px-2 py-1 rounded-md">
                           <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>{" "}
                           Active

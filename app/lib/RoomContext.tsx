@@ -423,12 +423,12 @@ export function RoomProvider({
 
       if (data.type === "user-kicked") {
         alert("You have been removed from this room.");
-        window.location.href = "/";
+        window.location.href = "/dashboard";
       }
 
       if (data.type === "room-ended") {
         alert("Session ended by host.");
-        window.location.href = "/";
+        window.location.href = "/dashboard";
       }
 
       if (data.type === "session-reset") {
