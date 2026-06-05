@@ -20,6 +20,7 @@ export default function Profile() {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
+  const [totalTimeMs, setTotalTimeMs] = useState(0);
 
   // Edit State
   const [isEditing, setIsEditing] = useState(false);
@@ -42,6 +43,13 @@ export default function Profile() {
         setUserProfile(mergedProfile);
         setBioInput(mergedProfile.bio || "");
         setBannerInput(mergedProfile.banner_url || "");
+        
+        // Fetch Real User Sessions
+        const { data: sessions } = await supabase.from('user_sessions').select('joined_at, left_at').eq('user_id', user.id).not('left_at', 'is', null);
+        if (sessions) {
+          const totalMs = sessions.reduce((acc: number, s: any) => acc + (new Date(s.left_at).getTime() - new Date(s.joined_at).getTime()), 0);
+          setTotalTimeMs(totalMs);
+        }
       }
 
       // Load Rooms for Activity
@@ -143,6 +151,16 @@ export default function Profile() {
     }
   };
 
+  const formatTotalTime = (ms: number) => {
+    if (ms === 0) return "0 min";
+    const hours = ms / (1000 * 60 * 60);
+    if (hours < 1) {
+      const mins = Math.max(1, Math.round(ms / (1000 * 60)));
+      return `${mins} min`;
+    }
+    return `${hours.toFixed(1)} hrs`;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#050505] text-gray-900 dark:text-gray-100 font-sans transition-colors duration-300 pb-20 relative overflow-hidden">
       
@@ -186,50 +204,50 @@ export default function Profile() {
           </div>
           
           <div className="px-8 pb-8 relative">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 -mt-16 md:-mt-20 mb-6">
-              <div className="flex flex-col md:flex-row items-center md:items-end gap-6">
-                {/* Avatar */}
-                <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-white dark:border-[#111] bg-gray-100 dark:bg-gray-800 shadow-xl flex items-center justify-center relative overflow-hidden z-10 transition-colors">
-                  {userProfile?.avatar_url ? (
-                    <img src={userProfile.avatar_url} alt="User Avatar" className="w-full h-full object-cover" />
-                  ) : (
-                    <User size={64} className="text-gray-400 dark:text-gray-600" />
-                  )}
-                </div>
-                
-                <div className="text-center md:text-left space-y-1 mb-2">
-                  <h1 className="text-3xl font-bold">{userProfile?.full_name || 'Linko Developer'}</h1>
-                  <p className="text-gray-500 dark:text-gray-400 flex items-center justify-center md:justify-start gap-2">
-                    @{userProfile?.email?.split('@')[0] || 'linkodev'} <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-700"></span> 
-                    <span className="flex items-center gap-1 text-sm">
-                      <Calendar size={14} /> Joined {userProfile?.created_at ? new Date(userProfile.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'Loading...'}
-                    </span>
-                  </p>
-                </div>
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 -mt-16 md:-mt-20 mb-4 relative z-20">
+              {/* Avatar */}
+              <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-white dark:border-[#111] bg-gray-100 dark:bg-gray-800 shadow-xl flex items-center justify-center relative overflow-hidden z-10 transition-colors mx-auto sm:mx-0 shrink-0">
+                {userProfile?.avatar_url ? (
+                  <img src={userProfile.avatar_url} alt="User Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <User size={64} className="text-gray-400 dark:text-gray-600" />
+                )}
               </div>
 
               {/* Sleek Actions */}
-              <div className="flex flex-wrap items-center justify-center md:justify-end gap-2 mt-4 md:mt-0">
+              <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2 mt-2 sm:mb-4 shrink-0">
                 {!isEditing ? (
                   <>
-                    <button onClick={handleShare} className="flex items-center justify-center gap-2 px-4 py-2 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 hover:border-blue-500 dark:hover:border-blue-500 text-gray-700 dark:text-gray-300 font-medium rounded-full shadow-sm hover:shadow-md transition-all text-sm group sm:min-w-[100px]" title="Share Public Profile">
+                    <button onClick={handleShare} className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 hover:border-blue-500 dark:hover:border-blue-500 text-gray-700 dark:text-gray-300 font-medium rounded-full shadow-sm hover:shadow-md transition-all text-sm group sm:w-[105px]" title="Share Public Profile">
                       <Share2 size={15} className="text-gray-500 dark:text-gray-400 group-hover:text-blue-500 transition-colors shrink-0" /> 
-                      <span className="hidden sm:inline text-center">{copied ? "Copied!" : "Share"}</span>
+                      <span className="hidden sm:inline">{copied ? "Copied!" : "Share"}</span>
                     </button>
-                    <button onClick={() => setIsEditing(true)} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 hover:border-[#ffa116] dark:hover:border-[#ffa116] text-gray-700 dark:text-gray-300 font-medium rounded-full shadow-sm hover:shadow-md transition-all text-sm group" title="Edit Profile">
-                      <Pencil size={15} className="text-gray-500 dark:text-gray-400 group-hover:text-[#ffa116] transition-colors" /> 
+                    <button onClick={() => setIsEditing(true)} className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 hover:border-[#ffa116] dark:hover:border-[#ffa116] text-gray-700 dark:text-gray-300 font-medium rounded-full shadow-sm hover:shadow-md transition-all text-sm group sm:w-[95px]" title="Edit Profile">
+                      <Pencil size={15} className="text-gray-500 dark:text-gray-400 group-hover:text-[#ffa116] transition-colors shrink-0" /> 
                       <span className="hidden sm:inline">Edit</span>
                     </button>
                   </>
                 ) : (
-                  <button onClick={() => setIsEditing(false)} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 hover:border-gray-400 text-gray-700 dark:text-gray-300 font-medium rounded-full shadow-sm hover:shadow-md transition-all text-sm">
-                    <X size={15} /> <span className="hidden sm:inline">Cancel</span>
+                  <button onClick={() => setIsEditing(false)} className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 hover:border-gray-400 text-gray-700 dark:text-gray-300 font-medium rounded-full shadow-sm hover:shadow-md transition-all text-sm sm:w-[105px]">
+                    <X size={15} className="shrink-0" /> <span className="hidden sm:inline">Cancel</span>
                   </button>
                 )}
-                <button onClick={handleLogout} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 hover:border-red-500 dark:hover:border-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 text-gray-700 dark:text-gray-300 font-medium rounded-full shadow-sm hover:shadow-md transition-all text-sm group" title="Sign Out">
-                  <LogOut size={15} className="text-red-500 group-hover:-translate-x-0.5 transition-transform" />
+                <button onClick={handleLogout} className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 hover:border-red-500 dark:hover:border-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 text-gray-700 dark:text-gray-300 font-medium rounded-full shadow-sm hover:shadow-md transition-all text-sm group sm:w-[110px]" title="Sign Out">
+                  <LogOut size={15} className="text-red-500 group-hover:-translate-x-0.5 transition-transform shrink-0" />
                   <span className="hidden sm:inline text-red-600 dark:text-red-400 font-semibold">Sign Out</span>
                 </button>
+              </div>
+            </div>
+            
+            {/* User Info */}
+            <div className="text-center sm:text-left space-y-1.5 mb-6 relative z-10">
+              <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">{userProfile?.full_name || 'Linko Developer'}</h1>
+              <div className="text-gray-500 dark:text-gray-400 flex flex-wrap items-center justify-center sm:justify-start gap-x-3 gap-y-1.5 font-medium">
+                <span>@{userProfile?.email?.split('@')[0] || 'linkodev'}</span>
+                <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-700 hidden sm:block"></span> 
+                <span className="flex items-center gap-1.5 text-sm">
+                  <Calendar size={14} className="shrink-0" /> Joined {userProfile?.created_at ? new Date(userProfile.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'Loading...'}
+                </span>
               </div>
             </div>
             
@@ -287,7 +305,7 @@ export default function Profile() {
               <div className="bg-white/80 dark:bg-[#111]/80 backdrop-blur-xl border border-gray-200 dark:border-white/10 p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-2 transition-colors">
                 <div className="flex items-center gap-2 mb-1">
                    <Clock size={20} className="text-blue-500" />
-                   <span className="text-3xl font-bold">~{Math.max(1, Math.round(rooms.length * 1.5))} hrs</span>
+                   <span className="text-3xl font-bold">{formatTotalTime(totalTimeMs)}</span>
                 </div>
                 <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Time Collaborating</span>
               </div>

@@ -40,7 +40,7 @@ const rooms = new Map<
 const roomDocs = new Map<string, Y.Doc>();
 const roomOutputs = new Map<string, any>();
 const roomLanguages = new Map<string, string>();
-const socketUsers = new Map<any, { id: string, name: string, joinedAt: number }>();
+const socketUsers = new Map<any, { id: string, name: string, joinedAt: number, dbSessionId?: string }>();
 
 export interface RoomState {
   hostId: string;
@@ -61,9 +61,28 @@ wss.on("connection", (ws) => {
   ws.on("message", (raw) => {
     const data = JSON.parse(raw.toString());
 
-    const finishJoin = (socket: any, rId: string) => {
+    const finishJoin = async (socket: any, rId: string) => {
       rooms.get(rId)?.add(socket);
       const currentUser = socketUsers.get(socket);
+
+      // Log session to database for authenticated users
+      if (currentUser && !currentUser.id.startsWith("anon_")) {
+        if (supabase) {
+          try {
+            const { data, error } = await supabase.from("user_sessions").insert({
+              user_id: currentUser.id,
+              room_id: rId,
+              joined_at: new Date().toISOString()
+            }).select("id").single();
+            
+            if (data && data.id) {
+              currentUser.dbSessionId = data.id;
+            }
+          } catch (e) {
+            console.error("Failed to insert user session:", e);
+          }
+        }
+      }
 
       // Send current room state to the newly joined user
       if (roomStates.has(rId)) {
@@ -401,11 +420,22 @@ wss.on("connection", (ws) => {
     }
   });
 
-  ws.on("close", () => {
+  ws.on("close", async () => {
     console.log("Disconnected");
     if (currentRoom && rooms.has(currentRoom)) {
       const room = rooms.get(currentRoom);
       const departingUser = socketUsers.get(ws);
+      
+      // Update session end time in database
+      if (departingUser && departingUser.dbSessionId && supabase) {
+        try {
+          await supabase.from("user_sessions").update({
+            left_at: new Date().toISOString()
+          }).eq("id", departingUser.dbSessionId);
+        } catch (e) {
+          console.error("Failed to update user session:", e);
+        }
+      }
       
       // Handle pending sockets cleanup
       const currentUser = socketUsers.get(ws);

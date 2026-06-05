@@ -40,9 +40,24 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       banner_url: authUser.user.user_metadata?.banner_url || null,
     };
 
+    // Fetch user sessions to calculate real collaboration time
+    const { data: sessions } = await adminDb
+      .from('user_sessions')
+      .select('joined_at, left_at')
+      .eq('user_id', id)
+      .not('left_at', 'is', null);
+
+    let totalCollaborationMs = 0;
+    if (sessions) {
+      totalCollaborationMs = sessions.reduce((acc, s) => {
+        return acc + (new Date(s.left_at).getTime() - new Date(s.joined_at).getTime());
+      }, 0);
+    }
+
     return NextResponse.json({
       profile: publicProfile,
-      rooms: rooms || []
+      rooms: rooms || [],
+      totalCollaborationMs
     });
 
   } catch (error) {

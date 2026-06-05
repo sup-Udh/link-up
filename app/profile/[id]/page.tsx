@@ -21,6 +21,7 @@ export default function PublicProfile({ params }: { params: Promise<{ id: string
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [totalTimeMs, setTotalTimeMs] = useState(0);
 
   useEffect(() => {
     async function loadData() {
@@ -35,6 +36,7 @@ export default function PublicProfile({ params }: { params: Promise<{ id: string
         const data = await res.json();
         setUserProfile(data.profile);
         setRooms(data.rooms);
+        setTotalTimeMs(data.totalCollaborationMs || 0);
       } catch (err) {
         console.error("Failed to load public profile", err);
         setError("Failed to load profile");
@@ -58,6 +60,16 @@ export default function PublicProfile({ params }: { params: Promise<{ id: string
     interval = seconds / 60;
     if (interval > 1) return Math.floor(interval) + " minutes ago";
     return "just now";
+  };
+
+  const formatTotalTime = (ms: number) => {
+    if (ms === 0) return "0 min";
+    const hours = ms / (1000 * 60 * 60);
+    if (hours < 1) {
+      const mins = Math.max(1, Math.round(ms / (1000 * 60)));
+      return `${mins} min`;
+    }
+    return `${hours.toFixed(1)} hrs`;
   };
 
   if (loading) {
@@ -127,26 +139,26 @@ export default function PublicProfile({ params }: { params: Promise<{ id: string
           </div>
           
           <div className="px-8 pb-8 relative">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 -mt-16 md:-mt-20 mb-6">
-              <div className="flex flex-col md:flex-row items-center md:items-end gap-6">
-                {/* Avatar */}
-                <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-white dark:border-[#111] bg-gray-100 dark:bg-gray-800 shadow-xl flex items-center justify-center relative overflow-hidden z-10 transition-colors">
-                  {userProfile?.avatar_url ? (
-                    <img src={userProfile.avatar_url} alt="User Avatar" className="w-full h-full object-cover" />
-                  ) : (
-                    <User size={64} className="text-gray-400 dark:text-gray-600" />
-                  )}
-                </div>
-                
-                <div className="text-center md:text-left space-y-1 mb-2">
-                  <h1 className="text-3xl font-bold">{userProfile?.full_name || 'Linko Developer'}</h1>
-                  <p className="text-gray-500 dark:text-gray-400 flex items-center justify-center md:justify-start gap-2">
-                    @{userProfile?.email?.split('@')[0] || 'linkodev'} <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-700"></span> 
-                    <span className="flex items-center gap-1 text-sm">
-                      <Calendar size={14} /> Joined {userProfile?.created_at ? new Date(userProfile.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'Loading...'}
-                    </span>
-                  </p>
-                </div>
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 -mt-16 md:-mt-20 mb-4 relative z-20">
+              {/* Avatar */}
+              <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-white dark:border-[#111] bg-gray-100 dark:bg-gray-800 shadow-xl flex items-center justify-center relative overflow-hidden z-10 transition-colors mx-auto sm:mx-0 shrink-0">
+                {userProfile?.avatar_url ? (
+                  <img src={userProfile.avatar_url} alt="User Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <User size={64} className="text-gray-400 dark:text-gray-600" />
+                )}
+              </div>
+            </div>
+            
+            {/* User Info */}
+            <div className="text-center sm:text-left space-y-1.5 mb-6 relative z-10">
+              <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">{userProfile?.full_name || 'Linko Developer'}</h1>
+              <div className="text-gray-500 dark:text-gray-400 flex flex-wrap items-center justify-center sm:justify-start gap-x-3 gap-y-1.5 font-medium">
+                <span>@{userProfile?.email?.split('@')[0] || 'linkodev'}</span>
+                <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-700 hidden sm:block"></span> 
+                <span className="flex items-center gap-1.5 text-sm">
+                  <Calendar size={14} className="shrink-0" /> Joined {userProfile?.created_at ? new Date(userProfile.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'Loading...'}
+                </span>
               </div>
             </div>
             
@@ -173,7 +185,7 @@ export default function PublicProfile({ params }: { params: Promise<{ id: string
               <div className="bg-white/80 dark:bg-[#111]/80 backdrop-blur-xl border border-gray-200 dark:border-white/10 p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-2 transition-colors">
                 <div className="flex items-center gap-2 mb-1">
                    <Clock size={20} className="text-blue-500" />
-                   <span className="text-3xl font-bold">~{Math.max(1, Math.round(rooms.length * 1.5))} hrs</span>
+                   <span className="text-3xl font-bold">{formatTotalTime(totalTimeMs)}</span>
                 </div>
                 <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Time Collaborating</span>
               </div>
