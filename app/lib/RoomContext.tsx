@@ -529,18 +529,26 @@ export function RoomProvider({
   };
 
   const changeLanguage = (lang: string) => {
-    // If the editor is empty or just contains the starter code of the current language, replace it with the new starter code
     if (problemMetadata) {
       const normalize = (str: string) => str.replace(/\s+/g, '').trim();
       const currentCode = normalize(yText.toString());
       const currentStarterCode = normalize(getStarterCode(problemMetadata, language) || "");
       
-      if (currentCode === "" || currentCode === currentStarterCode) {
-        const newStarter = getStarterCode(problemMetadata, lang);
-        if (newStarter) {
-          yText.delete(0, yText.length);
-          yText.insert(0, newStarter);
+      const hasUserModifiedCode = currentCode !== "" && currentCode !== currentStarterCode;
+      
+      if (hasUserModifiedCode) {
+        const confirmSwitch = window.confirm("Switching languages will replace your current code.\n\n[ Cancel ] to keep your code\n[ OK ] to Switch Language and reset");
+        if (!confirmSwitch) {
+          return; // Abort language switch
         }
+      }
+
+      const newStarter = getStarterCode(problemMetadata, lang);
+      yText.delete(0, yText.length);
+      if (newStarter) {
+        yText.insert(0, newStarter);
+      } else {
+        yText.insert(0, "// Starter code unavailable for this language.\n");
       }
     }
 
