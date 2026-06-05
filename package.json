@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "socket": "tsx server/websocket.ts"
+    "socket": "tsx --env-file=.env.local server/websocket.ts"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
