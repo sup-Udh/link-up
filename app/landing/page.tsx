@@ -201,7 +201,7 @@ export default function Home() {
                 Linko is the best platform to help you enhance your skills, expand your knowledge and prepare for technical interviews with real-time multiplayer collaboration.
               </p>
               
-              <Link href="/room" className="inline-flex items-center gap-2 bg-[#1cbaba] hover:bg-[#19a6a6] text-white px-8 py-3.5 rounded-full font-semibold transition-transform hover:-translate-y-0.5 shadow-lg shadow-[#1cbaba]/20">
+              <Link href="/dashboard" className="inline-flex items-center gap-2 bg-[#1cbaba] hover:bg-[#19a6a6] text-white px-8 py-3.5 rounded-full font-semibold transition-transform hover:-translate-y-0.5 shadow-lg shadow-[#1cbaba]/20">
                 Create Session <ArrowRight size={18} />
               </Link>
             </div>
