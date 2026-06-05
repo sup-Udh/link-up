@@ -108,14 +108,48 @@ function getFunctionAdapterCode(
   
   if (language === "cpp") {
     return {
-      helperCode: "",
-      executionCode: `auto __result = __solution.${metadata.functionName}(${argsStr});\n        // In a real env, we'd serialize this to JSON. For now just print to avoid complex C++ JSON libs.\n        cout << "Executed successfully" << endl;`,
+      helperCode: `
+#include <iostream>
+#include <vector>
+#include <string>
+
+template <typename T>
+void print_json(const std::vector<T>& v) {
+    std::cout << "[";
+    for(size_t i=0; i<v.size(); ++i) {
+        std::cout << v[i];
+        if(i != v.size() - 1) std::cout << ",";
+    }
+    std::cout << "]" << std::endl;
+}
+
+void print_json(int v) { std::cout << v << std::endl; }
+void print_json(double v) { std::cout << v << std::endl; }
+void print_json(bool v) { std::cout << (v ? "true" : "false") << std::endl; }
+void print_json(const std::string& v) { std::cout << "\\"" << v << "\\"" << std::endl; }
+`,
+      executionCode: `auto __result = __solution.${metadata.functionName}(${argsStr});\n        print_json(__result);`,
     };
   }
   if (language === "java") {
     return {
-      helperCode: "",
-      executionCode: `Object __result = __solution.${metadata.functionName}(${argsStr});\n            System.out.println("Executed successfully");`,
+      helperCode: `
+class JsonUtils {
+    public static void print(int[] v) {
+        System.out.print("[");
+        for(int i=0; i<v.length; i++) {
+            System.out.print(v[i]);
+            if(i != v.length - 1) System.out.print(",");
+        }
+        System.out.println("]");
+    }
+    public static void print(int v) { System.out.println(v); }
+    public static void print(double v) { System.out.println(v); }
+    public static void print(boolean v) { System.out.println(v); }
+    public static void print(String v) { System.out.println("\\"" + v + "\\""); }
+}
+`,
+      executionCode: `var __result = __solution.${metadata.functionName}(${argsStr});\n            JsonUtils.print(__result);`,
     };
   }
   if (language === "csharp") {
