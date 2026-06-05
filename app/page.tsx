@@ -52,13 +52,9 @@ export default function Home() {
       <div className="flex-1 flex flex-col lg:flex-row min-h-[calc(100vh-3.5rem)] relative z-10">
         
         {/* Left Sidebar (Marketing) */}
-        <div className="w-full lg:w-[480px] xl:w-[520px] p-8 lg:p-12 flex flex-col justify-center border-r border-gray-200 dark:border-white/10 bg-white/70 dark:bg-[#1e1e1e]/70 backdrop-blur-md relative shrink-0 transition-colors duration-300">
+        <div className="w-full lg:w-[480px] xl:w-[520px] p-8 lg:p-12 flex flex-col justify-center border-r border-gray-200 dark:border-white/10 bg-white/40 dark:bg-[#1e1e1e]/40 backdrop-blur-sm relative shrink-0 transition-colors duration-300">
           <div className="absolute top-[-10%] left-[-20%] w-[80%] h-[50%] bg-[#ffa116]/10 rounded-full blur-[100px] pointer-events-none" />
-          
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-[#ffa116]/10 border border-[#ffa116]/20 text-xs font-semibold text-[#ffa116] mb-8 w-fit">
-            <Sparkles size={14} />
-            The new standard
-          </div>
+    
           
           <h1 className="text-4xl lg:text-5xl font-medium mb-6 text-gray-900 dark:text-white">
             Code Together.<br/>
@@ -107,7 +103,7 @@ export default function Home() {
         </div>
 
         {/* Right Area (Cinematic Demo) */}
-        <div className="flex-1 bg-gray-100/70 dark:bg-[#121212]/70 backdrop-blur-md relative p-4 lg:p-8 flex items-center justify-center overflow-hidden transition-colors duration-300">
+        <div className="flex-1 bg-gray-100/40 dark:bg-[#121212]/40 backdrop-blur-sm relative p-4 lg:p-8 flex items-center justify-center overflow-hidden transition-colors duration-300">
           <div className="absolute top-[20%] right-[-10%] w-[60%] h-[60%] bg-[#ffa116]/5 rounded-full blur-[120px] pointer-events-none" />
           
           <div className="w-full max-w-6xl max-h-full">
@@ -118,7 +114,7 @@ export default function Home() {
       </div>
 
       {/* Meet the Developers Section */}
-      <section id="developers" className="min-h-screen bg-white/70 dark:bg-[#0a0a0a]/70 backdrop-blur-md border-t border-gray-200 dark:border-white/10 flex flex-col items-center justify-center p-8 transition-colors duration-300 relative z-10">
+      <section id="developers" className="min-h-screen bg-white/30 dark:bg-[#0a0a0a]/30 border-t border-gray-200 dark:border-white/10 flex flex-col items-center justify-center p-8 transition-colors duration-300 relative z-10">
         <div className="max-w-4xl w-full">
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4">Meet the Developers</h2>
@@ -129,7 +125,7 @@ export default function Home() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Udhay Card */}
-            <div className="bg-gray-50/90 dark:bg-[#1e1e1e]/90 border border-gray-200 dark:border-white/10 rounded-2xl p-8 flex flex-col items-center text-center transition-colors duration-300 hover:border-[#ffa116]/50 group">
+            <div className="bg-gray-50/70 dark:bg-[#1e1e1e]/70 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl p-8 flex flex-col items-center text-center transition-colors duration-300 hover:border-[#ffa116]/50 group">
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#ffa116] to-[#ffc875] p-1 mb-6 shadow-lg shadow-[#ffa116]/20 group-hover:scale-105 transition-transform">
                 <div className="w-full h-full rounded-full bg-white dark:bg-[#1e1e1e] flex items-center justify-center text-3xl font-bold text-[#ffa116]">U</div>
               </div>
@@ -141,7 +137,7 @@ export default function Home() {
             </div>
 
             {/* Ansh Card */}
-            <div className="bg-gray-50/90 dark:bg-[#1e1e1e]/90 border border-gray-200 dark:border-white/10 rounded-2xl p-8 flex flex-col items-center text-center transition-colors duration-300 hover:border-[#2cbb5d]/50 group">
+            <div className="bg-gray-50/70 dark:bg-[#1e1e1e]/70 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl p-8 flex flex-col items-center text-center transition-colors duration-300 hover:border-[#2cbb5d]/50 group">
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#2cbb5d] to-[#6ee7b7] p-1 mb-6 shadow-lg shadow-[#2cbb5d]/20 group-hover:scale-105 transition-transform">
                 <div className="w-full h-full rounded-full bg-white dark:bg-[#1e1e1e] flex items-center justify-center text-3xl font-bold text-[#2cbb5d]">A</div>
               </div>
