@@ -173,7 +173,9 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#050505] text-gray-900 dark:text-gray-100 font-sans transition-colors duration-300">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#050505] text-gray-900 dark:text-gray-100 font-sans transition-colors duration-300 relative overflow-hidden">
+      {/* Subtle Grid Background */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none opacity-40" />
       {/* Navbar */}
       <nav className="border-b border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-[#0a0a0a]/50 backdrop-blur-xl sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -191,7 +193,7 @@ export default function Dashboard() {
               href="/profile"
               className="flex items-center gap-3 cursor-pointer group"
             >
-              <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center group-hover:border-[#1cbaba] transition-colors overflow-hidden">
+              <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center group-hover:border-[#ffa116] transition-colors overflow-hidden">
                 {userProfile?.avatar_url ? (
                   <img
                     src={userProfile.avatar_url}
@@ -235,18 +237,18 @@ export default function Dashboard() {
             ) : (
               <Link
                 href="/extension/connect"
-                className="inline-flex items-center gap-2 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 px-4 py-2.5 rounded-xl text-sm font-semibold shadow-sm hover:shadow-md hover:border-[#1cbaba] dark:hover:border-[#1cbaba] transition-all text-gray-700 dark:text-gray-300 group shrink-0"
+                className="inline-flex items-center gap-2 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 px-4 py-2.5 rounded-xl text-sm font-semibold shadow-sm hover:shadow-md hover:border-[#ffa116] dark:hover:border-[#ffa116] transition-all text-gray-700 dark:text-gray-300 group shrink-0"
               >
                 <Download
                   size={16}
-                  className="text-[#1cbaba] group-hover:-translate-y-0.5 transition-transform"
+                  className="text-[#ffa116] group-hover:-translate-y-0.5 transition-transform"
                 />
                 Get Extension
               </Link>
             )}
             <button
               onClick={openModal}
-              className="inline-flex items-center gap-2 bg-[#1cbaba] hover:bg-[#19a6a6] text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-[#1cbaba]/20 transition-all active:scale-95 shrink-0"
+              className="inline-flex items-center gap-2 bg-[#ffa116] hover:bg-[#ffb342] text-black px-5 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-[#ffa116]/20 transition-all active:scale-95 shrink-0"
             >
               <Plus size={18} />
               Create Room
@@ -257,7 +259,7 @@ export default function Dashboard() {
         {/* Rooms Section */}
         {loadingRooms ? (
           <div className="flex justify-center py-20">
-            <div className="w-8 h-8 border-4 border-gray-200 dark:border-gray-800 border-t-[#1cbaba] rounded-full animate-spin"></div>
+            <div className="w-8 h-8 border-4 border-gray-200 dark:border-gray-800 border-t-[#ffa116] rounded-full animate-spin"></div>
           </div>
         ) : rooms.length === 0 ? (
           /* Empty State */
@@ -279,7 +281,7 @@ export default function Dashboard() {
                   setModalView("blank");
                   setIsModalOpen(true);
                 }}
-                className="px-6 py-3 bg-[#1cbaba] hover:bg-[#19a6a6] text-white rounded-xl font-semibold shadow-md shadow-[#1cbaba]/20 transition-all active:scale-95"
+                className="px-6 py-3 bg-[#ffa116] hover:bg-[#ffb342] text-black rounded-xl font-semibold shadow-md shadow-[#ffa116]/20 transition-all active:scale-95"
               >
                 Create Blank Room
               </button>
@@ -308,7 +310,7 @@ export default function Dashboard() {
                 <Link
                   href={`/room/${room.id}`}
                   key={room.id}
-                  className="group bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 hover:border-[#1cbaba] dark:hover:border-[#1cbaba] rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col h-full"
+                  className="group bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 hover:border-[#ffa116] dark:hover:border-[#ffa116] rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col h-full"
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center gap-2">
@@ -348,7 +350,7 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  <h3 className="text-lg font-bold mb-1 group-hover:text-[#1cbaba] transition-colors line-clamp-1 flex items-center gap-2">
+                  <h3 className="text-lg font-bold mb-1 group-hover:text-[#ffa116] transition-colors line-clamp-1 flex items-center gap-2">
                     <Crown size={18} className="text-[#ffa116] shrink-0" />
                     {room.title}
                   </h3>
@@ -401,7 +403,7 @@ export default function Dashboard() {
               <div className="p-6 space-y-3">
                 <button
                   onClick={() => setModalView("blank")}
-                  className="w-full flex items-center gap-4 p-4 rounded-2xl border border-gray-200 dark:border-gray-800 hover:border-[#1cbaba] dark:hover:border-[#1cbaba] bg-gray-50 dark:bg-[#0a0a0a] hover:bg-[#1cbaba]/5 dark:hover:bg-[#1cbaba]/10 transition-all text-left group"
+                  className="w-full flex items-center gap-4 p-4 rounded-2xl border border-gray-200 dark:border-gray-800 hover:border-[#ffa116] dark:hover:border-[#ffa116] bg-gray-50 dark:bg-[#0a0a0a] hover:bg-[#ffa116]/5 dark:hover:bg-[#ffa116]/10 transition-all text-left group"
                 >
                   <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-500/20 text-blue-500 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                     <TerminalSquare size={24} />
@@ -448,7 +450,7 @@ export default function Dashboard() {
                     value={roomTitle}
                     onChange={(e) => setRoomTitle(e.target.value)}
                     placeholder="e.g. System Design Mock"
-                    className="w-full bg-gray-50 dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#1cbaba] focus:ring-1 focus:ring-[#1cbaba] transition-all"
+                    className="w-full bg-gray-50 dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#ffa116] focus:ring-1 focus:ring-[#ffa116] transition-all"
                   />
                 </div>
 
@@ -459,7 +461,7 @@ export default function Dashboard() {
                   <select
                     value={roomLanguage}
                     onChange={(e) => setRoomLanguage(e.target.value)}
-                    className="w-full bg-gray-50 dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#1cbaba] transition-all appearance-none"
+                    className="w-full bg-gray-50 dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#ffa116] transition-all appearance-none"
                   >
                     <option value="JavaScript">JavaScript</option>
                     <option value="Python">Python</option>
@@ -472,14 +474,14 @@ export default function Dashboard() {
                   <button
                     type="button"
                     onClick={() => setIsPrivate(false)}
-                    className={`py-3 rounded-xl border text-sm font-semibold flex justify-center items-center gap-2 transition-colors ${!isPrivate ? "border-[#1cbaba] bg-[#1cbaba]/10 text-[#1cbaba]" : "border-gray-200 dark:border-gray-800 text-gray-500 hover:bg-gray-50 dark:hover:bg-[#0a0a0a]"}`}
+                    className={`py-3 rounded-xl border text-sm font-semibold flex justify-center items-center gap-2 transition-colors ${!isPrivate ? "border-[#ffa116] bg-[#ffa116]/10 text-[#ffa116]" : "border-gray-200 dark:border-gray-800 text-gray-500 hover:bg-gray-50 dark:hover:bg-[#0a0a0a]"}`}
                   >
                     <Globe size={16} /> Public
                   </button>
                   <button
                     type="button"
                     onClick={() => setIsPrivate(true)}
-                    className={`py-3 rounded-xl border text-sm font-semibold flex justify-center items-center gap-2 transition-colors ${isPrivate ? "border-[#1cbaba] bg-[#1cbaba]/10 text-[#1cbaba]" : "border-gray-200 dark:border-gray-800 text-gray-500 hover:bg-gray-50 dark:hover:bg-[#0a0a0a]"}`}
+                    className={`py-3 rounded-xl border text-sm font-semibold flex justify-center items-center gap-2 transition-colors ${isPrivate ? "border-[#ffa116] bg-[#ffa116]/10 text-[#ffa116]" : "border-gray-200 dark:border-gray-800 text-gray-500 hover:bg-gray-50 dark:hover:bg-[#0a0a0a]"}`}
                   >
                     <Lock size={16} /> Private
                   </button>
@@ -501,14 +503,14 @@ export default function Dashboard() {
                       checked={requireApproval}
                       onChange={(e) => setRequireApproval(e.target.checked)}
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#1cbaba]"></div>
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#ffa116]"></div>
                   </label>
                 </div>
 
                 <button
                   type="submit"
                   disabled={creating}
-                  className="w-full bg-[#1cbaba] hover:bg-[#19a6a6] text-white py-3.5 rounded-xl font-bold transition-all active:scale-95 disabled:opacity-70 flex justify-center items-center"
+                  className="w-full bg-[#ffa116] hover:bg-[#ffb342] text-black py-3.5 rounded-xl font-bold transition-all active:scale-95 disabled:opacity-70 flex justify-center items-center"
                 >
                   {creating ? (
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -539,7 +541,7 @@ export default function Dashboard() {
                 <Link
                   href="/extension/connect"
                   onClick={closeModal}
-                  className="text-sm text-[#1cbaba] hover:underline font-semibold"
+                  className="text-sm text-[#ffa116] hover:underline font-semibold"
                 >
                   Don't have the extension connected?
                 </Link>
@@ -636,8 +638,8 @@ const ExtensionAnimation = () => {
           <div
             className={`absolute top-4 left-4 right-4 transition-opacity duration-500 ${step === 3 ? "opacity-100" : "opacity-0"}`}
           >
-            <div className="flex flex-col items-center justify-center h-28 text-[#1cbaba]">
-              <div className="w-12 h-12 rounded-full bg-[#1cbaba]/10 flex items-center justify-center mb-2 animate-bounce">
+            <div className="flex flex-col items-center justify-center h-28 text-[#ffa116]">
+              <div className="w-12 h-12 rounded-full bg-[#ffa116]/10 flex items-center justify-center mb-2 animate-bounce">
                 <TerminalSquare size={24} />
               </div>
               <div className="text-xs font-bold text-gray-800 dark:text-gray-200">
@@ -660,7 +662,7 @@ const ExtensionAnimation = () => {
               <div className="w-full h-2 bg-gray-100 dark:bg-gray-800 rounded"></div>
               <div className="w-3/4 h-2 bg-gray-100 dark:bg-gray-800 rounded"></div>
               <div
-                className={`w-full py-1.5 mt-2 bg-[#1cbaba] rounded-md text-[9px] text-center text-white font-bold shadow-sm transition-all ${step === 2 ? "opacity-100 scale-100" : "opacity-80 scale-95"}`}
+                className={`w-full py-1.5 mt-2 bg-[#ffa116] rounded-md text-[9px] text-center text-black font-bold shadow-sm transition-all ${step === 2 ? "opacity-100 scale-100" : "opacity-80 scale-95"}`}
               >
                 Start Session
               </div>
@@ -693,7 +695,7 @@ const ExtensionAnimation = () => {
             </svg>
             {/* Click Ripple */}
             <div
-              className={`absolute top-1 left-1 w-5 h-5 bg-[#1cbaba]/40 rounded-full transition-transform duration-500 ${step === 1 || step === 2 ? "scale-150 opacity-0 animate-ping" : "scale-0 opacity-0"}`}
+              className={`absolute top-1 left-1 w-5 h-5 bg-[#ffa116]/40 rounded-full transition-transform duration-500 ${step === 1 || step === 2 ? "scale-150 opacity-0 animate-ping" : "scale-0 opacity-0"}`}
             ></div>
           </div>
         </div>
@@ -702,7 +704,7 @@ const ExtensionAnimation = () => {
       {/* Text Steps */}
       <div className="flex justify-between items-center text-left gap-2">
         <div
-          className={`flex-1 p-2.5 rounded-xl transition-all duration-300 ${step === 1 ? "bg-[#1cbaba]/10 text-[#1cbaba] shadow-sm border border-[#1cbaba]/20 scale-105" : "text-gray-400 dark:text-gray-600 bg-gray-50 dark:bg-[#0a0a0a] border border-transparent scale-100"}`}
+          className={`flex-1 p-2.5 rounded-xl transition-all duration-300 ${step === 1 ? "bg-[#ffa116]/10 text-[#ffa116] shadow-sm border border-[#ffa116]/20 scale-105" : "text-gray-400 dark:text-gray-600 bg-gray-50 dark:bg-[#0a0a0a] border border-transparent scale-100"}`}
         >
           <div className="text-[9px] font-bold uppercase tracking-wider mb-0.5 opacity-70">
             Step 1
@@ -712,7 +714,7 @@ const ExtensionAnimation = () => {
           </div>
         </div>
         <div
-          className={`flex-1 p-2.5 rounded-xl transition-all duration-300 ${step === 2 ? "bg-[#1cbaba]/10 text-[#1cbaba] shadow-sm border border-[#1cbaba]/20 scale-105" : "text-gray-400 dark:text-gray-600 bg-gray-50 dark:bg-[#0a0a0a] border border-transparent scale-100"}`}
+          className={`flex-1 p-2.5 rounded-xl transition-all duration-300 ${step === 2 ? "bg-[#ffa116]/10 text-[#ffa116] shadow-sm border border-[#ffa116]/20 scale-105" : "text-gray-400 dark:text-gray-600 bg-gray-50 dark:bg-[#0a0a0a] border border-transparent scale-100"}`}
         >
           <div className="text-[9px] font-bold uppercase tracking-wider mb-0.5 opacity-70">
             Step 2

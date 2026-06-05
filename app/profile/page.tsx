@@ -2,30 +2,62 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Code2, User, Edit3, Award, Hash, Clock, FolderGit2, Calendar, LayoutGrid, CheckCircle2, ChevronRight, LogOut } from "lucide-react";
+import { Code2, User, Edit3, Award, Hash, Clock, FolderGit2, Calendar, LayoutGrid, CheckCircle2, ChevronRight, LogOut, Check, X, Upload, Share2 } from "lucide-react";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
 import { createClient } from "@/utils/supabase/client";
 
-const MOCK_ACTIVITY = [
-  { id: 1, type: "solve", title: "Two Sum", lang: "Python", time: "2 hours ago", status: "Success" },
-  { id: 2, type: "room", title: "Reverse Linked List", lang: "JavaScript", time: "Yesterday", status: "Collaborated" },
-  { id: 3, type: "solve", title: "LRU Cache", lang: "TypeScript", time: "3 days ago", status: "Success" },
-  { id: 4, type: "solve", title: "Valid Parentheses", lang: "C++", time: "1 week ago", status: "Success" },
-];
+interface Room {
+  id: string;
+  title: string;
+  source: string;
+  language: string;
+  participant_count: number;
+  last_active_at: string;
+  is_active: boolean;
+}
 
 export default function Profile() {
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Edit State
+  const [isEditing, setIsEditing] = useState(false);
+  const [bioInput, setBioInput] = useState("");
+  const [bannerInput, setBannerInput] = useState("");
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    async function loadUser() {
+    async function loadData() {
       const supabase = createClient();
+      
+      // Load User and Metadata
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-        setUserProfile(profile);
+        const mergedProfile = { ...profile, ...user.user_metadata, created_at: user.created_at, id: user.id };
+        setUserProfile(mergedProfile);
+        setBioInput(mergedProfile.bio || "");
+        setBannerInput(mergedProfile.banner_url || "");
       }
+
+      // Load Rooms for Activity
+      try {
+        const res = await fetch("/api/rooms");
+        if (res.ok) {
+          const data = await res.json();
+          setRooms(data);
+        }
+      } catch (err) {
+        console.error("Failed to load rooms", err);
+      }
+
+      setLoading(false);
     }
-    loadUser();
+    loadData();
   }, []);
 
   const handleLogout = async () => {
@@ -34,9 +66,89 @@ export default function Profile() {
     window.location.href = '/login';
   };
 
+  const handleSaveProfile = async () => {
+    setIsSaving(true);
+    try {
+      let finalBannerUrl = bannerInput;
+
+      // If a new file was selected, upload it first
+      if (bannerFile) {
+        const formData = new FormData();
+        formData.append("file", bannerFile);
+        const uploadRes = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+        if (uploadRes.ok) {
+          const uploadData = await uploadRes.json();
+          finalBannerUrl = uploadData.url;
+        } else {
+          console.error("Failed to upload image");
+        }
+      }
+
+      const res = await fetch("/api/profile/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bio: bioInput, bannerUrl: finalBannerUrl }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUserProfile((prev: any) => ({
+          ...prev,
+          bio: data.user.user_metadata.bio,
+          banner_url: data.user.user_metadata.banner_url,
+        }));
+        setBannerInput(data.user.user_metadata.banner_url || "");
+        setBannerFile(null);
+        setBannerPreview(null);
+        setIsEditing(false);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setBannerFile(file);
+      setBannerPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const timeAgo = (dateString: string) => {
+    const seconds = Math.floor((new Date().getTime() - new Date(dateString).getTime()) / 1000);
+    let interval = seconds / 31536000;
+    if (interval > 1) return Math.floor(interval) + " years ago";
+    interval = seconds / 2592000;
+    if (interval > 1) return Math.floor(interval) + " months ago";
+    interval = seconds / 86400;
+    if (interval > 1) return Math.floor(interval) + " days ago";
+    interval = seconds / 3600;
+    if (interval > 1) return Math.floor(interval) + " hours ago";
+    interval = seconds / 60;
+    if (interval > 1) return Math.floor(interval) + " minutes ago";
+    return "just now";
+  };
+
+  const handleShare = () => {
+    if (userProfile?.id) {
+      const url = `${window.location.origin}/profile/${userProfile.id}`;
+      navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#050505] text-gray-900 dark:text-gray-100 font-sans transition-colors duration-300 pb-20">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#050505] text-gray-900 dark:text-gray-100 font-sans transition-colors duration-300 pb-20 relative overflow-hidden">
       
+      {/* Subtle Grid Background */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none opacity-40 z-0" />
+
       {/* Profile Navbar */}
       <nav className="sticky top-0 z-50 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-md border-b border-gray-200 dark:border-white/10 transition-colors">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -59,12 +171,18 @@ export default function Profile() {
         </div>
       </nav>
 
-      <main className="max-w-4xl mx-auto px-6 py-12 space-y-8">
+      <main className="max-w-4xl mx-auto px-6 py-12 space-y-8 relative z-10">
         
         {/* Profile Header Card */}
-        <section className="bg-white dark:bg-[#111] rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm relative overflow-hidden transition-colors">
-          <div className="h-32 md:h-48 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 dark:from-indigo-900/40 dark:via-purple-900/40 dark:to-pink-900/40 relative">
-             <div className="absolute inset-0 bg-white/20 dark:bg-black/20 mix-blend-overlay"></div>
+        <section className="bg-white/80 dark:bg-[#111]/80 backdrop-blur-xl rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm relative overflow-hidden transition-colors">
+          
+          {/* Banner Image or Gradient Fallback */}
+          <div className="h-32 md:h-56 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 dark:from-indigo-900/40 dark:via-purple-900/40 dark:to-pink-900/40 relative">
+             {(bannerPreview || userProfile?.banner_url) ? (
+               <img src={bannerPreview || userProfile.banner_url} alt="Profile Banner" className="w-full h-full object-cover mix-blend-normal" />
+             ) : (
+               <div className="absolute inset-0 bg-white/20 dark:bg-black/20 mix-blend-overlay"></div>
+             )}
           </div>
           
           <div className="px-8 pb-8 relative">
@@ -83,22 +201,69 @@ export default function Profile() {
                   <h1 className="text-3xl font-bold">{userProfile?.full_name || 'Linko Developer'}</h1>
                   <p className="text-gray-500 dark:text-gray-400 flex items-center justify-center md:justify-start gap-2">
                     @{userProfile?.email?.split('@')[0] || 'linkodev'} <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-700"></span> 
-                    <span className="flex items-center gap-1 text-sm"><Calendar size={14} /> Joined {userProfile?.created_at ? new Date(userProfile.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'June 2026'}</span>
+                    <span className="flex items-center gap-1 text-sm">
+                      <Calendar size={14} /> Joined {userProfile?.created_at ? new Date(userProfile.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'Loading...'}
+                    </span>
                   </p>
                 </div>
               </div>
 
               {/* Actions */}
               <div className="flex items-center justify-center gap-3">
+                {!isEditing ? (
+                  <>
+                    <button onClick={handleShare} className="flex items-center gap-2 px-5 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 font-semibold rounded-xl transition-colors">
+                      <Share2 size={16} /> {copied ? "Copied!" : "Share Profile"}
+                    </button>
+                    <button onClick={() => setIsEditing(true)} className="flex items-center gap-2 px-5 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 font-semibold rounded-xl transition-colors">
+                      <Edit3 size={16} /> Edit Profile
+                    </button>
+                  </>
+                ) : (
+                  <button onClick={() => setIsEditing(false)} className="flex items-center gap-2 px-5 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 font-semibold rounded-xl transition-colors">
+                    <X size={16} /> Cancel
+                  </button>
+                )}
                 <button onClick={handleLogout} className="flex items-center gap-2 px-5 py-2.5 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 font-semibold rounded-xl transition-colors">
                   <LogOut size={16} /> Sign Out
                 </button>
               </div>
             </div>
             
-            <p className="text-gray-600 dark:text-gray-300 text-center md:text-left max-w-2xl text-lg font-light">
-              Building the future of collaborative coding. Passionate about algorithms, distributed systems, and clean UI design.
-            </p>
+            {/* Bio Section */}
+            {isEditing ? (
+              <div className="space-y-4 max-w-2xl mt-4 bg-gray-50 dark:bg-[#151515] p-5 rounded-2xl border border-gray-200 dark:border-white/5">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Banner Image</label>
+                  <label className="flex items-center justify-center w-full h-24 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl cursor-pointer hover:bg-gray-100 dark:hover:bg-[#222] transition-colors group">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <Upload className="w-6 h-6 mb-2 text-gray-400 group-hover:text-[#ffa116]" />
+                      <p className="text-sm text-gray-500 dark:text-gray-400 font-medium group-hover:text-[#ffa116] transition-colors">
+                        {bannerFile ? bannerFile.name : "Click to upload a new banner image"}
+                      </p>
+                    </div>
+                    <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+                  </label>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Bio</label>
+                  <textarea 
+                    value={bioInput} 
+                    onChange={(e) => setBioInput(e.target.value)} 
+                    rows={3} 
+                    placeholder="Tell us about your coding journey..." 
+                    className="w-full bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#ffa116] resize-none" 
+                  />
+                </div>
+                <button onClick={handleSaveProfile} disabled={isSaving} className="flex items-center gap-2 px-6 py-2.5 bg-[#ffa116] hover:bg-[#ffb342] text-black font-bold rounded-xl transition-colors disabled:opacity-70">
+                  {isSaving ? <span className="animate-pulse">Saving...</span> : <><Check size={16} /> Save Profile</>}
+                </button>
+              </div>
+            ) : (
+              <p className="text-gray-600 dark:text-gray-300 text-center md:text-left max-w-2xl text-lg font-light leading-relaxed">
+                {userProfile?.bio || "Building the future of collaborative coding. Passionate about algorithms, distributed systems, and clean UI design."}
+              </p>
+            )}
           </div>
         </section>
 
@@ -110,46 +275,19 @@ export default function Profile() {
               <Award size={20} className="text-[#ffa116]" /> Statistics
             </h2>
             
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white dark:bg-[#111] border border-gray-200 dark:border-white/10 p-5 rounded-2xl flex flex-col items-center justify-center text-center gap-1 transition-colors">
-                <span className="text-3xl font-bold text-[#1cbaba]">42</span>
-                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Problems<br/>Solved</span>
+            <div className="grid grid-cols-1 gap-4">
+              <div className="bg-white/80 dark:bg-[#111]/80 backdrop-blur-xl border border-gray-200 dark:border-white/10 p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-2 transition-colors">
+                <span className="text-4xl font-bold text-[#ffa116]">{rooms.length}</span>
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Rooms Created</span>
               </div>
-              <div className="bg-white dark:bg-[#111] border border-gray-200 dark:border-white/10 p-5 rounded-2xl flex flex-col items-center justify-center text-center gap-1 transition-colors">
-                <span className="text-3xl font-bold text-indigo-500">12</span>
-                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Rooms<br/>Created</span>
-              </div>
-              <div className="bg-white dark:bg-[#111] border border-gray-200 dark:border-white/10 p-5 rounded-2xl flex flex-col items-center justify-center text-center gap-1 col-span-2 transition-colors">
+              
+              <div className="bg-white/80 dark:bg-[#111]/80 backdrop-blur-xl border border-gray-200 dark:border-white/10 p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-2 transition-colors">
                 <div className="flex items-center gap-2 mb-1">
-                   <Clock size={16} className="text-[#ffa116]" />
-                   <span className="text-2xl font-bold">14 hrs</span>
+                   <Clock size={20} className="text-blue-500" />
+                   <span className="text-3xl font-bold">~{Math.max(1, Math.round(rooms.length * 1.5))} hrs</span>
                 </div>
                 <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Time Collaborating</span>
               </div>
-            </div>
-
-            <div className="bg-white dark:bg-[#111] border border-gray-200 dark:border-white/10 p-6 rounded-2xl transition-colors">
-               <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-4">Top Languages</h3>
-               <div className="space-y-4">
-                 <div>
-                   <div className="flex justify-between text-sm mb-1"><span>Python</span> <span className="font-medium">60%</span></div>
-                   <div className="h-2 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                     <div className="h-full bg-blue-500 rounded-full" style={{ width: '60%' }}></div>
-                   </div>
-                 </div>
-                 <div>
-                   <div className="flex justify-between text-sm mb-1"><span>JavaScript</span> <span className="font-medium">30%</span></div>
-                   <div className="h-2 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                     <div className="h-full bg-yellow-400 rounded-full" style={{ width: '30%' }}></div>
-                   </div>
-                 </div>
-                 <div>
-                   <div className="flex justify-between text-sm mb-1"><span>C++</span> <span className="font-medium">10%</span></div>
-                   <div className="h-2 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                     <div className="h-full bg-pink-500 rounded-full" style={{ width: '10%' }}></div>
-                   </div>
-                 </div>
-               </div>
             </div>
           </div>
 
@@ -159,35 +297,49 @@ export default function Profile() {
               <LayoutGrid size={20} className="text-blue-500" /> Recent Activity
             </h2>
 
-            <div className="bg-white dark:bg-[#111] border border-gray-200 dark:border-white/10 rounded-3xl overflow-hidden transition-colors">
-              <ul className="divide-y divide-gray-100 dark:divide-white/5">
-                {MOCK_ACTIVITY.map((activity) => (
-                  <li key={activity.id} className="p-6 hover:bg-gray-50 dark:hover:bg-[#151515] transition-colors flex items-start gap-4 cursor-pointer group">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${activity.type === 'solve' ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' : 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'}`}>
-                      {activity.type === 'solve' ? <CheckCircle2 size={20} /> : <FolderGit2 size={20} />}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-1">
-                        <h3 className="font-bold text-gray-900 dark:text-white text-lg group-hover:text-[#1cbaba] transition-colors">
-                          {activity.title}
-                        </h3>
-                        <span className="text-xs text-gray-400 font-medium">{activity.time}</span>
+            <div className="bg-white/80 dark:bg-[#111]/80 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-3xl overflow-hidden transition-colors">
+              {loading ? (
+                <div className="p-10 flex justify-center">
+                  <div className="w-8 h-8 border-4 border-gray-200 dark:border-gray-800 border-t-[#ffa116] rounded-full animate-spin"></div>
+                </div>
+              ) : rooms.length === 0 ? (
+                <div className="p-10 text-center text-gray-500">
+                  <p>No recent activity found. Create a room to get started!</p>
+                </div>
+              ) : (
+                <ul className="divide-y divide-gray-100 dark:divide-white/5">
+                  {rooms.slice(0, 5).map((room) => (
+                    <li key={room.id} className="p-6 hover:bg-gray-50/50 dark:hover:bg-[#151515]/50 transition-colors flex items-start gap-4 group">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${room.source === 'extension' ? 'bg-[#ffa116]/10 text-[#ffa116]' : 'bg-blue-500/10 text-blue-500'}`}>
+                        {room.source === 'extension' ? <Code2 size={20} /> : <FolderGit2 size={20} />}
                       </div>
-                      <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
-                        <span className="flex items-center gap-1.5"><Hash size={14}/> {activity.lang}</span>
-                        <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-700"></span>
-                        <span className="font-medium text-gray-600 dark:text-gray-300">{activity.status}</span>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-1">
+                          <Link href={`/room/${room.id}`} className="font-bold text-gray-900 dark:text-white text-lg group-hover:text-[#ffa116] transition-colors">
+                            {room.title}
+                          </Link>
+                          <span className="text-xs text-gray-400 font-medium">{timeAgo(room.last_active_at)}</span>
+                        </div>
+                        <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+                          <span className="flex items-center gap-1.5"><Hash size={14}/> {room.language}</span>
+                          <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-700"></span>
+                          <span className="font-medium text-gray-600 dark:text-gray-300">
+                            {room.participant_count > 0 ? `${room.participant_count} Participants` : 'Solo Session'}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+                    </li>
+                  ))}
+                </ul>
+              )}
               
-              <div className="p-4 border-t border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-[#0a0a0a] text-center">
-                <button className="text-sm font-semibold text-[#1cbaba] hover:text-[#19a6a6] transition-colors">
-                  View All Activity
-                </button>
-              </div>
+              {rooms.length > 5 && (
+                <div className="p-4 border-t border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-[#0a0a0a] text-center">
+                  <Link href="/dashboard" className="text-sm font-semibold text-[#ffa116] hover:text-[#ffb342] transition-colors">
+                    View All in Dashboard
+                  </Link>
+                </div>
+              )}
             </div>
             
           </div>

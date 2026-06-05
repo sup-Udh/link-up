@@ -22,6 +22,9 @@ export default function Login() {
       <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-[#1cbaba]/10 dark:bg-[#1cbaba]/5 rounded-full blur-[100px] pointer-events-none transition-colors" />
       <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-[#ffa116]/10 dark:bg-[#ffa116]/5 rounded-full blur-[100px] pointer-events-none transition-colors" />
 
+      {/* Subtle Grid Background */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
+
       {/* Top Navigation */}
       <div className="absolute top-0 w-full flex items-center justify-between p-6 z-20">
         <Link href="/landing" className="flex items-center gap-2 text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">
