@@ -75,13 +75,6 @@ export default function Home() {
               Start Coding
               <ChevronRight size={18} />
             </button>
-            <button 
-              onClick={scrollToDevelopers}
-              className="px-6 py-4 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white font-semibold transition-all flex items-center gap-2 w-full sm:w-auto justify-center group"
-            >
-              Scroll Down
-              <ArrowDown size={18} className="animate-bounce" />
-            </button>
           </div>
 
           <div className="mt-16 pt-8 border-t border-gray-200 dark:border-white/5 transition-colors duration-300">
@@ -103,12 +96,20 @@ export default function Home() {
         </div>
 
         {/* Right Area (Cinematic Demo) */}
-        <div className="flex-1 bg-gray-100/40 dark:bg-[#121212]/40 backdrop-blur-sm relative p-4 lg:p-8 flex items-center justify-center overflow-hidden transition-colors duration-300">
+        <div className="flex-1 bg-gray-100/40 dark:bg-[#121212]/40 backdrop-blur-sm relative p-4 lg:p-8 flex flex-col items-center justify-center overflow-hidden transition-colors duration-300">
           <div className="absolute top-[20%] right-[-10%] w-[60%] h-[60%] bg-[#ffa116]/5 rounded-full blur-[120px] pointer-events-none" />
           
-          <div className="w-full max-w-6xl max-h-full">
+          <div className="w-full max-w-6xl">
             <CinematicHero />
           </div>
+
+          <button 
+            onClick={scrollToDevelopers}
+            className="mt-6 text-xs text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white font-semibold transition-all flex flex-col items-center gap-1.5 group"
+          >
+            Scroll Down
+            <ArrowDown size={14} className="animate-bounce" />
+          </button>
         </div>
         
       </div>
@@ -150,6 +151,17 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Simple Footer */}
+      <footer className="border-t border-gray-200 dark:border-white/10 py-10 text-center text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-[#050505] relative z-10 transition-colors duration-300">
+        <div className="flex flex-col items-center justify-center gap-3">
+          <div className="flex items-center gap-2">
+            <Code2 size={16} className="text-[#ffa116]" />
+            <span className="font-bold text-gray-900 dark:text-white text-base">Linko</span>
+          </div>
+          <p>© {new Date().getFullYear()} Linko. Built for real-time collaboration.</p>
+        </div>
+      </footer>
     </main>
   );
 }

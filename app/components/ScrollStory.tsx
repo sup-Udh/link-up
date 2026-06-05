@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useScroll, useTransform, MotionValue } from "framer-motion";
+import { motion, useScroll, useTransform, MotionValue, useSpring } from "framer-motion";
 import { Code2, Code, TerminalSquare, BarChart2, ChefHat, Hexagon, Braces } from "lucide-react";
 
 interface PlatformProps {
@@ -18,11 +18,11 @@ function PlatformCard({ progress, startX, startY, name, color, icon }: PlatformP
   const y = useTransform(progress, [0.1, 0.4, 0.8], [startY, startY, 0]);
   
   // Dissolve/shrink as it hits the center (70% to 85% scroll)
-  const scale = useTransform(progress, [0.75, 0.85], [1, 0]);
-  const opacity = useTransform(progress, [0.7, 0.85], [0.9, 0]);
+  const scale = useTransform(progress, [0.75, 0.85], [1, 0.5]);
+  const opacity = useTransform(progress, [0.7, 0.85], [1, 0]);
   
   // Subtle rotation effect
-  const initialRotate = (startX % 30); // Deterministic pseudo-random rotation
+  const initialRotate = (startX % 45); // Deterministic pseudo-random rotation
   const rotate = useTransform(progress, [0, 0.8], [initialRotate, 0]);
 
   return (
@@ -46,14 +46,21 @@ function PlatformCard({ progress, startX, startY, name, color, icon }: PlatformP
 export default function ScrollStory() {
   // Use window scroll progress since this is a global background effect
   const { scrollYProgress } = useScroll();
+  
+  // Smooth out the scroll progress to create a beautiful, lagging "slow" effect
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 40,
+    damping: 15,
+    restDelta: 0.001
+  });
 
   // Linko Center Logo Animations
-  const logoScale = useTransform(scrollYProgress, [0.4, 0.85], [0.4, 1.2]);
-  const logoOpacity = useTransform(scrollYProgress, [0, 0.4, 0.85], [0.05, 0.1, 1]);
+  const logoScale = useTransform(smoothProgress, [0.4, 0.85], [0.4, 1.2]);
+  const logoOpacity = useTransform(smoothProgress, [0, 0.4, 0.85], [0.05, 0.1, 1]);
   const logoGlow = useTransform(
-    scrollYProgress, 
+    smoothProgress, 
     [0.6, 0.9], 
-    ["0px 0px 0px rgba(59,130,246,0)", "0px 0px 100px rgba(59,130,246,0.6)"]
+    ["0px 0px 0px rgba(59,130,246,0)", "0px 0px 150px rgba(59,130,246,0.8)"]
   );
 
   return (
@@ -66,13 +73,13 @@ export default function ScrollStory() {
       <div className="absolute inset-0 w-full h-full flex items-center justify-center">
         
         {/* Abstract Platform Cards */}
-        {/* We use highly dispersed starting positions for the magnetic pull effect */}
-        <PlatformCard progress={scrollYProgress} startX={-350} startY={-250} name="LeetCode" color="#ffa116" icon={<Code size={24} />} />
-        <PlatformCard progress={scrollYProgress} startX={350} startY={-200} name="HackerRank" color="#00ea64" icon={<TerminalSquare size={24} />} />
-        <PlatformCard progress={scrollYProgress} startX={-450} startY={150} name="Codeforces" color="#1f8acb" icon={<BarChart2 size={24} />} />
-        <PlatformCard progress={scrollYProgress} startX={400} startY={250} name="CodeChef" color="#5b3e31" icon={<ChefHat size={24} />} />
-        <PlatformCard progress={scrollYProgress} startX={-200} startY={350} name="AtCoder" color="#444444" icon={<Hexagon size={24} />} />
-        <PlatformCard progress={scrollYProgress} startX={250} startY={-380} name="GeeksForGeeks" color="#2f8d46" icon={<Braces size={24} />} />
+        {/* Pushed further out so they travel more distance and are highly noticeable */}
+        <PlatformCard progress={smoothProgress} startX={-600} startY={-400} name="LeetCode" color="#ffa116" icon={<Code size={24} />} />
+        <PlatformCard progress={smoothProgress} startX={600} startY={-300} name="HackerRank" color="#00ea64" icon={<TerminalSquare size={24} />} />
+        <PlatformCard progress={smoothProgress} startX={-700} startY={350} name="Codeforces" color="#1f8acb" icon={<BarChart2 size={24} />} />
+        <PlatformCard progress={smoothProgress} startX={650} startY={450} name="CodeChef" color="#5b3e31" icon={<ChefHat size={24} />} />
+        <PlatformCard progress={smoothProgress} startX={-300} startY={550} name="AtCoder" color="#444444" icon={<Hexagon size={24} />} />
+        <PlatformCard progress={smoothProgress} startX={350} startY={-550} name="GeeksForGeeks" color="#2f8d46" icon={<Braces size={24} />} />
 
         {/* Central Linko Logo */}
         <motion.div 

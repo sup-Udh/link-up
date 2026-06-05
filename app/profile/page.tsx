@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Code2, User, Edit3, Award, Hash, Clock, FolderGit2, Calendar, LayoutGrid, CheckCircle2, ChevronRight, LogOut, Check, X, Upload, Share2 } from "lucide-react";
+import { Code2, User, Pencil, Award, Hash, Clock, FolderGit2, Calendar, LayoutGrid, CheckCircle2, ChevronRight, LogOut, Check, X, Upload, Share2 } from "lucide-react";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
 import { createClient } from "@/utils/supabase/client";
 
@@ -208,24 +208,27 @@ export default function Profile() {
                 </div>
               </div>
 
-              {/* Actions */}
-              <div className="flex items-center justify-center gap-3">
+              {/* Sleek Actions */}
+              <div className="flex flex-wrap items-center justify-center md:justify-end gap-2 mt-4 md:mt-0">
                 {!isEditing ? (
                   <>
-                    <button onClick={handleShare} className="flex items-center gap-2 px-5 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 font-semibold rounded-xl transition-colors">
-                      <Share2 size={16} /> {copied ? "Copied!" : "Share Profile"}
+                    <button onClick={handleShare} className="flex items-center justify-center gap-2 px-4 py-2 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 hover:border-blue-500 dark:hover:border-blue-500 text-gray-700 dark:text-gray-300 font-medium rounded-full shadow-sm hover:shadow-md transition-all text-sm group sm:min-w-[100px]" title="Share Public Profile">
+                      <Share2 size={15} className="text-gray-500 dark:text-gray-400 group-hover:text-blue-500 transition-colors shrink-0" /> 
+                      <span className="hidden sm:inline text-center">{copied ? "Copied!" : "Share"}</span>
                     </button>
-                    <button onClick={() => setIsEditing(true)} className="flex items-center gap-2 px-5 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 font-semibold rounded-xl transition-colors">
-                      <Edit3 size={16} /> Edit Profile
+                    <button onClick={() => setIsEditing(true)} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 hover:border-[#ffa116] dark:hover:border-[#ffa116] text-gray-700 dark:text-gray-300 font-medium rounded-full shadow-sm hover:shadow-md transition-all text-sm group" title="Edit Profile">
+                      <Pencil size={15} className="text-gray-500 dark:text-gray-400 group-hover:text-[#ffa116] transition-colors" /> 
+                      <span className="hidden sm:inline">Edit</span>
                     </button>
                   </>
                 ) : (
-                  <button onClick={() => setIsEditing(false)} className="flex items-center gap-2 px-5 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 font-semibold rounded-xl transition-colors">
-                    <X size={16} /> Cancel
+                  <button onClick={() => setIsEditing(false)} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 hover:border-gray-400 text-gray-700 dark:text-gray-300 font-medium rounded-full shadow-sm hover:shadow-md transition-all text-sm">
+                    <X size={15} /> <span className="hidden sm:inline">Cancel</span>
                   </button>
                 )}
-                <button onClick={handleLogout} className="flex items-center gap-2 px-5 py-2.5 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 font-semibold rounded-xl transition-colors">
-                  <LogOut size={16} /> Sign Out
+                <button onClick={handleLogout} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 hover:border-red-500 dark:hover:border-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 text-gray-700 dark:text-gray-300 font-medium rounded-full shadow-sm hover:shadow-md transition-all text-sm group" title="Sign Out">
+                  <LogOut size={15} className="text-red-500 group-hover:-translate-x-0.5 transition-transform" />
+                  <span className="hidden sm:inline text-red-600 dark:text-red-400 font-semibold">Sign Out</span>
                 </button>
               </div>
             </div>
