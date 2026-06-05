@@ -15,6 +15,11 @@ export default function Home() {
     router.push(`/room/${roomId}?slug=two-sum`);
   };
 
+
+  const DashboardReroute = () => {
+    router.push("/dashboard");
+  }
+
   const scrollToDevelopers = () => {
     document.getElementById("developers")?.scrollIntoView({ behavior: "smooth" });
   };
@@ -69,7 +74,9 @@ export default function Home() {
           
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <button 
-              onClick={createRoom}
+              // redirect to dashboard
+              onClick={DashboardReroute}
+
               className="px-8 py-4 bg-gray-900 text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 font-bold rounded-lg transition-all shadow-lg flex items-center gap-2 w-full sm:w-auto justify-center"
             >
               Start Coding
@@ -113,6 +120,53 @@ export default function Home() {
         </div>
         
       </div>
+
+      {/* How It Works Section */}
+      <section className="min-h-screen flex flex-col items-center justify-center p-8 relative z-10">
+        <div className="max-w-5xl w-full">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4">How Linko Works</h2>
+            <p className="text-gray-500 dark:text-gray-400 text-lg max-w-2xl mx-auto">
+              Get started with collaborative coding in 3 simple steps. No sign-ups required.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Step 1 */}
+            <div className="bg-white/50 dark:bg-[#1a1a1a]/50 backdrop-blur-md border border-gray-200 dark:border-white/10 rounded-2xl p-8 flex flex-col items-center text-center transition-all hover:bg-white/80 dark:hover:bg-[#1a1a1a]/80 shadow-xl shadow-black/5">
+              <div className="w-16 h-16 rounded-2xl bg-[#ffa116]/10 text-[#ffa116] flex items-center justify-center mb-6">
+                <Users size={32} />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">1. Create a Room</h3>
+              <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
+                Click "New Room" to instantly generate a secure, high-performance collaborative coding environment.
+              </p>
+            </div>
+
+            {/* Step 2 */}
+            <div className="bg-white/50 dark:bg-[#1a1a1a]/50 backdrop-blur-md border border-gray-200 dark:border-white/10 rounded-2xl p-8 flex flex-col items-center text-center transition-all hover:bg-white/80 dark:hover:bg-[#1a1a1a]/80 shadow-xl shadow-black/5">
+              <div className="w-16 h-16 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center mb-6">
+                <Sparkles size={32} />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">2. Share the Link</h3>
+              <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
+                Send the URL to your teammate. They can join instantly with just one click, right from their browser.
+              </p>
+            </div>
+
+            {/* Step 3 */}
+            <div className="bg-white/50 dark:bg-[#1a1a1a]/50 backdrop-blur-md border border-gray-200 dark:border-white/10 rounded-2xl p-8 flex flex-col items-center text-center transition-all hover:bg-white/80 dark:hover:bg-[#1a1a1a]/80 shadow-xl shadow-black/5">
+              <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-6">
+                <Code2 size={32} />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">3. Code Together</h3>
+              <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
+                Write code, execute test cases, and solve LeetCode problems in real-time with zero latency.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Meet the Developers Section */}
       <section id="developers" className="min-h-screen bg-white/30 dark:bg-[#0a0a0a]/30 border-t border-gray-200 dark:border-white/10 flex flex-col items-center justify-center p-8 transition-colors duration-300 relative z-10">
