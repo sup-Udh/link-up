@@ -272,7 +272,8 @@ export function RoomProvider({
             code: yText.toString(),
             language,
             customTestCases: customCases,
-            latestResults: testResults
+            latestResults: testResults,
+            officialTestCases: problemMetadata?.examples || []
           })
         });
       } catch (err) {
@@ -298,7 +299,7 @@ export function RoomProvider({
       clearTimeout(autosaveTimer.current);
       yText.unobserve(observer);
     };
-  }, [yText, language, customCases, testResults, hasLoadedState, currentUser, roomId]);
+  }, [yText, language, customCases, testResults, problemMetadata, hasLoadedState, currentUser, roomId]);
 
   useEffect(() => {
     if (identityStatus !== "ready" || !currentUser) return;
