@@ -37,6 +37,8 @@ const rooms = new Map<
   Set<any>
 >();
 
+
+
 const roomDocs = new Map<string, Y.Doc>();
 const roomOutputs = new Map<string, any>();
 const roomLanguages = new Map<string, string>();
@@ -131,6 +133,25 @@ wss.on("connection", (ws) => {
         }));
       }
     };
+
+    if (data.type === "broadcastMessage") {
+      const {roomId, text,senderId} = data
+      console.log(roomId,text)
+      console.log(`No. of participants: ${rooms.get(roomId)?.size}`)
+      rooms.get(roomId)?.forEach((member) => {
+        if (member !== ws) {
+            member.send(
+            JSON.stringify({
+              type: "NEW_MESSAGE",
+              message: text,
+              id: senderId
+            }
+          )
+        )
+        }
+        
+      })
+    }
 
     if (data.type === "join-room") {
       const { roomId, user, requireApproval } = data;

@@ -2,12 +2,14 @@
 
 import { useRoom } from "@/app/lib/RoomContext";
 import { useEffect, useState } from "react";
+import Chat from "./Chat"
 
 export default function Members() {
   const { users, awareness, currentUser, hostId, driverId, kickUser, transferHost, assignDriver, pendingRequests, approveUser, rejectUser } = useRoom();
   const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
 
   useEffect(() => {
+    
     const handleAwarenessChange = () => {
       const activeTyping = new Set<string>();
       awareness.getStates().forEach((state: any) => {
@@ -23,6 +25,7 @@ export default function Members() {
   }, [awareness]);
 
   const isHost = currentUser?.id === hostId;
+
 
   return (
     <div className="flex flex-col h-full text-white">
@@ -41,6 +44,7 @@ export default function Members() {
               <span className="text-sm">{u.id === hostId ? "👑" : "🟢"}</span>
               <span className="text-sm font-medium flex-1 truncate">
                 {u.name} {u.id === currentUser?.id && <span className="text-gray-400 font-normal">(You)</span>}
+                
               </span>
               {u.id === driverId && <span title="Driver" className="text-sm">🎮</span>}
             </div>
@@ -48,7 +52,7 @@ export default function Members() {
             {typingUsers.has(u.id) && (
               <span className="text-xs text-gray-400 italic ml-6 animate-pulse">is typing...</span>
             )}
-
+            
             {isHost && u.id !== hostId && (
               <div className="ml-6 mt-1 flex flex-wrap gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button onClick={() => kickUser(u.id)} className="text-[10px] bg-red-600/20 text-red-400 px-2 py-0.5 rounded hover:bg-red-600 hover:text-white transition">Kick</button>
@@ -69,6 +73,7 @@ export default function Members() {
           </div>
         ))}
       </div>
+      {currentUser && <Chat senderId={currentUser.name}/>} 
 
       {isHost && pendingRequests.length > 0 && (
         <div className="p-4 border-t border-gray-700 bg-[#252525] shrink-0">

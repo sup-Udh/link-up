@@ -16,7 +16,6 @@ import {
 } from "y-protocols/awareness";
 import type { NormalizedProblem } from "./problem-engine/types";
 import { getStarterCode, isEditorEmpty } from "./problem-engine/starterCode";
-
 export interface TestCaseResult {
   passed: boolean;
   expected: string;
@@ -64,6 +63,8 @@ interface RoomContextType {
   language: string;
   changeLanguage: (lang: string) => void;
   problemMetadata: NormalizedProblem | null;
+  messages: string[];
+  addMessage: (message: string) => void;
   
   // Custom Cases
   customCases: CustomTestCase[];
@@ -109,7 +110,7 @@ function getColorForId(str: string) {
   return color;
 }
 
-function getWsUrl(): string {
+export function getWsUrl(): string {
   if (process.env.NEXT_PUBLIC_WS_URL) return process.env.NEXT_PUBLIC_WS_URL;
   
   // If running locally, route directly to the websocket server port to bypass any Next.js proxying issues
@@ -138,6 +139,8 @@ export function RoomProvider({
   const [language, setLanguage] = useState("javascript");
   const [problemMetadata, setProblemMetadata] = useState<NormalizedProblem | null>(null);
   const [customCases, setCustomCases] = useState<CustomTestCase[]>([]);
+  const [messages, setMessages] = useState<string[]>([]);
+  
   const [hasLoadedState, setHasLoadedState] = useState(false);
   
   // Autosave refs
@@ -175,6 +178,10 @@ export function RoomProvider({
     }
     setCurrentUser({ id: storedId, name: name.trim(), joinedAt: Date.now() });
     setIdentityStatus("ready");
+  };
+
+  const addMessage = (message: string) => {
+    setMessages((prev) => [...prev, message]);
   };
 
   const addNotification = (message: string) => {
@@ -337,6 +344,15 @@ export function RoomProvider({
         setUsers(data.users || []);
         broadcastAwareness();
         setJoinStatus((prev) => prev === "connecting" ? "joined" : prev);
+      }
+
+      if (data.type === "ping"){
+        return;
+      }
+
+      if (data.type === "NEW_MESSAGE"){
+        const finalMessage = `${data.id}:${data.message}`
+        addMessage(finalMessage);
       }
 
       if (data.type === "notification") {
@@ -570,7 +586,7 @@ export function RoomProvider({
     <RoomContext.Provider value={{ 
       ydoc, yText, awareness, users, currentUser, identityStatus, setIdentity, notifications, 
       latestOutput, testResults, isExecutingIndex, runCode, language, changeLanguage, problemMetadata,
-      customCases, addCustomCase, updateCustomCase, deleteCustomCase,
+      messages, addMessage, customCases, addCustomCase, updateCustomCase, deleteCustomCase,
       hostId, driverId, editorLocked, joinStatus, pendingRequests, approveUser, rejectUser,
       kickUser, transferHost, assignDriver, setEditorLock, resetSession, endSession
     }}>
