@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRoom } from "@/app/lib/RoomContext";
+import { Play, Plus, Trash2, RotateCcw, AlertTriangle, Check, X, Loader2 } from "lucide-react";
 
 export default function BottomPanel() {
   const { 
@@ -38,136 +39,108 @@ export default function BottomPanel() {
   const passedCases = Object.values(testResults).filter(r => r.passed).length;
 
   return (
-    <div className="flex flex-col h-full bg-[#1e1e1e] text-sm font-mono text-gray-300">
-      {/* Tabs Header */}
-      <div className="flex items-center justify-between bg-[#2d2d2d] border-b border-gray-700 pr-4">
-        <div className="flex items-center">
+    <div className="flex flex-col h-full bg-[var(--ws-surface)] text-sm font-sans text-[var(--ws-text)]">
+      {/* Tab Bar */}
+      <div className="flex items-center justify-between bg-[var(--ws-surface-elevated)] border-b border-[var(--ws-border)] px-3 py-0">
+        <div className="flex items-center gap-1">
           <button
             onClick={() => setActiveTab("testcase")}
-            className={`px-4 py-2 font-semibold transition-colors ${
-              activeTab === "testcase" ? "text-white border-b-2 border-white" : "text-gray-500 hover:text-gray-300"
+            className={`px-3 py-2.5 text-xs font-medium transition-colors ${
+              activeTab === "testcase"
+                ? "text-[var(--ws-text)] border-b-2 border-[var(--ws-accent)]"
+                : "text-[var(--ws-text-muted)] hover:text-[var(--ws-text-secondary)]"
             }`}
           >
             Testcases
           </button>
           <button
             onClick={() => setActiveTab("result")}
-            className={`px-4 py-2 font-semibold transition-colors flex items-center ${
-              activeTab === "result" ? "text-white border-b-2 border-white" : "text-gray-500 hover:text-gray-300"
+            className={`px-3 py-2.5 text-xs font-medium transition-colors flex items-center gap-1.5 ${
+              activeTab === "result"
+                ? "text-[var(--ws-text)] border-b-2 border-[var(--ws-accent)]"
+                : "text-[var(--ws-text-muted)] hover:text-[var(--ws-text-secondary)]"
             }`}
           >
             Test Result
             {isExecutingIndex !== null && (
-              <span className="ml-2 w-2 h-2 rounded-full bg-blue-500 animate-ping" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--ws-accent)] animate-pulse" />
             )}
           </button>
         </div>
         <button 
           onClick={() => runCode("all")} 
           disabled={isExecutingIndex !== null}
-          className="px-4 py-1.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded text-xs font-semibold shadow-sm transition"
+          className="border border-[var(--ws-accent)]/30 text-[var(--ws-accent)] hover:bg-[var(--ws-accent)]/10 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg px-3 py-1.5 text-xs font-medium transition-colors flex items-center gap-1.5"
         >
-          {isExecutingIndex === "all" ? "Running All..." : "▶ Run All Cases"}
+          {isExecutingIndex === "all" ? (
+            <>
+              <Loader2 className="w-3 h-3 animate-spin" />
+              Running…
+            </>
+          ) : (
+            <>
+              <Play className="w-3 h-3" />
+              Run All
+            </>
+          )}
         </button>
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 ws-scrollbar">
         {activeTab === "testcase" ? (
           /* Testcase View */
           !problemMetadata ? (
-            <div className="text-gray-500 italic">Loading testcases...</div>
+            <div className="text-[var(--ws-text-muted)] text-xs">Loading testcases…</div>
           ) : (
-            <div className="space-y-8 pb-8">
+            <div className="space-y-6 pb-4">
               {/* LeetCode Examples */}
               <div>
-                <h3 className="text-gray-400 font-bold mb-4 uppercase tracking-wider text-xs">LeetCode Examples</h3>
+                <h3 className="text-[10px] uppercase tracking-wider text-[var(--ws-text-muted)] font-semibold mb-3">Examples</h3>
                 {exampleCount === 0 ? (
-                  <div className="text-gray-500 italic">No examples available.</div>
+                  <div className="text-[var(--ws-text-muted)] text-xs">No examples available.</div>
                 ) : (
-                  <div className="space-y-4">
-                    {problemMetadata.examples.map((ex, idx) => (
-                      <div key={`lc-${ex.id}`} className="bg-[#252525] border border-gray-700 rounded-lg p-4 shadow-sm">
-                        <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
-                          <span className="font-bold text-gray-200">{ex.title}</span>
-                          <button 
-                            onClick={() => runCode(idx)} 
-                            disabled={isExecutingIndex !== null}
-                            className="px-3 py-1 bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white disabled:opacity-50 rounded text-xs font-medium transition flex items-center"
-                          >
-                            {isExecutingIndex === idx ? <span className="animate-spin mr-1">⌛</span> : "▶ "} Run Example
-                          </button>
-                        </div>
-                        
-                        <div className="space-y-3">
-                          {/* Input */}
-                          <div>
-                            <div className="text-xs text-gray-500 mb-1 font-semibold uppercase tracking-wide">Input</div>
-                            <div className="bg-[#1a1a1a] px-3 py-2 rounded border border-gray-700 text-gray-300 break-all whitespace-pre-wrap font-mono text-xs">
-                              {ex.input}
-                            </div>
-                          </div>
-                          {/* Expected Output */}
-                          <div>
-                            <div className="text-xs text-gray-500 mb-1 font-semibold uppercase tracking-wide">Expected Output</div>
-                            <div className="bg-[#1a1a1a] px-3 py-2 rounded border border-gray-700 text-gray-300 break-all whitespace-pre-wrap font-mono text-xs">
-                              {ex.output}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+                  <div className="space-y-3">
+                    {problemMetadata.examples.map((ex, idx) => {
+                      const result = testResults[idx];
+                      const borderClass = result
+                        ? result.passed
+                          ? "border-l-2 border-l-[var(--ws-success)]"
+                          : "border-l-2 border-l-[var(--ws-error)]"
+                        : "";
 
-              {/* Custom Cases */}
-              <div>
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-gray-400 font-bold uppercase tracking-wider text-xs">Custom Cases</h3>
-                  <button onClick={handleAddCustomCase} className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded text-xs transition shadow-sm">+ Add Case</button>
-                </div>
-                
-                {customCases.length === 0 ? (
-                  <div className="text-gray-500 italic text-sm">No custom cases added yet.</div>
-                ) : (
-                  <div className="space-y-4">
-                    {customCases.map((tc, cIdx) => {
-                      const absoluteIdx = exampleCount + cIdx;
                       return (
-                        <div key={tc.id} className="bg-[#252525] border border-yellow-700/50 rounded-lg p-4 shadow-sm">
-                          <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
-                            <span className="font-bold text-yellow-500/80">Custom Case {cIdx + 1}</span>
-                            <div className="flex gap-2">
-                              <button onClick={() => deleteCustomCase(tc.id)} className="px-2 py-1 bg-red-900/30 hover:bg-red-600 text-red-400 hover:text-white rounded text-xs transition">Delete</button>
-                              <button 
-                                onClick={() => runCode(absoluteIdx)} 
-                                disabled={isExecutingIndex !== null}
-                                className="px-3 py-1 bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white disabled:opacity-50 rounded text-xs font-medium transition flex items-center"
-                              >
-                                {isExecutingIndex === absoluteIdx ? <span className="animate-spin mr-1">⌛</span> : "▶ "} Run Case
-                              </button>
-                            </div>
+                        <div
+                          key={`lc-${ex.id}`}
+                          className={`bg-[var(--ws-surface-elevated)] border border-[var(--ws-border)] rounded-xl p-4 space-y-3 ${borderClass}`}
+                        >
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs font-semibold text-[var(--ws-text)]">{ex.title}</span>
+                            <button 
+                              onClick={() => runCode(idx)} 
+                              disabled={isExecutingIndex !== null}
+                              className="p-1.5 rounded-lg text-[var(--ws-text-muted)] hover:text-[var(--ws-accent)] hover:bg-[var(--ws-surface-hover)] disabled:opacity-40 transition-colors"
+                            >
+                              {isExecutingIndex === idx ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <Play className="w-3.5 h-3.5" />
+                              )}
+                            </button>
                           </div>
                           
-                          <div className="space-y-4">
+                          <div className="space-y-2">
                             <div>
-                              <label className="text-xs text-gray-500 mb-1 block">Input (newline separated arguments)</label>
-                              <textarea 
-                                className="w-full bg-[#1a1a1a] border border-gray-600 focus:border-blue-500 outline-none rounded p-3 text-gray-300 text-sm font-mono h-24 resize-y transition-colors"
-                                value={tc.input}
-                                placeholder={"e.g.\n[1, 2, 3]\n4"}
-                                onChange={(e) => updateCustomCase({ ...tc, input: e.target.value })}
-                              />
+                              <div className="text-[10px] uppercase tracking-wider text-[var(--ws-text-muted)] font-semibold mb-1">Input</div>
+                              <div className="bg-[var(--ws-surface)] rounded-lg px-3 py-2 font-mono text-xs text-[var(--ws-text-secondary)] break-all whitespace-pre-wrap">
+                                {ex.input}
+                              </div>
                             </div>
                             <div>
-                              <label className="text-xs text-gray-500 mb-1 block">Expected Output</label>
-                              <textarea 
-                                className="w-full bg-[#1a1a1a] border border-gray-600 focus:border-blue-500 outline-none rounded p-3 text-gray-300 text-sm font-mono h-16 resize-y transition-colors"
-                                value={tc.expectedOutput}
-                                placeholder="e.g. 5"
-                                onChange={(e) => updateCustomCase({ ...tc, expectedOutput: e.target.value })}
-                              />
+                              <div className="text-[10px] uppercase tracking-wider text-[var(--ws-text-muted)] font-semibold mb-1">Expected Output</div>
+                              <div className="bg-[var(--ws-surface)] rounded-lg px-3 py-2 font-mono text-xs text-[var(--ws-text-secondary)] break-all whitespace-pre-wrap">
+                                {ex.output}
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -176,28 +149,113 @@ export default function BottomPanel() {
                   </div>
                 )}
               </div>
+
+              {/* Custom Cases */}
+              <div>
+                <h3 className="text-[10px] uppercase tracking-wider text-[var(--ws-text-muted)] font-semibold mb-3">Custom Cases</h3>
+                
+                <div className="space-y-3">
+                  {customCases.map((tc, cIdx) => {
+                    const absoluteIdx = exampleCount + cIdx;
+                    const result = testResults[absoluteIdx];
+                    const borderClass = result
+                      ? result.passed
+                        ? "border-l-2 border-l-[var(--ws-success)]"
+                        : "border-l-2 border-l-[var(--ws-error)]"
+                      : "";
+
+                    return (
+                      <div
+                        key={tc.id}
+                        className={`bg-[var(--ws-surface-elevated)] border border-[var(--ws-border)] rounded-xl p-4 space-y-3 ${borderClass}`}
+                      >
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-semibold text-[var(--ws-text)]">Custom Case {cIdx + 1}</span>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => deleteCustomCase(tc.id)}
+                              className="p-1.5 rounded-lg text-[var(--ws-text-muted)] hover:text-[var(--ws-error)] hover:bg-red-500/10 transition-colors"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                            <button 
+                              onClick={() => runCode(absoluteIdx)} 
+                              disabled={isExecutingIndex !== null}
+                              className="p-1.5 rounded-lg text-[var(--ws-text-muted)] hover:text-[var(--ws-accent)] hover:bg-[var(--ws-surface-hover)] disabled:opacity-40 transition-colors"
+                            >
+                              {isExecutingIndex === absoluteIdx ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <Play className="w-3.5 h-3.5" />
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <div>
+                            <div className="text-[10px] uppercase tracking-wider text-[var(--ws-text-muted)] font-semibold mb-1">Input</div>
+                            <textarea 
+                              className="w-full bg-[var(--ws-surface)] border border-[var(--ws-border)] rounded-lg px-3 py-2 font-mono text-xs text-[var(--ws-text-secondary)] resize-none focus:outline-none focus:border-[var(--ws-accent)] h-20 transition-colors"
+                              value={tc.input}
+                              placeholder={"e.g.\n[1, 2, 3]\n4"}
+                              onChange={(e) => updateCustomCase({ ...tc, input: e.target.value })}
+                            />
+                          </div>
+                          <div>
+                            <div className="text-[10px] uppercase tracking-wider text-[var(--ws-text-muted)] font-semibold mb-1">Expected Output</div>
+                            <textarea 
+                              className="w-full bg-[var(--ws-surface)] border border-[var(--ws-border)] rounded-lg px-3 py-2 font-mono text-xs text-[var(--ws-text-secondary)] resize-none focus:outline-none focus:border-[var(--ws-accent)] h-14 transition-colors"
+                              value={tc.expectedOutput}
+                              placeholder="e.g. 5"
+                              onChange={(e) => updateCustomCase({ ...tc, expectedOutput: e.target.value })}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {/* Add Case Button */}
+                  <button
+                    onClick={handleAddCustomCase}
+                    className="w-full border border-dashed border-[var(--ws-border-hover)] rounded-xl p-4 text-center hover:border-[var(--ws-accent)] text-[var(--ws-text-muted)] hover:text-[var(--ws-accent)] transition-colors text-xs flex items-center justify-center gap-1.5"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Add Case
+                  </button>
+                </div>
+              </div>
             </div>
           )
         ) : (
           /* Result View */
-          <div className="pb-8">
+          <div className="pb-4">
             {/* Summary Header */}
             {ranCases > 0 && (
-              <div className={`mb-6 p-4 rounded-lg border flex items-center justify-between shadow-sm ${passedCases === totalCases && ranCases === totalCases ? 'bg-green-900/20 border-green-700/50 text-green-400' : 'bg-yellow-900/20 border-yellow-700/50 text-yellow-500'}`}>
-                <div className="text-lg font-bold">
-                  Passed {passedCases} / {ranCases} executed
-                  {ranCases < totalCases && <span className="text-sm opacity-70 ml-2">({totalCases} total cases)</span>}
+              <div className="bg-[var(--ws-surface-elevated)] rounded-xl p-4 border border-[var(--ws-border)] mb-4">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm font-medium text-[var(--ws-text)]">
+                    Passed {passedCases} / {ranCases} executed
+                    {ranCases < totalCases && (
+                      <span className="text-xs text-[var(--ws-text-muted)] ml-2">({totalCases} total)</span>
+                    )}
+                  </div>
+                  {passedCases === totalCases && ranCases === totalCases && (
+                    <div className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-semibold">
+                      Accepted
+                    </div>
+                  )}
                 </div>
-                {passedCases === totalCases && ranCases === totalCases && (
-                  <div className="font-black tracking-widest uppercase text-sm">Accepted</div>
-                )}
               </div>
             )}
 
             {!latestOutput && ranCases === 0 ? (
-              <div className="text-gray-500 italic mt-8 text-center">No output yet. Click "Run All Cases" to execute.</div>
+              <div className="text-[var(--ws-text-muted)] text-xs text-center py-12">
+                No output yet. Click &quot;Run All&quot; to execute.
+              </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {/* Individual Case Results */}
                 {totalCases > 0 && Array.from({ length: totalCases }).map((_, idx) => {
                   const res = testResults[idx];
@@ -209,36 +267,58 @@ export default function BottomPanel() {
                     : (problemMetadata?.examples?.[idx]?.title || `Example ${idx + 1}`);
                   
                   return (
-                    <div key={`res-${idx}`} className={`border rounded-lg bg-[#252525] p-4 shadow-sm ${res.passed ? "border-green-900/30" : "border-red-900/50"}`}>
-                      <div className={`font-bold mb-3 flex items-center justify-between ${res.passed ? "text-green-500" : "text-red-500"}`}>
-                        <div className="flex items-center text-base">
-                          <span className="mr-2 text-xl">{res.passed ? "✓" : "✗"}</span>
-                          {title} <span className="opacity-70 ml-2 text-sm">{res.passed ? "Passed" : "Failed"}</span>
+                    <div
+                      key={`res-${idx}`}
+                      className={`bg-[var(--ws-surface-elevated)] border border-[var(--ws-border)] rounded-xl p-4 ${
+                        res.passed
+                          ? "border-l-2 border-l-[var(--ws-success)]"
+                          : "border-l-2 border-l-[var(--ws-error)]"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          {res.passed ? (
+                            <Check className="w-3.5 h-3.5 text-[var(--ws-success)]" />
+                          ) : (
+                            <X className="w-3.5 h-3.5 text-[var(--ws-error)]" />
+                          )}
+                          <span className="text-xs font-semibold text-[var(--ws-text)]">{title}</span>
+                          <span className={`text-[10px] font-medium ${res.passed ? "text-[var(--ws-success)]" : "text-[var(--ws-error)]"}`}>
+                            {res.passed ? "Passed" : "Failed"}
+                          </span>
                         </div>
                         <button 
                           onClick={() => runCode(idx)} 
                           disabled={isExecutingIndex !== null}
-                          className="px-3 py-1 bg-[#1e1e1e] hover:bg-gray-700 text-gray-300 disabled:opacity-50 rounded text-xs border border-gray-600 transition flex items-center"
+                          className="p-1.5 rounded-lg text-[var(--ws-text-muted)] hover:text-[var(--ws-accent)] hover:bg-[var(--ws-surface-hover)] disabled:opacity-40 transition-colors"
                         >
-                          {isExecutingIndex === idx ? <span className="animate-spin">⌛</span> : "▶ Re-run"}
+                          {isExecutingIndex === idx ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <RotateCcw className="w-3.5 h-3.5" />
+                          )}
                         </button>
                       </div>
 
                       {res.error ? (
-                        <div className="text-red-400 mt-3 whitespace-pre-wrap font-mono text-xs p-3 bg-[#1a1a1a] rounded border border-red-900/50">
+                        <div className="bg-red-500/5 border border-red-500/10 rounded-lg p-3 text-red-400 font-mono text-xs whitespace-pre-wrap">
                           {res.error}
                         </div>
                       ) : (
-                        <div className="grid grid-cols-2 gap-4 text-xs mt-3">
-                          <div className="bg-[#1a1a1a] p-3 rounded border border-gray-700">
-                            <div className="text-gray-500 mb-2 font-semibold tracking-wide uppercase">Expected Output</div>
-                            <pre className="text-gray-300 break-all whitespace-pre-wrap font-mono">{res.expected}</pre>
+                        <div className="grid grid-cols-2 gap-3 text-xs">
+                          <div>
+                            <div className="text-[10px] uppercase tracking-wider text-[var(--ws-text-muted)] font-semibold mb-1">Expected</div>
+                            <div className="bg-[var(--ws-surface)] rounded-lg px-3 py-2">
+                              <pre className="text-[var(--ws-text-secondary)] break-all whitespace-pre-wrap font-mono text-xs">{res.expected}</pre>
+                            </div>
                           </div>
-                          <div className="bg-[#1a1a1a] p-3 rounded border border-gray-700">
-                            <div className="text-gray-500 mb-2 font-semibold tracking-wide uppercase">Received Output</div>
-                            <pre className={res.passed ? "text-green-400 break-all whitespace-pre-wrap font-mono" : "text-red-400 break-all whitespace-pre-wrap font-mono"}>
-                              {res.received || "undefined"}
-                            </pre>
+                          <div>
+                            <div className="text-[10px] uppercase tracking-wider text-[var(--ws-text-muted)] font-semibold mb-1">Received</div>
+                            <div className="bg-[var(--ws-surface)] rounded-lg px-3 py-2">
+                              <pre className={`break-all whitespace-pre-wrap font-mono text-xs ${res.passed ? "text-[var(--ws-success)]" : "text-[var(--ws-error)]"}`}>
+                                {res.received || "undefined"}
+                              </pre>
+                            </div>
                           </div>
                         </div>
                       )}
@@ -248,13 +328,16 @@ export default function BottomPanel() {
 
                 {/* Global Compile/Runtime Errors */}
                 {latestOutput?.output && (!latestOutput.success || ranCases === 0) && (
-                  <div className="mt-6 border border-red-900/50 bg-[#252525] rounded-lg p-4 shadow-sm">
-                    <div className="text-xs text-red-500 mb-3 font-bold uppercase tracking-wide flex items-center">
-                      <span className="mr-2">⚠️</span> Console Output / Compilation Error
+                  <div className="bg-[var(--ws-surface-elevated)] border border-[var(--ws-border)] rounded-xl p-4">
+                    <div className="flex items-center gap-1.5 text-[var(--ws-error)] text-xs font-semibold mb-3">
+                      <AlertTriangle className="w-3.5 h-3.5" />
+                      Console Output / Compilation Error
                     </div>
-                    <pre className="text-red-400 whitespace-pre-wrap text-xs bg-[#1a1a1a] p-4 rounded border border-red-900/30 overflow-x-auto">
-                      {latestOutput.output}
-                    </pre>
+                    <div className="bg-red-500/5 border border-red-500/10 rounded-lg p-3">
+                      <pre className="text-red-400 whitespace-pre-wrap font-mono text-xs overflow-x-auto">
+                        {latestOutput.output}
+                      </pre>
+                    </div>
                   </div>
                 )}
               </div>

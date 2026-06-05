@@ -6,12 +6,16 @@ import { MonacoBinding } from "y-monaco";
 import { useRoom } from "@/app/lib/RoomContext";
 import { getLanguageConfig } from "@/app/lib/languages";
 import LanguageSelector from "./LanguageSelector";
+import { ThemeToggle } from "./ThemeToggle";
+import { useTheme } from "next-themes";
+import { Play, Loader2, Lock, Gamepad2, Users } from "lucide-react";
 import type { editor as monacoEditor } from "monaco-editor";
 
 export default function Editor() {
-  const { yText, awareness, runCode, isExecutingIndex, language, currentUser, driverId, editorLocked, hostId } = useRoom();
+  const { yText, awareness, runCode, isExecutingIndex, language, currentUser, driverId, editorLocked, hostId, users } = useRoom();
   const [editor, setEditor] =
     useState<monacoEditor.IStandaloneCodeEditor | null>(null);
+  const { resolvedTheme } = useTheme();
 
   const isHost = currentUser?.id === hostId;
   
@@ -26,6 +30,15 @@ export default function Editor() {
     if (!editor) return;
     editor.updateOptions({ readOnly: isReadOnly });
   }, [editor, isReadOnly]);
+
+  // Update Monaco theme when system theme changes
+  useEffect(() => {
+    if (!editor) return;
+    const monacoInstance = (window as any).monaco;
+    if (monacoInstance) {
+      monacoInstance.editor.setTheme(resolvedTheme === "dark" ? "vs-dark" : "vs");
+    }
+  }, [editor, resolvedTheme]);
 
   // Cursor tracking + rendering (runs after editor mounts)
   useEffect(() => {
@@ -184,34 +197,81 @@ export default function Editor() {
   );
 
   const langConfig = getLanguageConfig(language);
+  const monacoTheme = resolvedTheme === "dark" ? "vs-dark" : "vs";
+  const connectedCount = users?.length || 0;
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-4 py-2 bg-[#2d2d2d] border-b border-gray-700">
-        <div className="flex items-center space-x-4">
-          <span className="text-gray-300 font-semibold text-sm">Editor</span>
+      {/* Editor Toolbar */}
+      <div className="flex items-center justify-between px-3 py-2 bg-[var(--ws-surface-elevated)] border-b border-[var(--ws-border)]">
+        {/* Left side */}
+        <div className="flex items-center gap-3">
           <LanguageSelector />
+          <div className="w-px h-4 bg-[var(--ws-border)]" />
+          <div className="flex items-center gap-1.5">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+            </span>
+            <span className="text-[11px] font-medium text-[var(--ws-text-muted)]">Live</span>
+          </div>
+          {connectedCount > 0 && (
+            <>
+              <div className="w-px h-4 bg-[var(--ws-border)]" />
+              <div className="flex items-center gap-1.5 text-[11px] text-[var(--ws-text-muted)]">
+                <Users size={12} />
+                <span className="font-medium">{connectedCount}</span>
+              </div>
+            </>
+          )}
         </div>
-        <button
-          onClick={() => runCode("all")}
-          disabled={isExecutingIndex !== null}
-          className="px-4 py-1.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-medium rounded text-sm transition-colors"
-        >
-          {isExecutingIndex !== null ? "Running..." : "Run Code"}
-        </button>
+
+        {/* Right side */}
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <button
+            onClick={() => runCode("all")}
+            disabled={isExecutingIndex !== null}
+            className="flex items-center gap-1.5 px-4 py-1.5 bg-gradient-to-r from-[var(--ws-accent)] to-[#ffb84d] hover:from-[var(--ws-accent-hover)] hover:to-[#ffd280] disabled:opacity-50 disabled:cursor-not-allowed text-black font-semibold rounded-lg text-xs shadow-[0_0_12px_var(--ws-accent-glow)] hover:shadow-[0_0_20px_var(--ws-accent-glow)] transition-all"
+          >
+            {isExecutingIndex !== null ? (
+              <>
+                <Loader2 size={13} className="animate-spin" />
+                Running...
+              </>
+            ) : (
+              <>
+                <Play size={13} fill="currentColor" />
+                Run
+              </>
+            )}
+          </button>
+        </div>
       </div>
+
+      {/* Read-only banner */}
       {(isReadOnly || editorLocked) && (
-        <div className="w-full bg-yellow-600/90 text-white text-xs font-bold text-center py-1.5 shadow-md uppercase tracking-wider pointer-events-none shrink-0 border-b border-yellow-700">
-          {editorLocked 
-            ? (isHost ? "🔒 Editor Locked For Guests" : "🔒 Editor Locked By Host") 
-            : "🎮 Navigator Mode (Read-Only)"}
+        <div className="mx-3 mt-2 mb-1 px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-lg text-[11px] font-medium text-center shrink-0 flex items-center justify-center gap-1.5">
+          {editorLocked ? (
+            <>
+              <Lock size={11} />
+              {isHost ? "Editor Locked For Guests" : "Editor Locked By Host"}
+            </>
+          ) : (
+            <>
+              <Gamepad2 size={11} />
+              Navigator Mode (Read-Only)
+            </>
+          )}
         </div>
       )}
-      <div className="flex-1 relative">
+
+      {/* Monaco Editor */}
+      <div className="flex-1 relative bg-[var(--ws-editor)]">
         <MonacoEditor
           height="100%"
           language={langConfig.monacoLanguage}
-          theme="vs-dark"
+          theme={monacoTheme}
           onMount={handleMount}
           options={{ readOnly: isReadOnly }}
         />
