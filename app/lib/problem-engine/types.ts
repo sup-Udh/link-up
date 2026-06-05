@@ -34,6 +34,7 @@ export interface ExecutionMetadata {
   functionName: string;
   parameters: string[];
   problemType: ProblemType;
+  apiMetadata?: any;
 }
 
 // ─── Problem Type ────────────────────────────────────────────────────
@@ -68,4 +69,5 @@ export interface RawLeetCodeQuestion {
   codeSnippets: { lang: string; langSlug: string; code: string }[];
   topicTags: { name: string }[];
   hints: string[];
+  metaData?: string;
 }

@@ -19,15 +19,25 @@ import { detectProblemType } from "./detectProblemType";
 export function extractExecutionMetadata(
   starterCode: string,
   content: string = "",
-  problemType?: ProblemType
+  problemType?: ProblemType,
+  rawMetaData?: string
 ): ExecutionMetadata {
   const type = problemType ?? detectProblemType(starterCode, content);
 
-  if (type === "DESIGN") {
-    return extractDesignMetadata(starterCode, type);
+  let apiMetadata: any = undefined;
+  if (rawMetaData) {
+    try {
+      apiMetadata = JSON.parse(rawMetaData);
+    } catch (e) {}
   }
 
-  return extractFunctionMetadata(starterCode, content, type);
+  if (type === "DESIGN") {
+    const meta = extractDesignMetadata(starterCode, type);
+    return { ...meta, apiMetadata };
+  }
+
+  const meta = extractFunctionMetadata(starterCode, content, type);
+  return { ...meta, apiMetadata };
 }
 
 /**

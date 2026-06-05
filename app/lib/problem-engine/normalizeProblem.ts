@@ -36,7 +36,7 @@ export function normalizeProblem(raw: RawLeetCodeQuestion): NormalizedProblem {
   const problemType = detectProblemType(jsCode, raw.content || "");
 
   // 5. Extract execution metadata
-  const metadata = extractExecutionMetadata(jsCode, raw.content || "", problemType);
+  const metadata = extractExecutionMetadata(jsCode, raw.content || "", problemType, raw.metaData);
 
   // 6. Extract topic tags
   const topicTags = (raw.topicTags || []).map((t) => t.name);

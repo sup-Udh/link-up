@@ -7,6 +7,7 @@
 
 import type { ProblemType, ExecutionMetadata, Example } from "../types";
 import { parseFunctionInput, type ParsedInput } from "./functionAdapter";
+import { transpileLiteral } from "./transpiler";
 import {
   getLinkedListHelpers,
   getSerializeCall as getListSerializeCall,
@@ -67,26 +68,96 @@ function getFunctionAdapterCode(
 ): AdapterResult {
   const parsed = parseFunctionInput(example.input, metadata.parameters);
 
-  if (language === "python") {
+  if (language === "python" || language === "ruby" || language === "php" || language === "javascript" || language === "typescript") {
     const argsStr = parsed.args.join(", ");
+    
+    if (language === "python") {
+      return {
+        helperCode: "",
+        executionCode: `import json\n__result = ${metadata.functionName}(${argsStr})\nprint(json.dumps(__result))\n`,
+      };
+    }
+    if (language === "ruby") {
+      return {
+        helperCode: "",
+        executionCode: `__result = ${metadata.functionName}(${argsStr})\nputs __result.to_json\n`,
+      };
+    }
+    if (language === "php") {
+      return {
+        helperCode: "",
+        executionCode: `$__result = $__solution->${metadata.functionName}(${argsStr});\necho json_encode($__result);\n`,
+      };
+    }
+    // JS / TS
     return {
       helperCode: "",
-      executionCode: `
-import json
-__result = ${metadata.functionName}(${argsStr})
-print(json.dumps(__result))
-`,
+      executionCode: `const __result = ${metadata.functionName}(${argsStr});\nconsole.log(JSON.stringify(__result));\n`,
     };
   }
 
-  // JavaScript / TypeScript
-  const argsStr = parsed.args.join(", ");
+  // --- Static Languages (C++, Java, Rust, Go, C#, Swift, Scala, C) ---
+  const apiParams = metadata.apiMetadata?.params || [];
+  
+  const args = parsed.args.map((valStr, i) => {
+    const typeStr = apiParams[i]?.type || "unknown";
+    return transpileLiteral(valStr, typeStr, language);
+  });
+  
+  const argsStr = args.join(", ");
+  
+  if (language === "cpp") {
+    return {
+      helperCode: "",
+      executionCode: `auto __result = __solution.${metadata.functionName}(${argsStr});\n        // In a real env, we'd serialize this to JSON. For now just print to avoid complex C++ JSON libs.\n        cout << "Executed successfully" << endl;`,
+    };
+  }
+  if (language === "java") {
+    return {
+      helperCode: "",
+      executionCode: `Object __result = __solution.${metadata.functionName}(${argsStr});\n            System.out.println("Executed successfully");`,
+    };
+  }
+  if (language === "csharp") {
+    return {
+      helperCode: "",
+      executionCode: `var __result = __solution.${metadata.functionName}(${argsStr});\n            Console.WriteLine(JsonSerializer.Serialize(__result));`,
+    };
+  }
+  if (language === "go") {
+    return {
+      helperCode: "",
+      executionCode: `__result := ${metadata.functionName}(${argsStr})\n    __json, _ := json.Marshal(__result)\n    fmt.Println(string(__json))`,
+    };
+  }
+  if (language === "rust") {
+    return {
+      helperCode: "",
+      executionCode: `let __result = Solution::${metadata.functionName}(${argsStr});\n    println!("Executed successfully");`,
+    };
+  }
+  if (language === "swift") {
+    return {
+      helperCode: "",
+      executionCode: `let __result = __solution.${metadata.functionName}(${argsStr})\nprint("Executed successfully")`,
+    };
+  }
+  if (language === "scala") {
+    return {
+      helperCode: "",
+      executionCode: `val __result = ${metadata.functionName}(${argsStr})\n            println("Executed successfully")`,
+    };
+  }
+  if (language === "c") {
+    return {
+      helperCode: "",
+      executionCode: `${metadata.functionName}(${argsStr});\n    printf("Executed successfully\\n");`,
+    };
+  }
+
   return {
     helperCode: "",
-    executionCode: `
-const __result = ${metadata.functionName}(${argsStr});
-console.log(JSON.stringify(__result));
-`,
+    executionCode: `const __result = ${metadata.functionName}(${argsStr});\nconsole.log(JSON.stringify(__result));\n`,
   };
 }
 

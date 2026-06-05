@@ -10,6 +10,14 @@ import { generatePythonWrapper } from "./python";
 import { generateTypeScriptWrapper } from "./typescript";
 import { generateJavaWrapper } from "./java";
 import { generateCppWrapper } from "./cpp";
+import { generateGoWrapper } from "./go";
+import { generateRustWrapper } from "./rust";
+import { generateCWrapper } from "./c";
+import { generateCsharpWrapper } from "./csharp";
+import { generateSwiftWrapper } from "./swift";
+import { generateScalaWrapper } from "./scala";
+import { generatePhpWrapper } from "./php";
+import { generateRubyWrapper } from "./ruby";
 
 /**
  * Generate a complete executable program for the given language.
@@ -37,6 +45,22 @@ export function generateWrapper(
       return generateJavaWrapper(userCode, helperCode, executionCode);
     case "cpp":
       return generateCppWrapper(userCode, helperCode, executionCode);
+    case "go":
+      return generateGoWrapper(userCode, helperCode, executionCode);
+    case "rust":
+      return generateRustWrapper(userCode, helperCode, executionCode);
+    case "c":
+      return generateCWrapper(userCode, helperCode, executionCode);
+    case "csharp":
+      return generateCsharpWrapper(userCode, helperCode, executionCode);
+    case "swift":
+      return generateSwiftWrapper(userCode, helperCode, executionCode);
+    case "scala":
+      return generateScalaWrapper(userCode, helperCode, executionCode);
+    case "php":
+      return generatePhpWrapper(userCode, helperCode, executionCode);
+    case "ruby":
+      return generateRubyWrapper(userCode, helperCode, executionCode);
     default:
       // Fallback for unsupported languages — just try to append them
       return `${helperCode}\n\n${userCode}\n\n${executionCode}`;

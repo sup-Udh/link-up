@@ -54,6 +54,19 @@ export async function POST(request: Request) {
     if (!langInfo) {
       return NextResponse.json({ error: "Unsupported language" }, { status: 400 });
     }
+    
+    // Check if the language is unsupported by our Wandbox compiler
+    if (langInfo.id === "dart" || langInfo.id === "kotlin") {
+      return NextResponse.json({ 
+        results: examplesToRun.map(ex => ({
+          passed: false,
+          expected: ex.output,
+          received: "",
+          error: `${langInfo.name} execution is temporarily disabled as our compiler infrastructure does not yet support it natively. Please select another language like JavaScript, Python, or C++.`,
+          executionTime: 0
+        })) 
+      });
+    }
 
     // 5. Execute all selected examples via Wandbox API sequentially to avoid rate/resource limits
     const results: any[] = [];
