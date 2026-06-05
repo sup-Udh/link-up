@@ -16,6 +16,7 @@ import {
 } from "y-protocols/awareness";
 import type { NormalizedProblem } from "./problem-engine/types";
 import { getStarterCode, isEditorEmpty } from "./problem-engine/starterCode";
+import { createClient } from "@/utils/supabase/client";
 
 export interface TestCaseResult {
   passed: boolean;
@@ -317,9 +318,21 @@ export function RoomProvider({
       }
     };
 
-    ws.onopen = () => {
+    ws.onopen = async () => {
       const requireApproval = sessionStorage.getItem("linko_req_app") === "true";
-      ws.send(JSON.stringify({ type: "join-room", roomId, user: currentUser, requireApproval }));
+
+      // Fetch the real Supabase user UUID — this is what the DB foreign key requires.
+      // The currentUser.id is a localStorage random ID used for presence only.
+      let supabaseUserId: string | null = null;
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.id) supabaseUserId = user.id;
+      } catch (_) {
+        // Non-authenticated guest — session won't be tracked
+      }
+
+      ws.send(JSON.stringify({ type: "join-room", roomId, user: currentUser, supabaseUserId, requireApproval }));
 
       awareness.setLocalStateField("user", {
         id: currentUser.id,

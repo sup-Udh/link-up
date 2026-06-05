@@ -40,7 +40,7 @@ const rooms = new Map<
 const roomDocs = new Map<string, Y.Doc>();
 const roomOutputs = new Map<string, any>();
 const roomLanguages = new Map<string, string>();
-const socketUsers = new Map<any, { id: string, name: string, joinedAt: number, dbSessionId?: string }>();
+const socketUsers = new Map<any, { id: string, name: string, joinedAt: number, supabaseUserId?: string | null, dbSessionId?: string }>();
 
 export interface RoomState {
   hostId: string;
@@ -66,21 +66,22 @@ wss.on("connection", (ws) => {
       const currentUser = socketUsers.get(socket);
 
       // Log session to database for authenticated users
-      if (currentUser && !currentUser.id.startsWith("anon_")) {
-        if (supabase) {
-          try {
-            const { data, error } = await supabase.from("user_sessions").insert({
-              user_id: currentUser.id,
-              room_id: rId,
-              joined_at: new Date().toISOString()
-            }).select("id").single();
-            
-            if (data && data.id) {
-              currentUser.dbSessionId = data.id;
-            }
-          } catch (e) {
-            console.error("Failed to insert user session:", e);
+      if (currentUser && currentUser.supabaseUserId && supabase) {
+        try {
+          const { data, error } = await supabase.from("user_sessions").insert({
+            user_id: currentUser.supabaseUserId,
+            room_id: rId,
+            joined_at: new Date().toISOString()
+          }).select("id").single();
+          
+          if (data && data.id) {
+            currentUser.dbSessionId = data.id;
           }
+          if (error) {
+            console.error("user_sessions insert error:", error.message);
+          }
+        } catch (e) {
+          console.error("Failed to insert user session:", e);
         }
       }
 
@@ -152,15 +153,15 @@ wss.on("connection", (ws) => {
     };
 
     if (data.type === "join-room") {
-      const { roomId, user, requireApproval } = data;
+      const { roomId, user, supabaseUserId, requireApproval } = data;
       currentRoom = roomId;
 
       if (user && user.id && user.name) {
-        socketUsers.set(ws, { id: user.id, name: user.name, joinedAt: Date.now() });
+        socketUsers.set(ws, { id: user.id, name: user.name, joinedAt: Date.now(), supabaseUserId: supabaseUserId || null });
       } else {
         // Fallback for missing identity
         const anonId = "anon_" + Math.random().toString(36).substr(2, 6);
-        socketUsers.set(ws, { id: anonId, name: "Anonymous", joinedAt: Date.now() });
+        socketUsers.set(ws, { id: anonId, name: "Anonymous", joinedAt: Date.now(), supabaseUserId: null });
       }
 
       const currentUserData = socketUsers.get(ws)!;
