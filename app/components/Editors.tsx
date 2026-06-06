@@ -10,9 +10,11 @@ import { ThemeToggle } from "./ThemeToggle";
 import { useTheme } from "next-themes";
 import { Play, Loader2, Lock, Gamepad2, Users } from "lucide-react";
 import type { editor as monacoEditor } from "monaco-editor";
+import { getStarterCode, isEditorEmpty } from "@/app/lib/problem-engine/starterCode";
+import { useRef } from "react";
 
 export default function Editor() {
-  const { yText, awareness, runCode, isExecutingIndex, language, currentUser, driverId, editorLocked, hostId, users } = useRoom();
+  const { yText, awareness, runCode, isExecutingIndex, language, currentUser, driverId, editorLocked, hostId, users, problemMetadata } = useRoom();
   const [editor, setEditor] =
     useState<monacoEditor.IStandaloneCodeEditor | null>(null);
   const { resolvedTheme } = useTheme();
@@ -39,6 +41,26 @@ export default function Editor() {
       monacoInstance.editor.setTheme(resolvedTheme === "dark" ? "vs-dark" : "vs");
     }
   }, [editor, resolvedTheme]);
+
+  const hasInjectedStarterCode = useRef(false);
+
+  // Inject starter code when everything is ready
+  useEffect(() => {
+    if (!editor || !problemMetadata || !isHost) return;
+    
+    // Only inject once per session per host
+    if (!hasInjectedStarterCode.current && isEditorEmpty(yText.toString())) {
+      hasInjectedStarterCode.current = true;
+      const starter = getStarterCode(problemMetadata, language);
+      
+      if (starter) {
+        if (yText.length > 0) {
+          yText.delete(0, yText.length);
+        }
+        yText.insert(0, starter);
+      }
+    }
+  }, [editor, problemMetadata, isHost, language, yText]);
 
   // Cursor tracking + rendering (runs after editor mounts)
   useEffect(() => {

@@ -311,24 +311,6 @@ export function RoomProvider({
       });
   }, [roomId]); // Removed yText from dependencies so it only fetches once
 
-  const hasInitializedCode = useRef(false);
-
-  useEffect(() => {
-    // Only the host should inject the starter code when the room is empty
-    // This prevents duplicated code when other users join before Yjs syncs.
-    if (!problemMetadata || !currentUser || !hostId) return;
-    if (hostId === currentUser.id && !hasInitializedCode.current) {
-      if (isEditorEmpty(yText.toString())) {
-        const starter = getStarterCode(problemMetadata, language);
-        if (starter) {
-          yText.delete(0, yText.length);
-          yText.insert(0, starter);
-        }
-      }
-      hasInitializedCode.current = true;
-    }
-  }, [problemMetadata, currentUser, hostId, language, yText]);
-
   // Debounced Autosave
   useEffect(() => {
     if (!hasLoadedState || !currentUser) return;
