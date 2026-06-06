@@ -26,6 +26,7 @@
 
   "host_permissions": [
     "https://leetcode.com/*",
+    "https://neetcode.io/*",
     "http://localhost/*",
     "http://localhost:*/*",
     "http://127.0.0.1/*",
@@ -37,6 +38,7 @@
     {
       "matches": [
         "https://leetcode.com/problems/*",
+        "https://neetcode.io/problems/*",
         "http://localhost/*",
         "http://localhost:*/*",
         "http://127.0.0.1/*",

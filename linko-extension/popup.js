@@ -118,6 +118,32 @@ async function checkAuth() {
 
 // INIT
 checkAuth();
+checkProvider();
+
+async function checkProvider() {
+  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+  const tab = tabs[0];
+  if (!tab || !tab.url) return;
+
+  const providerContainer = document.getElementById("provider-container");
+  const providerBadge = document.getElementById("provider-badge");
+  
+  if (tab.url.includes("leetcode.com/problems/")) {
+    providerContainer.style.display = "block";
+    providerBadge.textContent = "LeetCode";
+    providerBadge.style.backgroundColor = "rgba(255, 161, 22, 0.15)";
+    providerBadge.style.color = "#ffa116";
+    providerBadge.style.border = "1px solid rgba(255, 161, 22, 0.3)";
+  } else if (tab.url.includes("neetcode.io/problems/")) {
+    providerContainer.style.display = "block";
+    providerBadge.textContent = "NeetCode";
+    providerBadge.style.backgroundColor = "rgba(102, 102, 255, 0.15)"; // Soft blue/purple
+    providerBadge.style.color = "#8b8bf4";
+    providerBadge.style.border = "1px solid rgba(102, 102, 255, 0.3)";
+  } else {
+    providerContainer.style.display = "none";
+  }
+}
 
 // --- EVENT LISTENERS ---
 
@@ -237,8 +263,8 @@ startBtn.addEventListener("click", async () => {
       });
       const tab = tabs[0];
 
-      if (!tab || !tab.url.includes("leetcode.com/problems/")) {
-        throw new Error("Please navigate to a LeetCode problem page.");
+      if (!tab || (!tab.url.includes("leetcode.com/problems/") && !tab.url.includes("neetcode.io/problems/"))) {
+        throw new Error("Please navigate to a LeetCode or NeetCode problem page.");
       }
 
       chrome.tabs.sendMessage(
@@ -247,7 +273,7 @@ startBtn.addEventListener("click", async () => {
         async (problem) => {
           if (chrome.runtime.lastError) {
             showStatus(
-              "Error: Please refresh the LeetCode page and try again.",
+              "Error: Please refresh the problem page and try again.",
               "red",
             );
             return;
@@ -268,9 +294,9 @@ startBtn.addEventListener("click", async () => {
                 Authorization: `Bearer ${result.extensionToken}`,
               },
               body: JSON.stringify({
+                provider: problem.provider || "leetcode",
                 slug: problem.slug,
                 url: problem.url,
-                // displayName is no longer needed from client, server infers from token!
               }),
             });
 

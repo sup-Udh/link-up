@@ -1,18 +1,26 @@
-
 console.log("Linko Content Script Loaded");
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "GET_PROBLEM") {
     const parts = window.location.pathname.split("/").filter(Boolean);
+    const hostname = window.location.hostname;
 
-    // Validate we are on a LeetCode problem page
-    if (parts.length >= 2 && parts[0] === "problems") {
-      const slug = parts[1];      
+    let provider = null;
+    if (hostname.includes("leetcode.com")) {
+      provider = "leetcode";
+    } else if (hostname.includes("neetcode.io")) {
+      provider = "neetcode";
+    }
+
+    // Validate we are on a supported problem page
+    if (provider && parts.length >= 2 && parts[0] === "problems") {
+      const slug = parts[1];
       sendResponse({
+        provider: provider,
         slug: slug,
         url: window.location.href,
       });
     } else {
-      sendResponse({ error: "Not on a LeetCode problem page." });
+      sendResponse({ error: "Not on a supported problem page." });
     }
   }
 });
