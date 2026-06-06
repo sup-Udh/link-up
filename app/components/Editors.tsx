@@ -4,20 +4,23 @@ import { useEffect, useState, useCallback } from "react";
 import MonacoEditor from "@monaco-editor/react";
 import { MonacoBinding } from "y-monaco";
 import { useRoom } from "@/app/lib/RoomContext";
-import { getLanguageConfig } from "@/app/lib/languages";
+import { getLanguageConfig, SUPPORTED_LANGUAGES } from "@/app/lib/languages";
 import LanguageSelector from "./LanguageSelector";
 import { ThemeToggle } from "./ThemeToggle";
 import { useTheme } from "next-themes";
-import { Play, Loader2, Lock, Gamepad2, Users } from "lucide-react";
+import { Play, Loader2, Lock, Gamepad2, Users, Code2 } from "lucide-react";
 import type { editor as monacoEditor } from "monaco-editor";
 import { getStarterCode, isEditorEmpty } from "@/app/lib/problem-engine/starterCode";
 import { useRef } from "react";
 
 export default function Editor() {
-  const { yText, awareness, runCode, isExecutingIndex, language, currentUser, driverId, editorLocked, hostId, users, problemMetadata } = useRoom();
+  const { yText, awareness, runCode, isExecutingIndex, language, changeLanguage, currentUser, driverId, editorLocked, hostId, users, problemMetadata } = useRoom();
   const [editor, setEditor] =
     useState<monacoEditor.IStandaloneCodeEditor | null>(null);
   const { resolvedTheme } = useTheme();
+  
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [hasCheckedEmpty, setHasCheckedEmpty] = useState(false);
 
   const isHost = currentUser?.id === hostId;
   
@@ -42,25 +45,22 @@ export default function Editor() {
     }
   }, [editor, resolvedTheme]);
 
-  const hasInjectedStarterCode = useRef(false);
-
-  // Inject starter code when everything is ready
+  // Check if editor is empty on load, and prompt host to select language
   useEffect(() => {
-    if (!editor || !problemMetadata || !isHost) return;
+    if (!editor || !problemMetadata || hasCheckedEmpty) return;
     
-    // Only inject once per session per host
-    if (!hasInjectedStarterCode.current && isEditorEmpty(yText.toString())) {
-      hasInjectedStarterCode.current = true;
-      const starter = getStarterCode(problemMetadata, language);
-      
-      if (starter) {
-        if (yText.length > 0) {
-          yText.delete(0, yText.length);
-        }
-        yText.insert(0, starter);
-      }
+    // Mark as checked so we only do this once per editor load
+    setHasCheckedEmpty(true);
+    
+    if (isHost && isEditorEmpty(yText.toString())) {
+      setShowLanguageModal(true);
     }
-  }, [editor, problemMetadata, isHost, language, yText]);
+  }, [editor, problemMetadata, isHost, yText, hasCheckedEmpty]);
+
+  const handleInitialLanguageSelect = (langId: string) => {
+    changeLanguage(langId);
+    setShowLanguageModal(false);
+  };
 
   // Cursor tracking + rendering (runs after editor mounts)
   useEffect(() => {
@@ -297,6 +297,37 @@ export default function Editor() {
           onMount={handleMount}
           options={{ readOnly: isReadOnly }}
         />
+
+        {/* Initial Language Selection Modal */}
+        {showLanguageModal && (
+          <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center">
+            <div className="bg-[var(--ws-surface-elevated)] border border-[var(--ws-border)] rounded-2xl p-6 shadow-2xl w-[320px] max-w-[90%]">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--ws-accent)] to-[#ffb84d] flex items-center justify-center shadow-lg shadow-[var(--ws-accent-glow)] shrink-0">
+                  <Code2 size={20} className="text-black" />
+                </div>
+                <div>
+                  <h3 className="text-[var(--ws-text)] font-semibold">Choose Language</h3>
+                  <p className="text-[var(--ws-text-muted)] text-[11px]">Select a starting language</p>
+                </div>
+              </div>
+              
+              <div className="space-y-2 max-h-[240px] overflow-y-auto ws-scrollbar pr-2 mb-4">
+                {SUPPORTED_LANGUAGES.map((lang) => (
+                  <button
+                    key={lang.id}
+                    onClick={() => handleInitialLanguageSelect(lang.id)}
+                    className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-[var(--ws-surface-hover)] border border-transparent hover:border-[var(--ws-border-hover)] transition-all group"
+                  >
+                    <span className="text-sm font-medium text-[var(--ws-text-secondary)] group-hover:text-[var(--ws-text)] transition-colors">
+                      {lang.name}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
