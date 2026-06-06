@@ -282,7 +282,7 @@ export default function Dashboard() {
                   size={16}
                   className="text-[#ffa116] group-hover:-translate-y-0.5 transition-transform"
                 />
-                Get Extension
+                Connect Extension
               </Link>
             )}
             <button
