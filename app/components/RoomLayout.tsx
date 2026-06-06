@@ -219,6 +219,41 @@ function RoomContent({ problemPanel }: { problemPanel: React.ReactNode }) {
   const searchParams = useSearchParams();
   const isDemo = searchParams.get("demo") === "true";
 
+  const [timeLimitReached, setTimeLimitReached] = useState(false);
+
+  useEffect(() => {
+    if (isDemo) {
+      const timer = setTimeout(() => {
+        setTimeLimitReached(true);
+      }, 3 * 60 * 1000); // 3 minutes
+      return () => clearTimeout(timer);
+    }
+  }, [isDemo]);
+
+  if (timeLimitReached) {
+    return (
+      <div className="flex h-screen bg-[var(--ws-bg)] items-center justify-center flex-col gap-5 text-center p-6 z-[2000] relative">
+        <div className="w-16 h-16 rounded-2xl bg-[#ffa116]/10 flex items-center justify-center shadow-[0_0_20px_rgba(255,161,22,0.2)]">
+          <ShieldAlert size={32} className="text-[#ffa116]" />
+        </div>
+        <div className="space-y-3">
+          <h1 className="text-[var(--ws-text)] text-2xl font-bold">Time Limit Reached</h1>
+          <p className="text-[var(--ws-text-muted)] text-sm max-w-sm leading-relaxed mx-auto">
+            The dummy room cannot be used for more than 3 minutes. Login to Linko and code collaboratively for unlimited time.
+          </p>
+        </div>
+        <div className="flex gap-4 mt-6">
+          <button onClick={() => window.location.href = "/"} className="px-6 py-3 bg-[var(--ws-surface-elevated)] border border-[var(--ws-border)] hover:bg-[var(--ws-surface-hover)] text-[var(--ws-text)] font-semibold rounded-xl transition-colors">
+            Return Home
+          </button>
+          <button onClick={() => window.location.href = "/login"} className="px-6 py-3 bg-[#ffa116] hover:bg-[#ffb342] text-black font-bold rounded-xl transition-colors shadow-lg shadow-[#ffa116]/20">
+            Login to Linko
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative h-screen bg-[var(--ws-bg)] overflow-hidden">
       {isDemo && identityStatus === "ready" && <RoomTour />}

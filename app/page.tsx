@@ -13,15 +13,26 @@ import SetupAnimation from "./components/SetupAnimation";
 export default function Home() {
   const router = useRouter();
   const [showInstallModal, setShowInstallModal] = useState(false);
+  const [showNameModal, setShowNameModal] = useState(false);
+  const [dummyName, setDummyName] = useState("");
 
-  const createRoom = () => {
+  const handleStartDummyRoom = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!dummyName.trim()) return;
+    
     const roomId = crypto.randomUUID().slice(0, 8);
-    router.push(`/room/${roomId}?slug=two-sum&demo=true`);
+    // Passing name in URL, RoomContext will save it to local storage
+    window.open(`/room/${roomId}?slug=two-sum&demo=true&name=${encodeURIComponent(dummyName.trim())}`, '_blank');
+    setShowNameModal(false);
+    setDummyName("");
   };
 
+  const createRoom = () => {
+    setShowNameModal(true);
+  };
 
   const DashboardReroute = () => {
-    router.push("/dashboard");
+    setShowNameModal(true);
   }
 
   const scrollToDevelopers = () => {
@@ -312,6 +323,45 @@ export default function Home() {
           </div>
         </div>
       )}
+      {/* Name Prompt Modal for Quick Start */}
+      {showNameModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Quick Start</h2>
+              <button 
+                onClick={() => setShowNameModal(false)}
+                className="text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
+              You're about to create a temporary dummy room. No sign-up required! What should we call you?
+            </p>
+            
+            <form onSubmit={handleStartDummyRoom}>
+              <input
+                type="text"
+                autoFocus
+                placeholder="Enter your name..."
+                value={dummyName}
+                onChange={(e) => setDummyName(e.target.value)}
+                className="w-full bg-gray-50 dark:bg-[#121212] border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-[#ffa116] focus:ring-1 focus:ring-[#ffa116] transition-all mb-4"
+              />
+              <button
+                type="submit"
+                disabled={!dummyName.trim()}
+                className="w-full py-3 bg-[#ffa116] hover:bg-[#ffb342] text-black font-bold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Create Room
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
     </main>
   );
 }

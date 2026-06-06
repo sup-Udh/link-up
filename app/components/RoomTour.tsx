@@ -8,20 +8,20 @@ import { useRoom } from "@/app/lib/RoomContext";
 export default function RoomTour() {
   const router = useRouter();
   const { currentUser } = useRoom();
-  const [step, setStep] = useState(0); // 0=Welcome, 1=Problem, 2=Editor, 3=Collab, 4=FreeExplore, 5=CTA
+  const [step, setStep] = useState(0); // 0=Welcome, 1=Problem, 2=Editor, 3=Collab, 4=Share, 5=FreeExplore, 6=CTA
   useEffect(() => {
     let timer: NodeJS.Timeout;
-    if (step === 4) {
+    if (step === 5) {
       // Free exploration timer - show CTA after 60 seconds
       timer = setTimeout(() => {
-        setStep(5);
+        setStep(6);
       }, 60000);
     }
     return () => clearTimeout(timer);
   }, [step]);
 
   const nextStep = () => setStep(s => s + 1);
-  const skipTour = () => setStep(4);
+  const skipTour = () => setStep(5);
 
   if (step === 0) {
     return (
@@ -99,8 +99,8 @@ export default function RoomTour() {
               <p className="text-sm text-[var(--ws-text-secondary)] mb-4 leading-relaxed">
                 Manage your session here. This demo room is open for anybody to join, and you can see active participants below.
               </p>
-              <button onClick={skipTour} className="w-full py-2 bg-[#ffa116] text-black rounded-lg text-sm font-bold flex justify-center items-center gap-1">
-                Finish Tour <Check size={16} />
+              <button onClick={nextStep} className="w-full py-2 bg-[#ffa116] text-black rounded-lg text-sm font-bold flex justify-center items-center gap-1">
+                Next <ChevronRight size={16} />
               </button>
             </div>
 
@@ -125,8 +125,28 @@ export default function RoomTour() {
         </div>
       )}
 
-      {/* CTA Modal (Step 5) */}
-      {step === 5 && (
+      {/* Share with Friends (Step 4) */}
+      {step === 4 && (
+        <div className="fixed inset-0 z-[1000] pointer-events-none">
+          <div className="absolute top-16 left-1/2 -translate-x-1/2 pointer-events-auto transition-all duration-500">
+            <div className="bg-[var(--ws-surface-elevated)] border border-[var(--ws-border)] rounded-2xl p-6 w-80 shadow-2xl text-center">
+              <h3 className="font-bold text-[var(--ws-text)] flex items-center justify-center gap-2 mb-2">
+                <span className="w-6 h-6 rounded-full bg-[#ffa116]/20 text-[#ffa116] flex items-center justify-center text-xs">4</span>
+                Share with Friends
+              </h3>
+              <p className="text-sm text-[var(--ws-text-secondary)] mb-4 leading-relaxed">
+                Just copy the URL from your browser and send it to your friends! Anyone with the link can join this room instantly.
+              </p>
+              <button onClick={skipTour} className="w-full py-2 bg-[#ffa116] text-black rounded-lg text-sm font-bold flex justify-center items-center gap-1">
+                Finish Tour <Check size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CTA Modal (Step 6) */}
+      {step === 6 && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in">
           <div className="bg-[var(--ws-surface)] border border-[var(--ws-border)] rounded-2xl p-8 max-w-md w-full shadow-2xl relative text-center">
             <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-[#ffa116] to-[#ffb342] flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(255,161,22,0.3)]">
@@ -144,7 +164,7 @@ export default function RoomTour() {
                 Go to Dashboard
               </button>
               <button 
-                onClick={() => setStep(4)} 
+                onClick={() => setStep(5)} 
                 className="w-full py-3 rounded-xl text-sm font-semibold bg-[var(--ws-surface-elevated)] border border-[var(--ws-border)] text-[var(--ws-text-muted)] hover:text-[var(--ws-text)] hover:bg-[var(--ws-surface-hover)] transition-colors"
               >
                 Continue Exploring Here
