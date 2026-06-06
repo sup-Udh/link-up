@@ -65,6 +65,8 @@ interface RoomContextType {
   language: string;
   changeLanguage: (lang: string) => void;
   problemMetadata: NormalizedProblem | null;
+  setProblem: (problem: NormalizedProblem) => void;
+  
   
   // Custom Cases
   customCases: CustomTestCase[];
@@ -273,7 +275,7 @@ export function RoomProvider({
             language,
             customTestCases: customCases,
             latestResults: testResults,
-            officialTestCases: problemMetadata?.examples || []
+            officialTestCases: problemMetadata ? { _isFullProblem: true, ...problemMetadata } : []
           })
         });
       } catch (err) {
@@ -405,6 +407,9 @@ export function RoomProvider({
         }
         if (data.state.customCases) {
           setCustomCases(data.state.customCases);
+        }
+        if (data.state.problem) {
+          setProblemMetadata(data.state.problem);
         }
       }
 
@@ -562,6 +567,17 @@ export function RoomProvider({
     }
   };
 
+  const setProblem = (problem: NormalizedProblem) => {
+    setProblemMetadata(problem);
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({
+        type: "set-problem",
+        roomId,
+        problem
+      }));
+    }
+  };
+
   const addCustomCase = (tc: CustomTestCase) => {
     wsRef.current?.send(JSON.stringify({ type: "add-custom-case", roomId, case: tc }));
   };
@@ -615,7 +631,7 @@ export function RoomProvider({
   return (
     <RoomContext.Provider value={{ 
       ydoc, yText, awareness, users, currentUser, identityStatus, setIdentity, notifications, 
-      latestOutput, testResults, isExecutingIndex, runCode, language, changeLanguage, problemMetadata,
+      latestOutput, testResults, isExecutingIndex, runCode, language, changeLanguage, problemMetadata, setProblem,
       customCases, addCustomCase, updateCustomCase, deleteCustomCase,
       hostId, driverId, editorLocked, joinStatus, pendingRequests, approveUser, rejectUser,
       kickUser, transferHost, assignDriver, setEditorLock, resetSession, endSession

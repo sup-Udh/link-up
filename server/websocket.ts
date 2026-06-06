@@ -49,6 +49,7 @@ export interface RoomState {
   requireApproval: boolean;
   pendingRequests: { id: string, name: string }[];
   customCases: { id: string, input: string, expectedOutput: string }[];
+  problem?: any;
 }
 const roomStates = new Map<string, RoomState>();
 const pendingSockets = new Map<string, any>();
@@ -343,6 +344,14 @@ wss.on("connection", (ws) => {
       const state = roomStates.get(data.roomId);
       if (state) {
         state.customCases.push(data.case);
+        broadcastRoomState(data.roomId);
+      }
+    }
+
+    if (data.type === "set-problem") {
+      const state = roomStates.get(data.roomId);
+      if (state) {
+        state.problem = data.problem;
         broadcastRoomState(data.roomId);
       }
     }

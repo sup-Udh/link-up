@@ -69,11 +69,11 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { title, language, source = "blank", requireApproval = false, slug = null } = body;
+    const { title, language, source = "blank", description, requireApproval = false, slug = null } = body;
 
     const roomId = generateRoomId();
 
-    const roomPayload = {
+    const roomPayload: any = {
       
       id: roomId,
       title: title || slug || "Untitled Session",
@@ -84,6 +84,10 @@ export async function POST(request: Request) {
       participant_count: 0,
       is_active: false,
     };
+
+    if (description) {
+      roomPayload.official_test_cases = { _isFullProblem: false, description };
+    }
 
     const adminDb = createAdminClient();
     const { error } = await adminDb.from('rooms').insert([roomPayload]);

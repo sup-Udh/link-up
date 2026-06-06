@@ -48,6 +48,7 @@ export default function Dashboard() {
 
   // Blank Room Form State
   const [roomTitle, setRoomTitle] = useState("");
+  const [roomDescription, setRoomDescription] = useState("");
   const [roomLanguage, setRoomLanguage] = useState("JavaScript");
   const [isPrivate, setIsPrivate] = useState(false);
   const [requireApproval, setRequireApproval] = useState(false);
@@ -111,6 +112,7 @@ export default function Dashboard() {
           title: roomTitle || "Untitled Session",
           language: roomLanguage,
           source: "blank",
+          description: roomDescription,
           requireApproval,
         }),
       });
@@ -153,6 +155,7 @@ export default function Dashboard() {
   const closeModal = () => {
     setIsModalOpen(false);
     setRoomTitle("");
+    setRoomDescription("");
   };
 
   const timeAgo = (dateString: string) => {
@@ -450,6 +453,19 @@ export default function Dashboard() {
                     value={roomTitle}
                     onChange={(e) => setRoomTitle(e.target.value)}
                     placeholder="e.g. System Design Mock"
+                    className="w-full bg-gray-50 dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#ffa116] focus:ring-1 focus:ring-[#ffa116] transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    Description (optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={roomDescription}
+                    onChange={(e) => setRoomDescription(e.target.value)}
+                    placeholder="e.g. Practicing graphs and dynamic programming..."
                     className="w-full bg-gray-50 dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#ffa116] focus:ring-1 focus:ring-[#ffa116] transition-all"
                   />
                 </div>

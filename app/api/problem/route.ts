@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { fetchLeetCodeProblem } from "@/app/lib/leetcode";
 import { normalizeProblem } from "@/app/lib/problem-engine/normalizeProblem";
 import { getSlugForRoom } from "@/app/lib/db";
+import { createAdminClient } from "@/utils/supabase/admin";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -13,11 +14,20 @@ export async function GET(request: Request) {
   }
 
   const slug = slugParam || (roomId ? await getSlugForRoom(roomId) : null);
-  if (!slug) {
-    return NextResponse.json({ error: "Room not found or no problem linked" }, { status: 404 });
-  }
-
+  
   try {
+    const supabase = createAdminClient();
+    if (roomId) {
+      const { data: room } = await supabase.from('rooms').select('official_test_cases').eq('id', roomId).single();
+      if (room?.official_test_cases && (room.official_test_cases as any)._isFullProblem) {
+        return NextResponse.json(room.official_test_cases);
+      }
+    }
+
+    if (!slug) {
+      return NextResponse.json({ error: "Room not found or no problem linked" }, { status: 404 });
+    }
+
     const raw = await fetchLeetCodeProblem(slug);
     const normalized = normalizeProblem(raw);
     return NextResponse.json(normalized);
