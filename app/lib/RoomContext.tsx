@@ -505,6 +505,8 @@ export function RoomProvider({
 
       if (data.type === "session-reset") {
         setLatestOutput(null);
+        setTestResults({});
+        setMessages([]);
         addNotification("Session reset by host.");
         if (currentUser.id === hostId) {
           yText.delete(0, yText.length);

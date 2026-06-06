@@ -445,8 +445,9 @@ wss.on("connection", (ws) => {
     if (data.type === "reset-session") {
       if (!isHost(data.roomId, ws)) return;
       
-      // Clear output history
+      // Clear output and chat history
       roomOutputs.delete(data.roomId);
+      roomMessages.delete(data.roomId);
       
       rooms.get(data.roomId)?.forEach((client) => {
         client.send(JSON.stringify({ type: "session-reset" }));
