@@ -6,7 +6,9 @@ import Members from "./Members";
 import BottomPanel from "./BottomPanel";
 import RoomControls from "./RoomControls";
 import ActivityFeed from "./ActivityFeed";
-import { useState } from "react";
+import RoomTour from "./RoomTour";
+import React, { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Panel, Group, Separator } from "react-resizable-panels";
 import { Code2, ShieldAlert, Loader2, RefreshCw, ArrowLeft } from "lucide-react";
 
@@ -121,8 +123,12 @@ function RoomContent({ problemPanel }: { problemPanel: React.ReactNode }) {
     );
   }
 
+  const searchParams = useSearchParams();
+  const isDemo = searchParams.get("demo") === "true";
+
   return (
     <div className="relative h-screen bg-[var(--ws-bg)] overflow-hidden">
+      {isDemo && identityStatus === "ready" && <RoomTour />}
       
       {/* Notification Toasts */}
       <div className="fixed top-4 right-4 z-[100] space-y-2">
@@ -188,7 +194,9 @@ export default function RoomLayout({
 }) {
   return (
     <RoomProvider roomId={roomId}>
-      <RoomContent problemPanel={problemPanel} />
+      <React.Suspense fallback={<div className="h-screen bg-[var(--ws-bg)]" />}>
+        <RoomContent problemPanel={problemPanel} />
+      </React.Suspense>
     </RoomProvider>
   );
 }
