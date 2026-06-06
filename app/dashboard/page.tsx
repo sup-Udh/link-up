@@ -28,6 +28,7 @@ interface Room {
   last_active_at: string;
   is_active: boolean;
   require_approval: boolean;
+  official_test_cases?: any;
 }
 
 export default function Dashboard() {
@@ -354,10 +355,16 @@ export default function Dashboard() {
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center gap-2">
-                      {room.source === "extension" ? (
-                        <span className="px-2.5 py-1 rounded-md bg-[#ffa116]/10 text-[#ffa116] text-xs font-semibold flex items-center gap-1.5">
-                          <Code2 size={12} /> LeetCode Session
-                        </span>
+                      {room.source === "extension" || room.source === "leetcode" ? (
+                        room.official_test_cases?.provider === "neetcode" || room.official_test_cases?.source === "neetcode" ? (
+                          <span className="px-2.5 py-1 rounded-md bg-indigo-500/10 text-indigo-400 text-xs font-semibold flex items-center gap-1.5">
+                            <Code2 size={12} /> NeetCode Session
+                          </span>
+                        ) : (
+                          <span className="px-2.5 py-1 rounded-md bg-[#ffa116]/10 text-[#ffa116] text-xs font-semibold flex items-center gap-1.5">
+                            <Code2 size={12} /> LeetCode Session
+                          </span>
+                        )
                       ) : (
                         <span className="px-2.5 py-1 rounded-md bg-blue-500/10 text-blue-500 dark:text-blue-400 text-xs font-semibold flex items-center gap-1.5">
                           <TerminalSquare size={12} /> Blank Session

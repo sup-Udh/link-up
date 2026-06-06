@@ -69,24 +69,27 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { title, language, source = "blank", description, requireApproval = false, slug = null } = body;
+    const { title, language, source = "blank", description, requireApproval = false, slug = null, provider = null } = body;
 
     const roomId = generateRoomId();
+
+    const roomSource = slug ? "extension" : source;
 
     const roomPayload: any = {
       
       id: roomId,
       title: title || slug || "Untitled Session",
       language: language || "JavaScript",
-      source: slug ? "extension" : source,
+      source: roomSource,
       host_id: user.id,
       require_approval: requireApproval,
       participant_count: 0,
       is_active: false,
+      official_test_cases: { _isFullProblem: false, provider: provider || (slug ? 'leetcode' : null) }
     };
 
     if (description) {
-      roomPayload.official_test_cases = { _isFullProblem: false, description };
+      roomPayload.official_test_cases.description = description;
     }
 
     const adminDb = createAdminClient();

@@ -17,6 +17,7 @@ export interface NormalizedProblem {
   hints: string[];
   rawTestcases: string;                     // exampleTestcases (newline-separated raw values)
   metadata: ExecutionMetadata;
+  source?: string;                          // the provider source e.g. leetcode, neetcode
 }
 
 // ─── Parsed Example ──────────────────────────────────────────────────

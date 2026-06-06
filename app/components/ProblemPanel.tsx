@@ -70,6 +70,15 @@ export default function ProblemPanel({ roomId }: { roomId: string }) {
           <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${difficultyBadge}`}>
             {problem.difficulty}
           </span>
+          {(problem as any).source === 'neetcode' ? (
+            <span className="rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+              NeetCode
+            </span>
+          ) : (problem as any).source === 'leetcode' ? (
+            <span className="rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide bg-orange-500/10 text-orange-400 border border-orange-500/20">
+              LeetCode
+            </span>
+          ) : null}
         </div>
         {problem.topicTags && problem.topicTags.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
