@@ -577,10 +577,7 @@ export default function Dashboard() {
                 <div className="w-16 h-16 rounded-full bg-[#ffa116]/10 flex items-center justify-center mx-auto mb-4">
                   <Code2 size={32} className="text-[#ffa116]" />
                 </div>
-                <h3 className="font-bold text-lg mb-2">
-                  Waiting for extension...
-                </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 mt-2">
                   Open a LeetCode problem and create a room using the Linko
                   Extension. The room will automatically appear in your
                   dashboard.
