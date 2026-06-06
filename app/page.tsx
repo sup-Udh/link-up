@@ -32,7 +32,7 @@ export default function Home() {
   };
 
   const DashboardReroute = () => {
-    setShowNameModal(true);
+    router.push("/dashboard");
   }
 
   const scrollToDevelopers = () => {
