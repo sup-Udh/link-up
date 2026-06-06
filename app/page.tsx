@@ -8,6 +8,7 @@ import CinematicHero from "./components/CinematicHero";
 import ScrollStory from "./components/ScrollStory";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { GithubIcon } from "./components/GithubIcon";
+import SetupAnimation from "./components/SetupAnimation";
 
 export default function Home() {
   const router = useRouter();
@@ -176,6 +177,50 @@ export default function Home() {
               <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
                 Write code, execute test cases, and solve LeetCode problems in real-time with zero latency.
               </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Setup Guide Section */}
+      <section className="min-h-screen bg-gray-50 dark:bg-[#0a0a0a]/50 border-t border-gray-200 dark:border-white/10 flex flex-col items-center justify-center p-8 transition-colors duration-300 relative z-10">
+        <div className="max-w-6xl w-full">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4">Setup in Seconds</h2>
+            <p className="text-gray-500 dark:text-gray-400 text-lg max-w-2xl mx-auto">
+              Connecting your coding environment has never been easier. Install the extension, open a problem, and you're ready to invite collaborators.
+            </p>
+          </div>
+
+          <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+            {/* Steps Text */}
+            <div className="flex-1 space-y-8">
+              <div className="flex gap-4">
+                <div className="w-10 h-10 rounded-full bg-[#ffa116] text-black font-bold flex items-center justify-center shrink-0">1</div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Install the Extension</h3>
+                  <p className="text-gray-500 dark:text-gray-400">Grab the free Linko extension from the Chrome Web Store. It's lightweight and integrates directly into your browser.</p>
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <div className="w-10 h-10 rounded-full bg-[#ffa116] text-black font-bold flex items-center justify-center shrink-0">2</div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Open a Problem</h3>
+                  <p className="text-gray-500 dark:text-gray-400">Head over to any supported platform like LeetCode and open the problem you want to solve with your peers.</p>
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <div className="w-10 h-10 rounded-full bg-[#ffa116] text-black font-bold flex items-center justify-center shrink-0">3</div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Start the Session</h3>
+                  <p className="text-gray-500 dark:text-gray-400">Click the Linko extension icon and hit 'Start Session'. We'll instantly generate a real-time collaborative workspace for that exact problem.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Animation Pane */}
+            <div className="flex-1 w-full max-w-lg lg:max-w-none flex justify-center">
+              <SetupAnimation />
             </div>
           </div>
         </div>
