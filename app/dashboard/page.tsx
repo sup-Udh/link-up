@@ -14,6 +14,7 @@ import {
   Crown,
   TerminalSquare,
   Trash2,
+  Puzzle,
 } from "lucide-react";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
 import { createClient } from "@/utils/supabase/client";
@@ -45,6 +46,9 @@ export default function Dashboard() {
   // Delete Modal State
   const [roomToDelete, setRoomToDelete] = useState<Room | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Install Modal State
+  const [showInstallModal, setShowInstallModal] = useState(false);
 
   // Blank Room Form State
   const [roomTitle, setRoomTitle] = useState("");
@@ -190,6 +194,13 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center gap-4">
+            <button
+              onClick={() => setShowInstallModal(true)}
+              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#1cbaba]/10 hover:bg-[#1cbaba]/20 text-[#1cbaba] text-sm font-medium transition-colors"
+            >
+              <Puzzle size={16} />
+              Extension
+            </button>
             <ThemeToggle />
             <div className="w-px h-6 bg-gray-200 dark:bg-gray-800"></div>
             <Link
@@ -597,6 +608,44 @@ export default function Dashboard() {
                   "Delete"
                 )}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Install Extension Modal */}
+      {showInstallModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-3xl p-8 max-w-sm w-full shadow-2xl relative">
+            <button
+              onClick={() => setShowInstallModal(false)}
+              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors rounded-xl"
+            >
+              <X size={20} />
+            </button>
+            <div className="w-16 h-16 mx-auto rounded-2xl bg-[#1cbaba]/10 flex items-center justify-center mb-6">
+              <Puzzle size={32} className="text-[#1cbaba]" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white text-center mb-3">
+              Linko Chrome Extension
+            </h2>
+            <p className="text-gray-500 dark:text-gray-400 text-sm text-center mb-8">
+              Unlock the full power of Linko. Start collaborative sessions directly from any LeetCode problem.
+            </p>
+            <div className="space-y-3">
+              <a
+                href="#"
+                className="w-full bg-[#1cbaba] hover:bg-[#19a6a6] text-white py-3.5 rounded-xl font-bold text-sm transition-all flex justify-center items-center gap-2"
+              >
+                Download from Web Store
+              </a>
+              <Link
+                href="/extension/connect"
+                onClick={() => setShowInstallModal(false)}
+                className="w-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white py-3.5 rounded-xl font-bold text-sm transition-all flex justify-center items-center gap-2"
+              >
+                I already have it installed
+              </Link>
             </div>
           </div>
         </div>

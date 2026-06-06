@@ -18,6 +18,53 @@ import type { NormalizedProblem } from "./problem-engine/types";
 import { getStarterCode, isEditorEmpty } from "./problem-engine/starterCode";
 import { createClient } from "@/utils/supabase/client";
 
+export interface ConfirmOptions {
+  title: string;
+  message: string;
+  confirmText?: string;
+  cancelText?: string;
+  isDestructive?: boolean;
+}
+
+export interface ConfirmDialogState extends ConfirmOptions {
+  resolve: (value: boolean) => void;
+}
+
+function ConfirmModal({ 
+  dialog, 
+  onClose 
+}: { 
+  dialog: ConfirmOptions; 
+  onClose: (val: boolean) => void;
+}) {
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] animate-in fade-in">
+      <div className="bg-[var(--ws-surface-elevated)] border border-[var(--ws-border)] rounded-2xl p-6 w-[360px] shadow-2xl animate-in zoom-in-95">
+        <h3 className="text-[var(--ws-text)] font-semibold text-lg mb-2">{dialog.title}</h3>
+        <p className="text-[var(--ws-text-secondary)] text-sm mb-6 whitespace-pre-line">{dialog.message}</p>
+        <div className="flex gap-3 justify-end">
+          <button 
+            onClick={() => onClose(false)} 
+            className="px-4 py-2 text-sm font-medium text-[var(--ws-text-muted)] hover:text-[var(--ws-text)] hover:bg-[var(--ws-surface-hover)] rounded-xl transition-colors"
+          >
+            {dialog.cancelText || "Cancel"}
+          </button>
+          <button 
+            onClick={() => onClose(true)} 
+            className={`px-4 py-2 text-sm font-bold rounded-xl transition-colors shadow-lg ${
+              dialog.isDestructive 
+                ? "bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 shadow-red-500/10" 
+                : "bg-[var(--ws-accent)] text-black hover:bg-[var(--ws-accent-hover)] shadow-[var(--ws-accent)]/20"
+            }`}
+          >
+            {dialog.confirmText || "OK"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export interface TestCaseResult {
   passed: boolean;
   expected: string;
@@ -78,7 +125,7 @@ interface RoomContextType {
   hostId: string | null;
   driverId: string | null;
   editorLocked: boolean;
-  joinStatus: "connecting" | "waiting-approval" | "joined" | "rejected";
+  joinStatus: "connecting" | "waiting-approval" | "joined" | "rejected" | "kicked" | "ended";
   pendingRequests: { id: string, name: string }[];
   approveUser: (id: string) => void;
   rejectUser: (id: string) => void;
@@ -149,8 +196,15 @@ export function RoomProvider({
   const [hostId, setHostId] = useState<string | null>(null);
   const [driverId, setDriverId] = useState<string | null>(null);
   const [editorLocked, setEditorLocked] = useState(false);
-  const [joinStatus, setJoinStatus] = useState<"connecting" | "waiting-approval" | "joined" | "rejected">("connecting");
+  const [joinStatus, setJoinStatus] = useState<"connecting" | "waiting-approval" | "joined" | "rejected" | "kicked" | "ended">("connecting");
   const [pendingRequests, setPendingRequests] = useState<{ id: string, name: string }[]>([]);
+  const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogState | null>(null);
+
+  const requestConfirm = (options: ConfirmOptions): Promise<boolean> => {
+    return new Promise((resolve) => {
+      setConfirmDialog({ ...options, resolve });
+    });
+  };
   
   const wsRef = useRef<WebSocket | null>(null);
 
@@ -427,13 +481,11 @@ export function RoomProvider({
       }
 
       if (data.type === "user-kicked") {
-        alert("You have been removed from this room.");
-        window.location.href = "/dashboard";
+        setJoinStatus("kicked");
       }
 
       if (data.type === "room-ended") {
-        alert("Session ended by host.");
-        window.location.href = "/dashboard";
+        setJoinStatus("ended");
       }
 
       if (data.type === "session-reset") {
@@ -533,21 +585,19 @@ export function RoomProvider({
     }
   };
 
-  const changeLanguage = (lang: string) => {
-    if (problemMetadata) {
-      const normalize = (str: string) => str.replace(/\s+/g, '').trim();
-      const currentCode = normalize(yText.toString());
-      const currentStarterCode = normalize(getStarterCode(problemMetadata, language) || "");
-      
-      const hasUserModifiedCode = currentCode !== "" && currentCode !== currentStarterCode;
-      
-      if (hasUserModifiedCode) {
-        const confirmSwitch = window.confirm("Switching languages will replace your current code.\n\n[ Cancel ] to keep your code\n[ OK ] to Switch Language and reset");
-        if (!confirmSwitch) {
-          return; // Abort language switch
-        }
-      }
+  const changeLanguage = async (lang: string) => {
+    if (lang === language) return;
+    if (yText.length > 0) {
+      const confirmSwitch = await requestConfirm({
+        title: "Change Language",
+        message: "Switching languages will replace your current code.\n\n[ Cancel ] to keep your code\n[ OK ] to Switch Language and reset",
+        confirmText: "Switch Language",
+        isDestructive: true
+      });
+      if (!confirmSwitch) return;
+    }
 
+    if (problemMetadata) {
       const newStarter = getStarterCode(problemMetadata, lang);
       yText.delete(0, yText.length);
       if (newStarter) {
@@ -602,8 +652,12 @@ export function RoomProvider({
     wsRef.current?.send(JSON.stringify({ type: "kick-user", roomId, userId }));
   };
 
-  const transferHost = (userId: string) => {
-    if (window.confirm("Are you sure you want to transfer host permissions?")) {
+  const transferHost = async (userId: string) => {
+    if (await requestConfirm({
+      title: "Transfer Host?",
+      message: "Are you sure you want to transfer host permissions?",
+      confirmText: "Transfer"
+    })) {
       wsRef.current?.send(JSON.stringify({ type: "transfer-host", roomId, userId }));
     }
   };
@@ -616,14 +670,24 @@ export function RoomProvider({
     wsRef.current?.send(JSON.stringify({ type: "lock-editor", roomId, locked }));
   };
 
-  const resetSession = () => {
-    if (window.confirm("Are you sure you want to reset the session? All code and outputs will be cleared.")) {
+  const resetSession = async () => {
+    if (await requestConfirm({
+      title: "Reset Session?",
+      message: "Are you sure you want to reset the session? All code and outputs will be cleared.",
+      confirmText: "Reset Session",
+      isDestructive: true
+    })) {
       wsRef.current?.send(JSON.stringify({ type: "reset-session", roomId }));
     }
   };
 
-  const endSession = () => {
-    if (window.confirm("Are you sure you want to permanently end this session? Everyone will be disconnected.")) {
+  const endSession = async () => {
+    if (await requestConfirm({
+      title: "End Session?",
+      message: "Are you sure you want to permanently end this session? Everyone will be disconnected.",
+      confirmText: "End Session",
+      isDestructive: true
+    })) {
       wsRef.current?.send(JSON.stringify({ type: "end-session", roomId }));
     }
   };
@@ -637,6 +701,15 @@ export function RoomProvider({
       kickUser, transferHost, assignDriver, setEditorLock, resetSession, endSession
     }}>
       {children}
+      {confirmDialog && (
+        <ConfirmModal 
+          dialog={confirmDialog} 
+          onClose={(val) => {
+            confirmDialog.resolve(val);
+            setConfirmDialog(null);
+          }} 
+        />
+      )}
     </RoomContext.Provider>
   );
 }

@@ -114,6 +114,44 @@ function RoomContent({ problemPanel }: { problemPanel: React.ReactNode }) {
     );
   }
 
+  if (joinStatus === "kicked") {
+    return (
+      <div className="flex h-screen bg-[var(--ws-bg)] items-center justify-center flex-col gap-5 text-center p-6">
+        <div className="w-14 h-14 rounded-2xl bg-red-500/10 flex items-center justify-center">
+          <ShieldAlert size={28} className="text-red-400" />
+        </div>
+        <div className="space-y-2">
+          <h1 className="text-red-400 text-xl font-semibold">Removed from Session</h1>
+          <p className="text-[var(--ws-text-muted)] text-sm max-w-xs">You have been removed from this room by the host.</p>
+        </div>
+        <div className="flex gap-3 mt-2">
+          <button onClick={() => window.location.href = "/dashboard"} className="flex items-center gap-2 px-5 py-2 bg-[var(--ws-surface-elevated)] border border-[var(--ws-border)] hover:bg-[var(--ws-surface-hover)] text-[var(--ws-text-secondary)] rounded-lg text-sm font-medium transition-colors">
+            <ArrowLeft size={14} /> Go to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (joinStatus === "ended") {
+    return (
+      <div className="flex h-screen bg-[var(--ws-bg)] items-center justify-center flex-col gap-5 text-center p-6">
+        <div className="w-14 h-14 rounded-2xl bg-[var(--ws-surface-hover)] flex items-center justify-center border border-[var(--ws-border)]">
+          <ShieldAlert size={28} className="text-[var(--ws-text-muted)]" />
+        </div>
+        <div className="space-y-2">
+          <h1 className="text-[var(--ws-text)] text-xl font-semibold">Session Ended</h1>
+          <p className="text-[var(--ws-text-muted)] text-sm max-w-xs">This session has been permanently ended by the host.</p>
+        </div>
+        <div className="flex gap-3 mt-2">
+          <button onClick={() => window.location.href = "/dashboard"} className="flex items-center gap-2 px-5 py-2 bg-[var(--ws-surface-elevated)] border border-[var(--ws-border)] hover:bg-[var(--ws-surface-hover)] text-[var(--ws-text-secondary)] rounded-lg text-sm font-medium transition-colors">
+            <ArrowLeft size={14} /> Go to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (joinStatus === "connecting") {
     return (
       <div className="flex h-screen bg-[var(--ws-bg)] items-center justify-center flex-col gap-4">

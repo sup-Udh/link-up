@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Code2, ArrowLeft, CheckCircle2, Shield, Copy } from "lucide-react";
+import { Code2, ArrowLeft, CheckCircle2, Shield, Copy, Puzzle, MousePointerClick, ClipboardPaste } from "lucide-react";
 import Link from "next/link";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
 
@@ -89,15 +89,51 @@ export default function ConnectExtension() {
         ) : (
           <div className="animate-in fade-in zoom-in duration-300">
             <p className="text-gray-500 dark:text-gray-400 text-center mb-6">
-              Paste this pairing code into your Linko extension. This code expires in 5 minutes.
+              Copy your pairing code below. This code expires in 5 minutes.
             </p>
 
-            <div className="bg-gray-50 dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800 rounded-2xl p-6 text-center mb-8 group cursor-pointer" onClick={copyToClipboard}>
+            <div className="bg-gray-50 dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-800 rounded-2xl p-6 text-center mb-8 group cursor-pointer hover:border-[#1cbaba]/50 transition-colors shadow-sm hover:shadow-[#1cbaba]/10" onClick={copyToClipboard}>
               <div className="text-4xl font-mono font-bold tracking-[0.2em] text-[#1cbaba] mb-2">
                 {pairingCode}
               </div>
               <div className="flex items-center justify-center gap-2 text-sm text-gray-500 font-medium group-hover:text-gray-900 dark:group-hover:text-gray-300 transition-colors">
                 {copied ? <><CheckCircle2 size={16} className="text-green-500" /> Copied!</> : <><Copy size={16} /> Click to copy</>}
+              </div>
+            </div>
+
+            <div className="pt-6 border-t border-gray-200 dark:border-gray-800 animate-in slide-in-from-bottom-4 fade-in duration-500 delay-150">
+              <h3 className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-6 text-center">How to Connect</h3>
+              
+              <div className="space-y-6">
+                <div className="flex gap-4 items-start">
+                  <div className="w-10 h-10 rounded-full bg-[#1cbaba]/10 flex items-center justify-center shrink-0 border border-[#1cbaba]/20 shadow-[0_0_10px_rgba(28,186,186,0.1)]">
+                    <Puzzle size={18} className="text-[#1cbaba]" />
+                  </div>
+                  <div className="pt-0.5">
+                    <h4 className="text-sm font-bold text-gray-900 dark:text-white mb-1">1. Open the Extension</h4>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">Click the Linko icon in your browser's toolbar (you may need to pin it first).</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4 items-start">
+                  <div className="w-10 h-10 rounded-full bg-[#ffa116]/10 flex items-center justify-center shrink-0 border border-[#ffa116]/20 shadow-[0_0_10px_rgba(255,161,22,0.1)]">
+                    <MousePointerClick size={18} className="text-[#ffa116]" />
+                  </div>
+                  <div className="pt-0.5">
+                    <h4 className="text-sm font-bold text-gray-900 dark:text-white mb-1">2. Choose Enter Pairing Code</h4>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">Click the primary button inside the extension popup.</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4 items-start">
+                  <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center shrink-0 border border-green-500/20 shadow-[0_0_10px_rgba(34,197,94,0.1)]">
+                    <ClipboardPaste size={18} className="text-green-500" />
+                  </div>
+                  <div className="pt-0.5">
+                    <h4 className="text-sm font-bold text-gray-900 dark:text-white mb-1">3. Paste & Verify</h4>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">Paste the code from above into the input field and click Verify Code.</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

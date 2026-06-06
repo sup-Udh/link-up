@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles, Code2, Users, ChevronRight, Check, ArrowDown } from "lucide-react";
+import Link from "next/link";
+import { Sparkles, Code2, Users, ChevronRight, Check, ArrowDown, Puzzle, X } from "lucide-react";
 import CinematicHero from "./components/CinematicHero";
 import ScrollStory from "./components/ScrollStory";
 import { ThemeToggle } from "./components/ThemeToggle";
@@ -9,6 +11,7 @@ import { GithubIcon } from "./components/GithubIcon";
 
 export default function Home() {
   const router = useRouter();
+  const [showInstallModal, setShowInstallModal] = useState(false);
 
   const createRoom = () => {
     const roomId = crypto.randomUUID().slice(0, 8);
@@ -139,7 +142,7 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">1. Create a Room</h3>
               <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
-                Click "New Room" to instantly generate a secure, high-performance collaborative coding environment.
+                Use the Extension or the "New Room" button to generate a unique coding room. It only takes a second. synced with your LeetCode problems for seamless problem loading.
               </p>
             </div>
 
