@@ -51,6 +51,14 @@ export interface RoomState {
   customCases: { id: string, input: string, expectedOutput: string }[];
   problem?: any;
 }
+export interface ChatMessage {
+  id: string;
+  text: string;
+  senderId: string;
+  senderName: string;
+  timestamp: number;
+}
+const roomMessages = new Map<string, ChatMessage[]>();
 const roomStates = new Map<string, RoomState>();
 const pendingSockets = new Map<string, any>();
 
@@ -151,7 +159,39 @@ wss.on("connection", (ws) => {
           language: roomLanguages.get(rId)
         }));
       }
+
+      // Send chat history if it exists
+      if (roomMessages.has(rId)) {
+        socket.send(JSON.stringify({
+          type: "CHAT_HISTORY",
+          messages: roomMessages.get(rId)
+        }));
+      }
     };
+
+    if (data.type === "broadcastMessage") {
+      const { roomId, text, senderId, senderName } = data;
+      const msg: ChatMessage = {
+        id: Math.random().toString(36).substr(2, 9),
+        text,
+        senderId,
+        senderName,
+        timestamp: Date.now()
+      };
+      
+      if (!roomMessages.has(roomId)) {
+        roomMessages.set(roomId, []);
+      }
+      roomMessages.get(roomId)!.push(msg);
+      
+      // Broadcast to everyone (including sender, for confirmation)
+      rooms.get(roomId)?.forEach((member) => {
+        member.send(JSON.stringify({
+          type: "NEW_MESSAGE",
+          message: msg
+        }));
+      });
+    }
 
     if (data.type === "join-room") {
       const { roomId, user, supabaseUserId, requireApproval } = data;
@@ -427,6 +467,7 @@ wss.on("connection", (ws) => {
       roomOutputs.delete(data.roomId);
       roomLanguages.delete(data.roomId);
       roomStates.delete(data.roomId);
+      roomMessages.delete(data.roomId);
     }
   });
 
@@ -475,6 +516,7 @@ wss.on("connection", (ws) => {
         roomOutputs.delete(currentRoom);
         roomLanguages.delete(currentRoom);
         roomStates.delete(currentRoom);
+        roomMessages.delete(currentRoom);
       } else {
         const payload = JSON.stringify({
           type: "presence",

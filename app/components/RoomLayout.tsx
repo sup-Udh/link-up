@@ -7,6 +7,7 @@ import BottomPanel from "./BottomPanel";
 import RoomControls from "./RoomControls";
 import ActivityFeed from "./ActivityFeed";
 import RoomTour from "./RoomTour";
+import ChatPanel from "./ChatPanel";
 import React, { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Panel, Group, Separator } from "react-resizable-panels";
@@ -206,12 +207,17 @@ function RoomContent({ problemPanel }: { problemPanel: React.ReactNode }) {
         {/* Right Panel: Collaborators, Activity & Controls */}
         <Panel defaultSize={20} minSize={10} collapsible={true} className="bg-[var(--ws-surface)] flex flex-col overflow-hidden">
           <div className="flex-1 overflow-hidden flex flex-col">
-            <div className="flex-1 overflow-y-auto ws-scrollbar">
-              <Members />
-            </div>
-            <div className="border-t border-[var(--ws-border)]">
-              <ActivityFeed />
-            </div>
+            <Group orientation="vertical">
+              <Panel defaultSize={40} minSize={20} className="flex flex-col">
+                <div className="flex-1 overflow-y-auto ws-scrollbar">
+                  <Members />
+                </div>
+              </Panel>
+              <ResizeHandle direction="vertical" />
+              <Panel defaultSize={60} minSize={30} className="flex flex-col border-t border-[var(--ws-border)]">
+                <ChatPanel />
+              </Panel>
+            </Group>
           </div>
           <div className="shrink-0">
             <RoomControls />

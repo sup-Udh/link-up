@@ -114,6 +114,9 @@ interface RoomContextType {
   problemMetadata: NormalizedProblem | null;
   setProblem: (problem: NormalizedProblem) => void;
   
+  // Chat
+  messages: Array<{id: string, text: string, senderId: string, senderName: string, timestamp: number}>;
+  sendMessage: (text: string) => void;
   
   // Custom Cases
   customCases: CustomTestCase[];
@@ -188,6 +191,7 @@ export function RoomProvider({
   const [language, setLanguage] = useState("javascript");
   const [problemMetadata, setProblemMetadata] = useState<NormalizedProblem | null>(null);
   const [customCases, setCustomCases] = useState<CustomTestCase[]>([]);
+  const [messages, setMessages] = useState<Array<{id: string, text: string, senderId: string, senderName: string, timestamp: number}>>([]);
   const [hasLoadedState, setHasLoadedState] = useState(false);
   
   // Autosave refs
@@ -415,6 +419,17 @@ export function RoomProvider({
         addNotification(data.message);
       }
 
+      if (data.type === "CHAT_HISTORY") {
+        setMessages(data.messages || []);
+      }
+
+      if (data.type === "NEW_MESSAGE") {
+        setMessages(prev => [...prev, data.message]);
+        if (data.message.senderId !== currentUser.id) {
+          addNotification(`💬 ${data.message.senderName}: ${data.message.text}`);
+        }
+      }
+
       if (data.type === "yjs-update") {
         Y.applyUpdate(ydoc, new Uint8Array(data.update), "ws");
       }
@@ -628,6 +643,17 @@ export function RoomProvider({
     }
   };
 
+  const sendMessage = (text: string) => {
+    if (!text.trim() || !currentUser) return;
+    wsRef.current?.send(JSON.stringify({
+      type: "broadcastMessage",
+      roomId,
+      text: text.trim(),
+      senderId: currentUser.id,
+      senderName: currentUser.name
+    }));
+  };
+
   const addCustomCase = (tc: CustomTestCase) => {
     wsRef.current?.send(JSON.stringify({ type: "add-custom-case", roomId, case: tc }));
   };
@@ -696,6 +722,7 @@ export function RoomProvider({
     <RoomContext.Provider value={{ 
       ydoc, yText, awareness, users, currentUser, identityStatus, setIdentity, notifications, 
       latestOutput, testResults, isExecutingIndex, runCode, language, changeLanguage, problemMetadata, setProblem,
+      messages, sendMessage,
       customCases, addCustomCase, updateCustomCase, deleteCustomCase,
       hostId, driverId, editorLocked, joinStatus, pendingRequests, approveUser, rejectUser,
       kickUser, transferHost, assignDriver, setEditorLock, resetSession, endSession
