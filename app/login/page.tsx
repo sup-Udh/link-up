@@ -27,7 +27,7 @@ export default function Login() {
 
       {/* Top Navigation */}
       <div className="absolute top-0 w-full flex items-center justify-between p-6 z-20">
-        <Link href="/landing" className="flex items-center gap-2 text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">
+        <Link href="/" className="flex items-center gap-2 text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">
           <ArrowLeft size={20} />
           <span className="font-medium text-sm">Back to home</span>
         </Link>
