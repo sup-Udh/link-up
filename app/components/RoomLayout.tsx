@@ -8,7 +8,7 @@ import RoomControls from "./RoomControls";
 import ActivityFeed from "./ActivityFeed";
 import RoomTour from "./RoomTour";
 import ChatPanel from "./ChatPanel";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { Panel, Group, Separator } from "react-resizable-panels";
 import { Code2, ShieldAlert, Loader2, RefreshCw, ArrowLeft, TerminalSquare } from "lucide-react";
