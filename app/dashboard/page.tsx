@@ -49,6 +49,7 @@ export default function Dashboard() {
 
   // Install Modal State
   const [showInstallModal, setShowInstallModal] = useState(false);
+  const [showBetaBanner, setShowBetaBanner] = useState(true);
 
   // Blank Room Form State
   const [roomTitle, setRoomTitle] = useState("");
@@ -223,7 +224,29 @@ export default function Dashboard() {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-6 py-10 space-y-12">
+      <main className="max-w-7xl mx-auto px-6 pt-6 pb-10 space-y-8">
+        {/* Beta Notice Banner */}
+        {showBetaBanner && (
+          <div className="bg-[#ffa116]/10 border border-[#ffa116]/20 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-sm relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[#ffa116]/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+            <div className="flex items-center gap-3 relative z-10 pr-8">
+              <span className="bg-[#ffa116] text-black px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider shadow-sm">
+                Beta
+              </span>
+              <span className="text-gray-700 dark:text-gray-300 font-medium">
+                Linko is currently in Beta! We're actively building out new features and fine-tuning the collaborative experience.
+              </span>
+            </div>
+            <button
+              onClick={() => setShowBetaBanner(false)}
+              className="absolute top-3 right-3 p-1.5 text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-800 rounded-lg transition-colors z-20"
+              aria-label="Close beta banner"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
+
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>

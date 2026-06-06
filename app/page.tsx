@@ -38,7 +38,10 @@ export default function Home() {
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2 font-bold text-lg tracking-tight">
             <Code2 className="text-[#ffa116]" size={24} />
-            Linko
+            <span>Linko</span>
+            <span className="bg-[#ffa116]/10 text-[#ffa116] border border-[#ffa116]/20 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ml-1">Beta</span>
+          </div>
+          <div className="hidden md:flex gap-6 text-sm font-medium text-gray-500 dark:text-gray-400">
           </div>
         </div>
         <div className="flex items-center gap-4">
@@ -87,7 +90,7 @@ export default function Home() {
               // redirect to dashboard
               onClick={DashboardReroute}
 
-              className="px-8 py-4 bg-gray-900 text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 font-bold rounded-lg transition-all shadow-lg flex items-center gap-2 w-full sm:w-auto justify-center"
+              className="px-8 py-4 bg-gray-900 text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 font-bold rounded-lg transition-all shadow-lg flex items-center gap-2 w-full sm:w-auto justify-center cursor-pointer"
             >
               Start Coding
               <ChevronRight size={18} />
