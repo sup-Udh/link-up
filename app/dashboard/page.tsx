@@ -124,7 +124,8 @@ export default function Dashboard() {
 
       if (res.ok) {
         const data = await res.json();
-        window.location.href = `/room/${data.roomId}`;
+        window.open(`/room/${data.roomId}`, '_blank');
+        closeModal();
       }
     } catch (err) {
       console.error(err);
@@ -346,6 +347,8 @@ export default function Dashboard() {
               {rooms.map((room) => (
                 <Link
                   href={`/room/${room.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   key={room.id}
                   className="group bg-white dark:bg-[#111] border border-gray-200 dark:border-gray-800 hover:border-[#ffa116] dark:hover:border-[#ffa116] rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col h-full"
                 >

@@ -11,7 +11,8 @@ import ChatPanel from "./ChatPanel";
 import React, { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Panel, Group, Separator } from "react-resizable-panels";
-import { Code2, ShieldAlert, Loader2, RefreshCw, ArrowLeft } from "lucide-react";
+import { Code2, ShieldAlert, Loader2, RefreshCw, ArrowLeft, TerminalSquare } from "lucide-react";
+import { motion } from "framer-motion";
 
 function ResizeHandle({ direction = "horizontal" }: { direction?: "horizontal" | "vertical" }) {
   return (
@@ -155,9 +156,62 @@ function RoomContent({ problemPanel }: { problemPanel: React.ReactNode }) {
 
   if (joinStatus === "connecting") {
     return (
-      <div className="flex h-screen bg-[var(--ws-bg)] items-center justify-center flex-col gap-4">
-        <Loader2 size={24} className="text-[var(--ws-accent)] animate-spin" />
-        <p className="text-[var(--ws-text-muted)] text-sm">Connecting to room...</p>
+      <div className="flex h-screen bg-[var(--ws-bg)] items-center justify-center flex-col relative overflow-hidden">
+        <div className="relative w-64 h-64 flex items-center justify-center">
+          
+          {/* LeetCode Icon */}
+          <motion.div
+            className="absolute"
+            initial={{ x: -100, y: -100, opacity: 0, scale: 0.5 }}
+            animate={{ x: 0, y: 0, opacity: [0, 1, 0], scale: [0.5, 1, 0.5] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <div className="w-10 h-10 rounded-xl bg-[#ffa116]/20 flex items-center justify-center border border-[#ffa116]/30">
+              <Code2 size={20} className="text-[#ffa116]" />
+            </div>
+          </motion.div>
+
+          {/* HackerRank Icon */}
+          <motion.div
+            className="absolute"
+            initial={{ x: 100, y: -100, opacity: 0, scale: 0.5 }}
+            animate={{ x: 0, y: 0, opacity: [0, 1, 0], scale: [0.5, 1, 0.5] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+          >
+            <div className="w-10 h-10 rounded-xl bg-[#2ebd59]/20 flex items-center justify-center border border-[#2ebd59]/30">
+              <TerminalSquare size={20} className="text-[#2ebd59]" />
+            </div>
+          </motion.div>
+
+          {/* Codeforces Icon */}
+          <motion.div
+            className="absolute"
+            initial={{ x: 0, y: 120, opacity: 0, scale: 0.5 }}
+            animate={{ x: 0, y: 0, opacity: [0, 1, 0], scale: [0.5, 1, 0.5] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+          >
+            <div className="w-10 h-10 rounded-xl bg-[#1f8bcb]/20 flex items-center justify-center border border-[#1f8bcb]/30">
+              <span className="text-[#1f8bcb] font-bold text-xs">CF</span>
+            </div>
+          </motion.div>
+
+          {/* Linko Logo (Center) */}
+          <motion.div 
+            className="z-10 w-16 h-16 rounded-2xl bg-gradient-to-br from-[#ffa116] to-[#ffb84d] flex items-center justify-center shadow-[0_0_30px_rgba(255,161,22,0.3)]"
+            animate={{ scale: [1, 1.1, 1] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <Code2 size={32} className="text-white" />
+          </motion.div>
+        </div>
+
+        <motion.p 
+          className="text-[var(--ws-text-muted)] text-sm font-medium mt-4 tracking-widest uppercase"
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        >
+          Initializing Workspace...
+        </motion.p>
       </div>
     );
   }
