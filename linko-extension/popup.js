@@ -39,6 +39,11 @@ const viewPairing = document.getElementById("view-pairing");
 const viewAuth = document.getElementById("view-auth");
 const statusEl = document.getElementById("status");
 
+// Theme Toggle Elements
+const themeToggle = document.getElementById("theme-toggle");
+const iconSun = document.getElementById("icon-sun");
+const iconMoon = document.getElementById("icon-moon");
+
 // Unauth View
 const btnConnect = document.getElementById("btn-connect");
 const btnShowPairing = document.getElementById("btn-show-pairing");
@@ -64,17 +69,50 @@ function showView(view) {
   view.classList.add("active");
 }
 
-function showStatus(msg, color = "#555") {
-  statusEl.textContent = msg;
+function showStatus(message, color = "var(--text-secondary)") {
+  statusEl.textContent = message;
   statusEl.style.color = color;
 }
+
+// Theme Toggle Handler
+function updateThemeIcons(theme) {
+  if (theme === "dark") {
+    iconSun.style.display = "block";
+    iconMoon.style.display = "none";
+  } else {
+    iconSun.style.display = "none";
+    iconMoon.style.display = "block";
+  }
+}
+
+themeToggle.addEventListener("click", () => {
+  const currentTheme = document.body.getAttribute("data-theme") || "dark";
+  const newTheme = currentTheme === "dark" ? "light" : "dark";
+  document.body.setAttribute("data-theme", newTheme);
+  updateThemeIcons(newTheme);
+  chrome.storage.local.set({ theme: newTheme });
+});
 
 // Check auth state on load
 async function checkAuth() {
   showView(viewLoading);
   showStatus("");
 
-  BASE_URL = await detectBaseUrl();
+  const [tokenResult, baseUrl] = await Promise.all([
+    new Promise((resolve) =>
+      chrome.storage.local.get(["extensionToken"], resolve)
+    ),
+    detectBaseUrl(),
+  ]);
+
+  // Apply theme
+  chrome.storage.local.get(["theme"], (result) => {
+    const savedTheme = result.theme || "dark";
+    document.body.setAttribute("data-theme", savedTheme);
+    updateThemeIcons(savedTheme);
+  });
+
+  BASE_URL = baseUrl;
   console.log("Using BASE_URL:", BASE_URL);
 
   chrome.storage.local.get(
