@@ -3,6 +3,12 @@ export function generateScalaWrapper(
   helperCode: string,
   executionCode: string
 ): string {
+  const indentedExecution = executionCode
+    .split('\n')
+    .filter(line => line.trim() !== '')
+    .map(line => '            ' + line)
+    .join('\n');
+
   return `
 import scala.collection.mutable._
 
@@ -16,7 +22,7 @@ ${userCode}
 object Main {
     def main(args: Array[String]): Unit = {
         try {
-            ${executionCode}
+${indentedExecution}
         } catch {
             case e: Exception => println("Execution Error")
         }

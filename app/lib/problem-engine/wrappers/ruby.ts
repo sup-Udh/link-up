@@ -3,6 +3,13 @@ export function generateRubyWrapper(
   helperCode: string,
   executionCode: string
 ): string {
+  // Indent each line of executionCode for the begin block
+  const indentedExecution = executionCode
+    .split('\n')
+    .filter(line => line.trim() !== '')
+    .map(line => '  ' + line)
+    .join('\n');
+
   return `
 require 'json'
 
@@ -14,7 +21,7 @@ ${userCode}
 
 # --- Execution ---
 begin
-  ${executionCode}
+${indentedExecution}
 rescue => e
   puts "Execution Error"
 end

@@ -3,6 +3,13 @@ export function generateTypeScriptWrapper(
   helperCode: string,
   executionCode: string
 ): string {
+  // Indent each line of executionCode for the try block
+  const indentedExecution = executionCode
+    .split('\n')
+    .filter(line => line.trim() !== '')
+    .map(line => '  ' + line)
+    .join('\n');
+
   // TypeScript behaves essentially identical to JS for execution wrapping
   // since the code will be compiled by Judge0 or similar sandbox
   return `
@@ -14,7 +21,7 @@ ${userCode}
 
 // --- Execution ---
 try {
-${executionCode}
+${indentedExecution}
 } catch (e) {
   console.error(e);
 }

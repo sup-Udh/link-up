@@ -3,6 +3,13 @@ export function generateCsharpWrapper(
   helperCode: string,
   executionCode: string
 ): string {
+  // Indent each line of executionCode for the try block
+  const indentedExecution = executionCode
+    .split('\n')
+    .filter(line => line.trim() !== '')
+    .map(line => '            ' + line)
+    .join('\n');
+
   return `
 using System;
 using System.Collections.Generic;
@@ -20,7 +27,7 @@ class Program {
     static void Main() {
         try {
             Solution __solution = new Solution();
-            ${executionCode}
+${indentedExecution}
         } catch (Exception e) {
             Console.WriteLine("Execution Error");
         }

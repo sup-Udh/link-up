@@ -74,7 +74,7 @@ function getFunctionAdapterCode(
     if (language === "python") {
       return {
         helperCode: "",
-        executionCode: `import json\n__result = ${metadata.functionName}(${argsStr})\nprint(json.dumps(__result))\n`,
+        executionCode: `import json\n__solution = Solution()\n__result = __solution.${metadata.functionName}(${argsStr})\nprint(json.dumps(__result))\n`,
       };
     }
     if (language === "ruby") {
@@ -107,6 +107,9 @@ function getFunctionAdapterCode(
   const argsStr = args.join(", ");
   
   if (language === "cpp") {
+    const argDecls = args.map((valStr, i) => `auto arg${i} = ${valStr};`).join("\n        ");
+    const callArgsStr = args.map((_, i) => `arg${i}`).join(", ");
+    
     return {
       helperCode: `
 #include <iostream>
@@ -128,7 +131,7 @@ void print_json(double v) { std::cout << v << std::endl; }
 void print_json(bool v) { std::cout << (v ? "true" : "false") << std::endl; }
 void print_json(const std::string& v) { std::cout << "\\"" << v << "\\"" << std::endl; }
 `,
-      executionCode: `auto __result = __solution.${metadata.functionName}(${argsStr});\n        print_json(__result);`,
+      executionCode: `${argDecls}\n        auto __result = __solution.${metadata.functionName}(${callArgsStr});\n        print_json(__result);`,
     };
   }
   if (language === "java") {

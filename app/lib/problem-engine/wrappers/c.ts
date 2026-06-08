@@ -3,6 +3,12 @@ export function generateCWrapper(
   helperCode: string,
   executionCode: string
 ): string {
+  const indentedExecution = executionCode
+    .split('\n')
+    .filter(line => line.trim() !== '')
+    .map(line => '    ' + line)
+    .join('\n');
+
   return `
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,7 +23,7 @@ ${userCode}
 
 // --- Execution ---
 int main() {
-    ${executionCode}
+${indentedExecution}
     return 0;
 }
 `;

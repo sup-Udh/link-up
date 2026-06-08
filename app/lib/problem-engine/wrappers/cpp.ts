@@ -3,6 +3,13 @@ export function generateCppWrapper(
   helperCode: string,
   executionCode: string
 ): string {
+  // Indent each line of executionCode to match the try block indentation
+  const indentedExecution = executionCode
+    .split('\n')
+    .filter(line => line.trim() !== '')
+    .map(line => '        ' + line)
+    .join('\n');
+
   // C++ requires includes, and the user code is a Solution class.
   return `
 #include <iostream>
@@ -26,7 +33,7 @@ ${userCode}
 int main() {
     try {
         Solution __solution;
-        ${executionCode}
+${indentedExecution}
     } catch (...) {
         cout << "Execution Error" << endl;
     }

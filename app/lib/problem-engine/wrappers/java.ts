@@ -3,13 +3,17 @@ export function generateJavaWrapper(
   helperCode: string,
   executionCode: string
 ): string {
+  // Indent each line of executionCode to match the try block indentation
+  const indentedExecution = executionCode
+    .split('\n')
+    .filter(line => line.trim() !== '')
+    .map(line => '            ' + line)
+    .join('\n');
+
   // Java requires putting everything into a class structure.
   // The user code is usually `class Solution { ... }`.
-  // We'll rename it or instantiate it.
-  
-  // Actually, LeetCode's Java template is typically: class Solution { public ... }
   // We can just append a Main class with public static void main.
-  
+
   return `
 import java.util.*;
 
@@ -24,7 +28,7 @@ public class Main {
     public static void main(String[] args) {
         try {
             Solution __solution = new Solution();
-            ${executionCode}
+${indentedExecution}
         } catch (Exception e) {
             e.printStackTrace();
         }

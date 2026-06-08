@@ -34,35 +34,39 @@ export function generateWrapper(
   helperCode: string,
   executionCode: string
 ): string {
+  // Normalize: adapters encode newlines as literal \n (two chars: backslash + n).
+  // Convert them to real newline characters so the generated source code is valid.
+  const normalizedExecution = executionCode.replace(/\\n/g, '\n');
+  const normalizedHelper = helperCode.replace(/\\n/g, '\n');
   switch (language) {
     case "javascript":
-      return generateJavaScriptWrapper(userCode, helperCode, executionCode);
+      return generateJavaScriptWrapper(userCode, normalizedHelper, normalizedExecution);
     case "typescript":
-      return generateTypeScriptWrapper(userCode, helperCode, executionCode);
+      return generateTypeScriptWrapper(userCode, normalizedHelper, normalizedExecution);
     case "python":
-      return generatePythonWrapper(userCode, helperCode, executionCode);
+      return generatePythonWrapper(userCode, normalizedHelper, normalizedExecution);
     case "java":
-      return generateJavaWrapper(userCode, helperCode, executionCode);
+      return generateJavaWrapper(userCode, normalizedHelper, normalizedExecution);
     case "cpp":
-      return generateCppWrapper(userCode, helperCode, executionCode);
+      return generateCppWrapper(userCode, normalizedHelper, normalizedExecution);
     case "go":
-      return generateGoWrapper(userCode, helperCode, executionCode);
+      return generateGoWrapper(userCode, normalizedHelper, normalizedExecution);
     case "rust":
-      return generateRustWrapper(userCode, helperCode, executionCode);
+      return generateRustWrapper(userCode, normalizedHelper, normalizedExecution);
     case "c":
-      return generateCWrapper(userCode, helperCode, executionCode);
+      return generateCWrapper(userCode, normalizedHelper, normalizedExecution);
     case "csharp":
-      return generateCsharpWrapper(userCode, helperCode, executionCode);
+      return generateCsharpWrapper(userCode, normalizedHelper, normalizedExecution);
     case "swift":
-      return generateSwiftWrapper(userCode, helperCode, executionCode);
+      return generateSwiftWrapper(userCode, normalizedHelper, normalizedExecution);
     case "scala":
-      return generateScalaWrapper(userCode, helperCode, executionCode);
+      return generateScalaWrapper(userCode, normalizedHelper, normalizedExecution);
     case "php":
-      return generatePhpWrapper(userCode, helperCode, executionCode);
+      return generatePhpWrapper(userCode, normalizedHelper, normalizedExecution);
     case "ruby":
-      return generateRubyWrapper(userCode, helperCode, executionCode);
+      return generateRubyWrapper(userCode, normalizedHelper, normalizedExecution);
     default:
       // Fallback for unsupported languages — just try to append them
-      return `${helperCode}\n\n${userCode}\n\n${executionCode}`;
+      return `${normalizedHelper}\n\n${userCode}\n\n${normalizedExecution}`;
   }
 }

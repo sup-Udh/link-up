@@ -3,6 +3,13 @@ export function generatePythonWrapper(
   helperCode: string,
   executionCode: string
 ): string {
+  // Indent each line of executionCode for the try block
+  const indentedExecution = executionCode
+    .split('\n')
+    .filter(line => line.trim() !== '')
+    .map(line => '    ' + line)
+    .join('\n');
+
   return `
 import sys
 import json
@@ -16,7 +23,7 @@ ${userCode}
 
 # --- Execution ---
 try:
-${executionCode.split('\\n').map(line => '    ' + line).join('\\n')}
+${indentedExecution}
 except Exception as e:
     import traceback
     traceback.print_exc()
