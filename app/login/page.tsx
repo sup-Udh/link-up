@@ -66,7 +66,7 @@ export default function Login() {
 
         {/* Footer info */}
         <p className="mt-8 text-xs text-center text-gray-400 dark:text-gray-500 max-w-[280px]">
-          By continuing, you agree to Linko's <a href="#" className="underline hover:text-gray-600 dark:hover:text-gray-300">Terms of Service</a> and <a href="#" className="underline hover:text-gray-600 dark:hover:text-gray-300">Privacy Policy</a>.
+          By continuing, you agree to Linko's <Link href="/terms" className="underline hover:text-gray-600 dark:hover:text-gray-300">Terms of Service</Link> and <Link href="/terms?tab=privacy" className="underline hover:text-gray-600 dark:hover:text-gray-300">Privacy Policy</Link>.
         </p>
       </div>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowLeft, Shield, FileText, Lock, Eye, Terminal, Users, Info, Scale } from "lucide-react";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
@@ -9,6 +9,15 @@ type Tab = "terms" | "privacy";
 
 export default function TermsAndPrivacy() {
   const [activeTab, setActiveTab] = useState<Tab>("terms");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("tab") === "privacy") {
+        setActiveTab("privacy");
+      }
+    }
+  }, []);
 
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-[#050505] text-gray-800 dark:text-gray-200 transition-colors duration-300 relative overflow-hidden pb-16">

@@ -78,7 +78,7 @@ export default function ScrollStory() {
         <PlatformCard progress={smoothProgress} startX={600} startY={-300} name="HackerRank" color="#00ea64" icon={<TerminalSquare size={24} />} />
         <PlatformCard progress={smoothProgress} startX={-700} startY={350} name="Codeforces" color="#1f8acb" icon={<BarChart2 size={24} />} />
         <PlatformCard progress={smoothProgress} startX={650} startY={450} name="CodeChef" color="#5b3e31" icon={<ChefHat size={24} />} />
-        <PlatformCard progress={smoothProgress} startX={-300} startY={550} name="AtCoder" color="#444444" icon={<Hexagon size={24} />} />
+        <PlatformCard progress={smoothProgress} startX={-300} startY={550} name="NeetCode" color="#6366f1" icon={<Hexagon size={24} />} />
         <PlatformCard progress={smoothProgress} startX={350} startY={-550} name="GeeksForGeeks" color="#2f8d46" icon={<Braces size={24} />} />
 
         {/* Central Linko Logo */}
