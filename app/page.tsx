@@ -64,7 +64,7 @@ export default function Home() {
             <Puzzle size={16} />
             Extension
           </button>
-          <a href="https://github.com" target="_blank" rel="noreferrer" className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">
+          <a href="https://github.com/sup-Udh/link-up" target="_blank" rel="noreferrer" className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">
             <GithubIcon width={20} height={20} />
           </a>
           <ThemeToggle />

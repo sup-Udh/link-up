@@ -8,7 +8,7 @@ import { getLanguageConfig, SUPPORTED_LANGUAGES } from "@/app/lib/languages";
 import LanguageSelector from "./LanguageSelector";
 import { ThemeToggle } from "./ThemeToggle";
 import { useTheme } from "next-themes";
-import { Play, Loader2, Lock, Gamepad2, Users, Code2 } from "lucide-react";
+import { Play, Loader2, Lock, Gamepad2, Users, Code2, Link as LinkIcon, Copy, Check } from "lucide-react";
 import type { editor as monacoEditor } from "monaco-editor";
 import { getStarterCode, isEditorEmpty } from "@/app/lib/problem-engine/starterCode";
 import { useRef } from "react";
@@ -20,7 +20,17 @@ export default function Editor() {
   const { resolvedTheme } = useTheme();
   
   const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [hasCheckedEmpty, setHasCheckedEmpty] = useState(false);
+
+  const handleCopyLink = () => {
+    if (typeof window !== "undefined") {
+      navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   const isHost = currentUser?.id === hostId;
   
@@ -60,6 +70,7 @@ export default function Editor() {
   const handleInitialLanguageSelect = (langId: string) => {
     changeLanguage(langId);
     setShowLanguageModal(false);
+    setShowInviteModal(true);
   };
 
   // Cursor tracking + rendering (runs after editor mounts)
@@ -325,6 +336,45 @@ export default function Editor() {
                   </button>
                 ))}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Invite Link Modal */}
+        {showInviteModal && (
+          <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center">
+            <div className="bg-[var(--ws-surface-elevated)] border border-[var(--ws-border)] rounded-2xl p-6 shadow-2xl w-[360px] max-w-[90%]">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20 shrink-0">
+                  <LinkIcon size={20} className="text-white" />
+                </div>
+                <div>
+                  <h3 className="text-[var(--ws-text)] font-semibold">Invite Collaborators</h3>
+                  <p className="text-[var(--ws-text-muted)] text-[11px]">Share this link to code together</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2 mb-6">
+                <input 
+                  type="text" 
+                  readOnly 
+                  value={typeof window !== "undefined" ? window.location.href : ""} 
+                  className="flex-1 bg-[var(--ws-surface)] border border-[var(--ws-border)] text-[var(--ws-text)] rounded-lg px-3 py-2 text-sm focus:outline-none"
+                />
+                <button
+                  onClick={handleCopyLink}
+                  className="p-2 rounded-lg bg-[var(--ws-surface-hover)] hover:bg-[var(--ws-surface-elevated)] text-[var(--ws-text)] border border-[var(--ws-border)] transition-colors"
+                >
+                  {copied ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}
+                </button>
+              </div>
+
+              <button
+                onClick={() => setShowInviteModal(false)}
+                className="w-full bg-[var(--ws-accent)] hover:bg-[var(--ws-accent-hover)] text-black font-semibold py-3 rounded-xl transition-all shadow-lg shadow-[var(--ws-accent-glow)]"
+              >
+                Start Coding
+              </button>
             </div>
           </div>
         )}
