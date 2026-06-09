@@ -73,27 +73,9 @@ export default function Editor() {
     setShowInviteModal(true);
   };
 
-  // Cursor tracking + rendering (runs after editor mounts)
+  // Cursor styling (y-monaco handles the actual positioning)
   useEffect(() => {
-    if (!editor) return;
-
-    const decorations = editor.createDecorationsCollection();
-
-    // ---- Send local cursor position into awareness ----
-    const cursorDisposable = editor.onDidChangeCursorSelection(() => {
-      const sel = editor.getSelection();
-      if (!sel) return;
-      awareness.setLocalStateField("cursor", {
-        anchor: {
-          line: sel.startLineNumber,
-          ch: sel.startColumn,
-        },
-        head: {
-          line: sel.positionLineNumber,
-          ch: sel.positionColumn,
-        },
-      });
-    });
+    if (!editor || !awareness) return;
 
     let typingTimeout: any;
     const modelDisposable = editor.onDidChangeModelContent(() => {
@@ -104,16 +86,14 @@ export default function Editor() {
       }, 1000);
     });
 
-    // ---- Render remote cursors from awareness ----
-    const renderCursors = () => {
-      const decs: monacoEditor.IModelDeltaDecoration[] = [];
-
+    // ---- Render remote cursors styles ----
+    const renderCursorStyles = () => {
       awareness.getStates().forEach((state: any, clientId: number) => {
         // Skip our own cursor
         if (clientId === awareness.clientID) return;
-        if (!state.cursor || !state.user) return;
+        if (!state.user) return;
 
-        const { cursor, user } = state;
+        const { user } = state;
         const color = user.color || "#ff0000";
         const name = user.name || "Anonymous";
         const id = clientId;
@@ -125,11 +105,15 @@ export default function Editor() {
           styleEl.id = `rc-${id}`;
           document.head.appendChild(styleEl);
         }
+        
         styleEl.textContent = `
-          .rc-cursor-${id} {
+          .yRemoteSelectionHead-${id} {
+            position: absolute;
             border-left: 2px solid ${color};
+            height: 100%;
+            box-sizing: border-box;
           }
-          .rc-cursor-${id}::after {
+          .yRemoteSelectionHead-${id}::after {
             content: '${name}';
             position: absolute;
             top: 0;
@@ -146,69 +130,20 @@ export default function Editor() {
             z-index: 100;
             line-height: 16px;
           }
-          .rc-sel-${id} {
+          .yRemoteSelection-${id} {
             background-color: ${color}40;
           }
         `;
-
-        // The coloured cursor bar
-        decs.push({
-          range: {
-            startLineNumber: cursor.head.line,
-            startColumn: cursor.head.ch,
-            endLineNumber: cursor.head.line,
-            endColumn: cursor.head.ch,
-          },
-          options: {
-            beforeContentClassName: `rc-cursor-${id}`,
-            stickiness: 1, // NeverGrowsWhenTypingAtEdges
-          },
-        });
-
-        // Selection highlight (if user has text selected)
-        const hasSelection =
-          cursor.anchor.line !== cursor.head.line ||
-          cursor.anchor.ch !== cursor.head.ch;
-
-        if (hasSelection) {
-          const startLine = Math.min(cursor.anchor.line, cursor.head.line);
-          const endLine = Math.max(cursor.anchor.line, cursor.head.line);
-          const startCol =
-            startLine === cursor.anchor.line
-              ? cursor.anchor.ch
-              : cursor.head.ch;
-          const endCol =
-            endLine === cursor.anchor.line
-              ? cursor.anchor.ch
-              : cursor.head.ch;
-
-          decs.push({
-            range: {
-              startLineNumber: startLine,
-              startColumn: startCol,
-              endLineNumber: endLine,
-              endColumn: endCol,
-            },
-            options: {
-              className: `rc-sel-${id}`,
-              stickiness: 1,
-            },
-          });
-        }
       });
-
-      decorations.set(decs);
     };
 
-    awareness.on("change", renderCursors);
-    renderCursors(); // render any cursors already present
+    awareness.on("change", renderCursorStyles);
+    renderCursorStyles(); // render any cursors already present
 
     return () => {
       clearTimeout(typingTimeout);
       modelDisposable.dispose();
-      cursorDisposable.dispose();
-      awareness.off("change", renderCursors);
-      decorations.clear();
+      awareness.off("change", renderCursorStyles);
       // Clean up dynamic style tags
       awareness.getStates().forEach((_, clientId) => {
         document.getElementById(`rc-${clientId}`)?.remove();
@@ -216,17 +151,17 @@ export default function Editor() {
     };
   }, [editor, awareness]);
 
-  // ---- Mount: bind Y.Text for text-sync only ----
+  // ---- Mount: bind Y.Text and Awareness ----
   const handleMount = useCallback(
     (ed: monacoEditor.IStandaloneCodeEditor) => {
       const model = ed.getModel();
       if (!model) return;
 
-      // Text sync only — we handle cursors ourselves above
-      new MonacoBinding(yText, model, new Set([ed]));
+      // Text and cursor sync via y-monaco
+      new MonacoBinding(yText, model, new Set([ed]), awareness);
       setEditor(ed); // triggers the useEffect above
     },
-    [yText]
+    [yText, awareness]
   );
 
   const langConfig = getLanguageConfig(language);
