@@ -266,7 +266,7 @@ export default function Home() {
                 <div className="w-full h-full rounded-full bg-white dark:bg-[#1e1e1e] flex items-center justify-center text-3xl font-bold text-[#2cbb5d]">A</div>
               </div>
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Ansh (Core & Systems)</h3>
-              <p className="text-[#2cbb5d] font-medium mb-4">Full-Stack Engineer</p>
+              <p className="text-[#2cbb5d] font-medium mb-4">Full-Stack Engineer (Core & Systems)</p>
               <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
                 Specializes in end-to-end architecture, high-performance WebSockets, and scalable real-time collaborative systems.
               </p>
