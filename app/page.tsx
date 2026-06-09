@@ -254,9 +254,9 @@ export default function Home() {
                 <div className="w-full h-full rounded-full bg-white dark:bg-[#1e1e1e] flex items-center justify-center text-3xl font-bold text-[#ffa116]">U</div>
               </div>
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Udhay</h3>
-              <p className="text-[#ffa116] font-medium mb-4">Full Stack Engineer</p>
+              <p className="text-[#ffa116] font-medium mb-4">Full-Stack Engineer (Product & UX)</p>
               <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
-                Specializes in real-time collaborative systems, backend architecture, and high-performance WebSockets.
+                Specializes in building robust multiplayer logic paired with beautiful, cinematic user interfaces and interactions.
               </p>
             </div>
 
@@ -265,10 +265,10 @@ export default function Home() {
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#2cbb5d] to-[#6ee7b7] p-1 mb-6 shadow-lg shadow-[#2cbb5d]/20 group-hover:scale-105 transition-transform">
                 <div className="w-full h-full rounded-full bg-white dark:bg-[#1e1e1e] flex items-center justify-center text-3xl font-bold text-[#2cbb5d]">A</div>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Ansh</h3>
-              <p className="text-[#2cbb5d] font-medium mb-4">Frontend Engineer</p>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Ansh (Core & Systems)</h3>
+              <p className="text-[#2cbb5d] font-medium mb-4">Full-Stack Engineer</p>
               <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
-                Focuses on building beautiful, cinematic user interfaces and robust multiplayer editor experiences.
+                Specializes in end-to-end architecture, high-performance WebSockets, and scalable real-time collaborative systems.
               </p>
             </div>
           </div>
