@@ -27,12 +27,7 @@
   "host_permissions": [
     "https://leetcode.com/*",
     "https://neetcode.io/*",
-    "https://linkocollab.xyz/*",
-    "http://localhost/*",
-    "http://localhost:*/*",
-    "http://127.0.0.1/*",
-    "http://127.0.0.1:*/*",
-    "https://*.ngrok-free.app/*"
+    "https://linkocollab.xyz/*"
   ],
 
   "content_scripts": [
@@ -40,12 +35,7 @@
       "matches": [
         "https://leetcode.com/problems/*",
         "https://neetcode.io/problems/*",
-        "https://linkocollab.xyz/*",
-        "http://localhost/*",
-        "http://localhost:*/*",
-        "http://127.0.0.1/*",
-        "http://127.0.0.1:*/*",
-        "https://*.ngrok-free.app/*"
+        "https://linkocollab.xyz/*"
       ],
       "js": [
         "content.js"

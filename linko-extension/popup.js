@@ -9,12 +9,7 @@ function detectBaseUrl() {
         try {
           const url = new URL(activeTab.url);
           const hostname = url.hostname;
-          if (
-            hostname === "localhost" ||
-            hostname === "127.0.0.1" ||
-            hostname.includes("linko") ||
-            hostname.includes("ngrok-free.app")
-          ) {
+          if (hostname.includes("linko")) {
             const detectedUrl = url.origin;
             chrome.storage.local.set({ savedBaseUrl: detectedUrl }, () => {
               resolve(detectedUrl);

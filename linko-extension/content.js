@@ -27,12 +27,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 // Ping the web app to indicate extension is alive AND connected
 const hostname = window.location.hostname;
-if (
-  hostname === "localhost" ||
-  hostname === "127.0.0.1" ||
-  hostname.includes("linko") ||
-  hostname.includes("ngrok-free.app")
-) {
+if (hostname.includes("linko")) {
   setInterval(() => {
     chrome.storage.local.get(["extensionToken"], (result) => {
       if (result.extensionToken) {
