@@ -1,4 +1,4 @@
-let BASE_URL = "https://link-uplinko.vercel.app";
+let BASE_URL = "https://linkocollab.xyz";
 
 // Automatically update BASE_URL if the user opens the popup while on the dashboard/connect page
 function detectBaseUrl() {
@@ -26,7 +26,7 @@ function detectBaseUrl() {
         }
       }
       chrome.storage.local.get(["savedBaseUrl"], (result) => {
-        resolve(result.savedBaseUrl || "https://link-uplinko.vercel.app");
+        resolve(result.savedBaseUrl || "https://linkocollab.xyz");
       });
     });
   });

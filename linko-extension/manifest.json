@@ -27,7 +27,7 @@
   "host_permissions": [
     "https://leetcode.com/*",
     "https://neetcode.io/*",
-    "https://link-uplinko.vercel.app/*",
+    "https://linkocollab.xyz/*",
     "http://localhost/*",
     "http://localhost:*/*",
     "http://127.0.0.1/*",
@@ -40,7 +40,7 @@
       "matches": [
         "https://leetcode.com/problems/*",
         "https://neetcode.io/problems/*",
-        "https://link-uplinko.vercel.app/*",
+        "https://linkocollab.xyz/*",
         "http://localhost/*",
         "http://localhost:*/*",
         "http://127.0.0.1/*",
