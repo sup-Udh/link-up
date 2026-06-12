@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     url: "https://www.linkocollab.xyz",
     images: [
       {
-        url: "https://www.linkocollab.xyz/og-image.png",
+        url: "https://www.linkocollab.xyz/linko-works.png",
         width: 1200,
         height: 630,
       },
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Linko",
     description: "Collaborative coding made easy.",
-    images: ["https://www.linkocollab.xyz/og-image.png"],
+    images: ["https://www.linkocollab.xyz/linko-works.png"],
   },
 };
 
