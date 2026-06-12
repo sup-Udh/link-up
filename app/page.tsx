@@ -307,7 +307,9 @@ export default function Home() {
             </p>
             <div className="space-y-3">
               <a
-                href="#"
+                href="https://chromewebstore.google.com/detail/linko/hgnbdoifnhbckidcilkedmpcppdfddkn"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-full bg-[#1cbaba] hover:bg-[#19a6a6] text-white py-3.5 rounded-xl font-bold text-sm transition-all flex justify-center items-center gap-2"
               >
                 Download from Web Store

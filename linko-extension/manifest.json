@@ -1,7 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Linko",
-  "version": "1.0",
+  "version": "1.0.1",
+  "description": "Collaborative coding on LeetCode and NeetCode.",
 
   "icons": {
     "128": "icon-grey.png"
