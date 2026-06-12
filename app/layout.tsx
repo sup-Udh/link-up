@@ -5,7 +5,25 @@ import Script from "next/script";
 
 export const metadata: Metadata = {
   title: "Linko",
-  description: "Collaborative coding platform",
+  description: "Code together on LeetCode and other coding platforms in real time.",
+  openGraph: {
+    title: "Linko",
+    description: "Collaborative coding made easy.",
+    url: "https://www.linkocollab.xyz",
+    images: [
+      {
+        url: "https://www.linkocollab.xyz/og-image.png",
+        width: 1200,
+        height: 630,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Linko",
+    description: "Collaborative coding made easy.",
+    images: ["https://www.linkocollab.xyz/og-image.png"],
+  },
 };
 
 export default function RootLayout({
